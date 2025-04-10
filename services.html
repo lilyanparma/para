@@ -152,7 +152,6 @@
       background-color: #dc3545;
     }
   </style>
-  
   <!-- تضمين مكتبات Firebase عبر CDN -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
@@ -219,9 +218,38 @@
     </div>
   </div>
   
-  <!-- كود التطبيق (يمكنك استخدامه إذا كنت تريد تنفيذ وظائف بعد تحميل الوثيقة) -->
+  <!-- كود التطبيق -->
   <script>
-    // وظيفة إضافة خدمة جديدة: إنشاء بطاقة تعرض البيانات مع حاوية خاصة باسم الخدمة
+    // مستمع لبيانات "services" من Firebase لتحديث عرض الخدمات تلقائيًا
+    firebase.database().ref('services').on('value', function(snapshot) {
+      var services = snapshot.val();
+      var servicesContainer = document.getElementById('servicesContainer');
+      servicesContainer.innerHTML = ''; // مسح المحتوى الحالي
+      
+      for (var key in services) {
+        var service = services[key];
+        var serviceCard = document.createElement('div');
+        serviceCard.className = 'service-card';
+        
+        var header = document.createElement('div');
+        header.className = 'service-header';
+        header.textContent = service.name;
+        
+        var info = document.createElement('div');
+        info.className = 'service-info';
+        info.innerHTML = '<p><strong>التاريخ:</strong> ' + service.date + '</p>' +
+                         '<p><strong>الثمن:</strong> ' + service.price + '</p>';
+        
+        serviceCard.appendChild(header);
+        serviceCard.appendChild(info);
+        // تخزين مفتاح firebase للعنصر لتسهيل التعديل لاحقًا
+        serviceCard.setAttribute('data-key', key);
+        
+        servicesContainer.appendChild(serviceCard);
+      }
+    });
+    
+    // دالة إضافة خدمة: تدفع البيانات إلى Firebase
     function addService() {
       var name = document.getElementById('serviceName').value;
       var date = document.getElementById('serviceDate').value;
@@ -232,45 +260,34 @@
         return;
       }
       
-      var servicesContainer = document.getElementById('servicesContainer');
-      var serviceCard = document.createElement('div');
-      serviceCard.className = 'service-card';
-      
-      // إنشاء حاوية الاسم مع لون تمييز
-      var header = document.createElement('div');
-      header.className = 'service-header';
-      header.textContent = name;
-      
-      // إنشاء حاوية المعلومات لبقية الحقول
-      var info = document.createElement('div');
-      info.className = 'service-info';
-      info.innerHTML = '<p><strong>التاريخ:</strong> ' + date + '</p>' +
-                       '<p><strong>الثمن:</strong> ' + price + '</p>';
-      
-      // تجميع البطاقة
-      serviceCard.appendChild(header);
-      serviceCard.appendChild(info);
-      servicesContainer.appendChild(serviceCard);
-      
-      // إعادة تعيين الحقول
-      document.getElementById('serviceName').value = '';
-      document.getElementById('serviceDate').value = '';
-      document.getElementById('servicePrice').value = '';
+      // دفع البيانات إلى Firebase تحت مسار "services"
+      firebase.database().ref('services').push({
+        name: name,
+        date: date,
+        price: price
+      }).then(function() {
+        alert("تم إضافة الخدمة بنجاح!");
+        // إعادة تعيين الحقول
+        document.getElementById('serviceName').value = '';
+        document.getElementById('serviceDate').value = '';
+        document.getElementById('servicePrice').value = '';
+      }).catch(function(error) {
+        console.error("خطأ أثناء إضافة الخدمة: ", error);
+        alert("حدث خطأ أثناء إضافة الخدمة!");
+      });
     }
     
-    // فتح مودال تعديل الخدمة
+    // دوال التعديل
     function openEditModal() {
       document.getElementById('editModal').style.display = 'block';
       document.getElementById('searchServiceName').value = '';
       document.getElementById('editForm').style.display = 'none';
     }
     
-    // إغلاق مودال تعديل الخدمة
     function closeEditModal() {
       document.getElementById('editModal').style.display = 'none';
     }
     
-    // البحث عن الخدمة في بطاقات العرض باستخدام الاسم (من حاوية header)
     function searchService() {
       var searchName = document.getElementById('searchServiceName').value.trim().toLowerCase();
       if (searchName === '') {
@@ -282,7 +299,6 @@
       var serviceCards = servicesContainer.getElementsByClassName('service-card');
       var foundCard = null;
       
-      // البحث من خلال مقارنة النص الموجود في حاوية header
       for (var i = 0; i < serviceCards.length; i++) {
         var headerText = serviceCards[i].getElementsByClassName('service-header')[0].textContent.toLowerCase();
         if (headerText === searchName) {
@@ -292,7 +308,6 @@
       }
       
       if (foundCard) {
-        // تعبئة نموذج التعديل بالبيانات من البطاقة
         var header = foundCard.getElementsByClassName('service-header')[0];
         var infoParagraphs = foundCard.getElementsByClassName('service-info')[0].getElementsByTagName('p');
         var currentName = header.textContent;
@@ -303,8 +318,8 @@
         document.getElementById('editDate').value = currentDate;
         document.getElementById('editPrice').value = currentPrice;
         
-        // تخزين البطاقة الحالية للتعديل
-        window.currentEditCard = foundCard;
+        // تخزين مفتاح الخدمة لتحديثها لاحقًا
+        window.currentKey = foundCard.getAttribute('data-key');
         document.getElementById('editForm').style.display = 'block';
       } else {
         alert("الخدمة غير موجودة!");
@@ -312,9 +327,11 @@
       }
     }
     
-    // حفظ التعديلات على الخدمة المحددة
     function saveEdit() {
-      if (!window.currentEditCard) return;
+      if (!window.currentKey) {
+        alert("لم يتم تحديد الخدمة للتعديل!");
+        return;
+      }
       
       var newName = document.getElementById('editName').value;
       var newDate = document.getElementById('editDate').value;
@@ -325,13 +342,18 @@
         return;
       }
       
-      // تحديث حاوية الاسم
-      window.currentEditCard.getElementsByClassName('service-header')[0].textContent = newName;
-      // تحديث معلومات التاريخ والثمن
-      window.currentEditCard.getElementsByClassName('service-info')[0].innerHTML = '<p><strong>التاريخ:</strong> ' + newDate + '</p>' +
-                                                                                    '<p><strong>الثمن:</strong> ' + newPrice + '</p>';
-      alert("تم حفظ التعديلات!");
-      closeEditModal();
+      // تحديث بيانات الخدمة في Firebase باستخدام المفتاح الحالي
+      firebase.database().ref('services/' + window.currentKey).update({
+        name: newName,
+        date: newDate,
+        price: newPrice
+      }).then(function(){
+        alert("تم حفظ التعديلات!");
+        closeEditModal();
+      }).catch(function(error){
+        console.error("خطأ في تحديث الخدمة:", error);
+        alert("حدث خطأ أثناء حفظ التعديلات!");
+      });
     }
   </script>
 </body>
