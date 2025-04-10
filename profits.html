@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>الحسابات والأرباح - إصدار فاتورة</title>
+  <style>
+    body { 
+      font-family: Arial, sans-serif;
+      direction: rtl;
+      margin: 20px;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    .btn-invoice {
+      background-color: #007BFF;
+      color: #fff;
+      border: none;
+      padding: 10px 20px;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+      display: block;
+      margin: 0 auto;
+    }
+    .btn-invoice:hover {
+      background-color: #0056b3;
+    }
+  </style>
+</head>
+<body>
+  <h1>الحسابات والأرباح</h1>
+  <p style="text-align: center;">انقر على الزر التالي لإنشاء فاتورة شهرية تلقائية وتحميلها بصيغة PDF.</p>
+  <button class="btn-invoice" onclick="generateInvoice()">إنشاء فاتورة شهرية (PDF)</button>
+  
+  <!-- تضمين مكتبة jsPDF من CDN -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script>
+    // دالة لإنشاء فاتورة PDF بناءً على بيانات المحاسبة
+    function generateInvoice() {
+      // البيانات الوهمية؛ عند الربط مع القاعدة سيتم استبدالها ببيانات الاستعلام
+      const invoiceData = {
+        month: "أبريل 2025",
+        totalSales: 50000,
+        totalExpenses: 30000,
+        profit: 20000,
+        details: [
+          { description: "بيع المنتجات", amount: 50000 },
+          { description: "المصاريف التشغيلية", amount: 30000 }
+        ]
+      };
+
+      // استخدم jsPDF لإنشاء ملف PDF
+      const { jsPDF } = window.jspdf;
+      const doc = new jsPDF();
+
+      doc.setFontSize(16);
+      doc.text("فاتورة شهرية", 105, 20, { align: "center" });
+
+      doc.setFontSize(12);
+      doc.text("الشهر: " + invoiceData.month, 20, 40);
+      doc.text("إجمالي المبيعات: " + invoiceData.totalSales + " ريال", 20, 50);
+      doc.text("إجمالي المصاريف: " + invoiceData.totalExpenses + " ريال", 20, 60);
+      doc.text("الأرباح: " + invoiceData.profit + " ريال", 20, 70);
+
+      doc.text("التفاصيل:", 20, 80);
+      let yOffset = 90;
+      invoiceData.details.forEach(item => {
+        doc.text("- " + item.description + ": " + item.amount + " ريال", 20, yOffset);
+        yOffset += 10;
+      });
+
+      // إظهار التاريخ الحالي
+      const today = new Date().toLocaleDateString("ar-EG");
+      doc.text("تاريخ الإصدار: " + today, 20, yOffset + 10);
+
+      // حفظ الملف وتحميله
+      doc.save("Invoice_" + invoiceData.month.replace(" ", "_") + ".pdf");
+    }
+  </script>
+</body>
+</html>
