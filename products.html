@@ -9,14 +9,11 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
-  
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-  
   <!-- تحميل مكتبة ZXing لمسح الأكواد -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
-  
-  <!-- تحميل مكتبة Font Awesome -->
+  <!-- تحميل Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   
   <style>
@@ -27,19 +24,26 @@
       padding: 20px;
       background: #f5f5f5;
     }
-    h1 { text-align: center; margin-bottom: 20px; }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
     button {
-      display: block;
-      margin: 0 auto 20px;
+      display: inline-block;
+      margin: 5px;
       padding: 10px 20px;
       font-size: 16px;
-      background-color: #007BFF;
-      color: #fff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover { background-color: #0056b3; }
+    /* ألوان الأزرار */
+    .btn-primary { background-color: #007BFF; color: #fff; }
+    .btn-primary:hover { background-color: #0056b3; }
+    .btn-success { background-color: #28a745; color: white; }
+    .btn-warning { background-color: #ffc107; color: white; }
+    .btn-danger { background-color: #dc3545; color: white; }
+    .btn-cancel { background-color: #6c757d; color: white; }
     /* منطقة عرض الكاميرا */
     #scanner-container {
       display: none;
@@ -56,7 +60,7 @@
       height: 100%;
       object-fit: cover;
     }
-    /* تنسيق المودال لإجراءات المنتج */
+    /* تنسيق المودال */
     .modal {
       display: none;
       position: fixed;
@@ -65,11 +69,10 @@
       top: 0;
       width: 100%;
       height: 100%;
-      overflow: auto;
       background-color: rgba(0,0,0,0.5);
     }
     .modal-content {
-      background-color: #fefefe;
+      background-color: #fff;
       margin: 10% auto;
       padding: 20px 20px 60px;
       border: 1px solid #888;
@@ -86,103 +89,80 @@
       font-size: 24px;
       cursor: pointer;
     }
-    .modal-header { font-size: 20px; margin-bottom: 15px; }
-    .modal-actions button {
-      display: block;
-      width: 100%;
-      margin: 10px 0;
-      padding: 10px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-    }
-    .btn-add { background-color: #28a745; color: white; }
-    .btn-edit { background-color: #ffc107; color: white; }
-    .btn-delete { background-color: #dc3545; color: white; }
-    /* تعريف مدخلات النموذج */
+    /* أقسام المودال */
     .input-field {
       padding: 10px;
       font-size: 16px;
-      width: 80%;
+      width: 90%;
       margin: 10px auto;
       display: block;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
     .modal-footer {
-      position: absolute;
-      bottom: 10px;
-      left: 0;
-      width: 100%;
+      margin-top: 20px;
       display: flex;
       justify-content: space-around;
     }
-    /* هنا قمنا بحذف زر "حفظ" لتبقي الزر الوحيد "إلغاء" في المودال-footer */
-    .modal-footer button {
-      width: 40%;
-      padding: 10px;
+    .info-field {
+      text-align: left;
+      margin: 10px;
       font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
+      border-bottom: 1px solid #ccc;
+      padding-bottom: 5px;
     }
-    .btn-cancel { background-color: #dc3545; color: white; }
   </style>
 </head>
 <body>
   <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
-  <button onclick="startScan()">ابدأ المسح</button>
+  <button class="btn-primary" onclick="startScan()">ابدأ المسح</button>
   
   <!-- منطقة عرض الكاميرا -->
   <div id="scanner-container">
     <video id="video" autoplay></video>
   </div>
   
-  <!-- مودال إجراءات المنتج -->
+  <!-- المودال -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
-      <div class="modal-header">إجراءات المنتج</div>
-      <!-- هنا يتم بناء واجهة الإجراءات اعتمادًا على حالة المنتج -->
-      <div id="modalActions"></div>
+      <div id="modalHeader" class="modal-header">إجراءات المنتج</div>
       
-      <!-- قسم إضافة المنتج (عند عدم وجوده) -->
-      <div id="addProductSection" style="display:none;">
+      <!-- قسم عرض معلومات المنتج (في وضع العرض - view) -->
+      <div id="productInfoSection" style="display:none;">
+        <div id="infoName" class="info-field"></div>
+        <div id="infoQuantity" class="info-field"></div>
+        <div id="infoPrice" class="info-field"></div>
+        <div id="infoImage" class="info-field"></div>
+      </div>
+      
+      <!-- قسم نموذج المنتج (يستخدم في وضع الإضافة والتعديل) -->
+      <div id="productFormSection" style="display:none;">
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
         <input type="file" id="productImage" class="input-field" accept="image/*">
-        <!-- زر إضافة المنتج يظهر هنا -->
-        <button class="btn-add" onclick="addProduct()">إضافة منتج</button>
       </div>
       
-      <!-- قسم إدارة المنتج (للمنتج الموجود) -->
-      <div id="manageProductSection" style="display:none;">
-        <button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>
-        <button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>
-      </div>
-      
-      <!-- المودال-footer يحتوي الآن على زر "إلغاء" فقط -->
-      <div class="modal-footer">
-        <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
-      </div>
+      <!-- المودال-footer: الأزرار تظهر بناءً على الوضع -->
+      <div class="modal-footer" id="modalFooter"></div>
     </div>
   </div>
   
-  <!-- كود الجافاسكريبت الكامل -->
+  <!-- كود JavaScript -->
   <script>
     // متغير لتخزين الكود المكتشف
     var currentCode = "";
     // كائن قارئ الأكواد من ZXing
     var codeReader = null;
+    // نمط المودال: "add" أو "view" أو "edit"
+    var modalMode = "";
 
     // دالة بدء عملية المسح باستخدام ZXing
     function startScan() {
       currentCode = "";
       document.getElementById("scanner-container").style.display = "block";
       
-      // إنشاء قارئ الأكواد باستخدام ZXing
       codeReader = new ZXing.BrowserMultiFormatReader();
       codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
         if (result) {
@@ -205,12 +185,19 @@
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة لمعالجة الكود والبحث عنه في Firebase
+    // دالة البحث في قاعدة البيانات باستخدام الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
-          var productExists = snapshot.exists();
-          buildModalActions(productExists);
+          if (snapshot.exists()) {
+            // إذا كان المنتج موجوداً، نعرض وضع العرض مع معلوماته
+            modalMode = "view";
+            showProductInfo(snapshot.val());
+          } else {
+            // إذا لم يكن موجوداً، نذهب إلى وضع الإضافة
+            modalMode = "add";
+            showProductForm(); // الحقول ستكون فارغة
+          }
           document.getElementById("productModal").style.display = "block";
         })
         .catch(function(error) {
@@ -219,36 +206,82 @@
         });
     }
 
-    // بناء واجهة الإجراءات حسب حالة المنتج
-    function buildModalActions(productExists) {
-      // إخفاء كلا القسمين أولاً
-      document.getElementById("addProductSection").style.display = "none";
-      document.getElementById("manageProductSection").style.display = "none";
+    // دالة عرض معلومات المنتج في وضع العرض (View)
+    function showProductInfo(data) {
+      document.getElementById("modalHeader").innerText = "معلومات المنتج";
+      // إخفاء نموذج الإدخال
+      document.getElementById("productFormSection").style.display = "none";
+      // تعبئة وعرض معلومات المنتج
+      document.getElementById("infoName").innerText = "اسم المنتج: " + data.name;
+      document.getElementById("infoQuantity").innerText = "عدد القطع: " + data.quantity;
+      document.getElementById("infoPrice").innerText = "الثمن: " + data.price;
+      document.getElementById("infoImage").innerText = "صورة المنتج: " + (data.image || "لا يوجد");
+      document.getElementById("productInfoSection").style.display = "block";
+      
+      // إعداد أزرار المودال في وضع العرض: زر حذف وزر تعديل
+      var footer = document.getElementById("modalFooter");
+      footer.innerHTML = "";
+      var btnDelete = document.createElement("button");
+      btnDelete.className = "btn-danger";
+      btnDelete.innerHTML = '<i class="fas fa-trash-alt"></i> حذف منتج';
+      btnDelete.onclick = deleteProduct;
+      
+      var btnEdit = document.createElement("button");
+      btnEdit.className = "btn-warning";
+      btnEdit.innerHTML = '<i class="fas fa-edit"></i> تعديل منتج';
+      btnEdit.onclick = function() {
+        // عند الضغط على تعديل، ننتقل إلى وضع التعديل
+        modalMode = "edit";
+        showProductForm(data); // تعبئة الحقول بالقيم الحالية
+      };
+      
+      footer.appendChild(btnDelete);
+      footer.appendChild(btnEdit);
+    }
 
-      var modalActions = document.getElementById('modalActions');
-      modalActions.innerHTML = ""; // يمكنك إضافة عنوان أو تعليمات هنا إذا رغبت
-
-      if (!productExists) {
-        // المنتج غير موجود: عرض قسم الإضافة
-        document.getElementById("addProductSection").style.display = "block";
-      } else {
-        // المنتج موجود: عرض قسم إدارة المنتج
-        document.getElementById("manageProductSection").style.display = "block";
+    // دالة عرض نموذج المنتج للإضافة أو التعديل
+    // إذا زودنا بالمعطيات (data) يكون وضع تعديل؛ وإذا لم يُزوّد، يكون وضع إضافة.
+    function showProductForm(data = {}) {
+      document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
+      document.getElementById("productInfoSection").style.display = "none";
+      document.getElementById("productFormSection").style.display = "block";
+      // تعبئة الحقول إذا كانت هناك بيانات (في وضع التعديل)
+      document.getElementById("productName").value = data.name || "";
+      document.getElementById("quantityInput").value = data.quantity || "";
+      document.getElementById("priceInput").value = data.price || "";
+      document.getElementById("productImage").value = ""; // عدم تعبئة الصورة
+      // إعداد أزرار المودال في وضع الإضافة أو التعديل
+      var footer = document.getElementById("modalFooter");
+      footer.innerHTML = "";
+      var actionButton = document.createElement("button");
+      actionButton.className = "btn-success";
+      if (modalMode === "add") {
+        actionButton.innerText = "إضافة منتج";
+        actionButton.onclick = addProduct;
+      } else { // وضع التعديل
+        actionButton.innerText = "تعديل المنتج";
+        actionButton.onclick = updateProduct;
       }
+      var btnCancel = document.createElement("button");
+      btnCancel.className = "btn-cancel";
+      btnCancel.innerText = "إلغاء";
+      btnCancel.onclick = closeModal;
+      
+      footer.appendChild(actionButton);
+      footer.appendChild(btnCancel);
     }
 
+    // دالة إغلاق المودال وإعادة تعيين الحقول
     function closeModal() {
-      document.getElementById('productModal').style.display = 'none';
-      // إعادة تعيين قيمة الحقول في قسم إضافة المنتج
-      document.getElementById('productName').value = '';
-      document.getElementById('quantityInput').value = '';
-      document.getElementById('priceInput').value = '';
-      document.getElementById('productImage').value = '';
+      document.getElementById("productModal").style.display = "none";
+      // إعادة تعيين جميع الحقول
+      document.getElementById("productName").value = "";
+      document.getElementById("quantityInput").value = "";
+      document.getElementById("priceInput").value = "";
+      document.getElementById("productImage").value = "";
     }
 
-    // دوال التعامل مع المنتجات على Firebase باستخدام Realtime Database
-
-    // دالة إضافة المنتج (عند عدم وجوده)
+    // دوال التعامل مع Firebase (Realtime Database)
     function addProduct() {
       var name = document.getElementById("productName").value;
       var quantity = document.getElementById("quantityInput").value;
@@ -260,10 +293,9 @@
         return;
       }
       
-      // في هذه الحالة سنقوم بتخزين اسم الصورة كـ placeholder،
-      // ويمكن لاحقاً دمج رفع الصورة إلى Firebase Storage والحصول على رابطها.
+      // في هذه الحالة، نحفظ اسم الصورة كـ placeholder.
       var imagePlaceholder = imageFile ? imageFile.name : "";
-
+      
       firebase.database().ref("products/" + currentCode).set({
         code: currentCode,
         name: name,
@@ -280,6 +312,35 @@
       });
     }
 
+    // دالة تحديث المنتج عند التعديل
+    function updateProduct() {
+      var name = document.getElementById("productName").value;
+      var quantity = document.getElementById("quantityInput").value;
+      var price = document.getElementById("priceInput").value;
+      var imageFile = document.getElementById("productImage").files[0];
+      
+      if (!name || !quantity || !price) {
+        alert("يرجى تعبئة جميع الحقول (اسم المنتج، عدد القطع، الثمن)!");
+        return;
+      }
+      
+      var imagePlaceholder = imageFile ? imageFile.name : "";
+      
+      firebase.database().ref("products/" + currentCode).update({
+        name: name,
+        quantity: parseInt(quantity),
+        price: parseFloat(price),
+        image: imagePlaceholder
+      })
+      .then(function() {
+        alert("تم تعديل المنتج بنجاح!");
+        closeModal();
+      })
+      .catch(function(error) {
+        alert("فشل تعديل المنتج: " + error);
+      });
+    }
+
     // دالة حذف المنتج
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
@@ -292,27 +353,9 @@
       });
     }
 
-    // دالة تعديل المنتج
-    function editProduct() {
-      var newQuantity = prompt("أدخل الكمية الجديدة:");
-      if (newQuantity && parseInt(newQuantity) > 0) {
-        firebase.database().ref("products/" + currentCode).update({
-          quantity: parseInt(newQuantity)
-        })
-        .then(function() {
-          alert("تم تعديل المنتج بنجاح!");
-          closeModal();
-        })
-        .catch(function(error) {
-          alert("فشل تعديل المنتج: " + error);
-        });
-      } else {
-        alert("يرجى إدخال رقم صالح للقطع!");
-      }
-    }
-
+    // عند النقر خارج المودال لإغلاقه
     window.onclick = function(event) {
-      var modal = document.getElementById('productModal');
+      var modal = document.getElementById("productModal");
       if (event.target == modal) {
         closeModal();
       }
