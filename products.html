@@ -14,54 +14,56 @@
       font-family: Arial, sans-serif;
       direction: rtl;
       margin: 0;
-      padding: 0;
+      padding: 20px;
+      background: #f5f5f5;
     }
-    /* زر قراءة الباركود */
-    .camera-btn {
-      display: inline-block;
-      margin: 20px;
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* زر بدء المسح */
+    button {
+      display: block;
+      margin: 0 auto 20px auto;
       padding: 10px 20px;
+      font-size: 16px;
       background-color: #007BFF;
-      color: white;
+      color: #fff;
       border: none;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 18px;
     }
-    .camera-btn:hover {
+    button:hover {
       background-color: #0056b3;
-      transform: scale(1.05);
-      transition: transform 0.2s, background-color 0.2s;
     }
-    /* حاوية عرض الكاميرا */
+    /* منطقة المسح (مربعة) */
     #scanner-container {
       display: none; /* مخفية افتراضيًا */
-      position: fixed;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
+      width: 300px;
+      height: 300px;
+      margin: 0 auto 20px auto; /* توضع في المنتصف */
+      position: relative;
+      border: 2px solid #333;
       background: #000;
-      z-index: 999;
-      overflow: hidden; /* لضمان عدم خروج المؤشرات عن الحاوية */
+      overflow: hidden;
     }
-    /* مؤشر الليزر العمودي */
+    /* مؤشر الليزر: خط أحمر يمتد بعرض المنطقة ويتحرك عمودياً */
     .scanner-laser {
       position: absolute;
-      left: 50%; /* وضع الخط في منتصف الحاوية أفقياً */
+      left: 0;
       top: 0;
-      width: 2px; /* سمك المؤشر */
-      height: 100%;
+      width: 100%;
+      height: 2px;
       background: red;
       opacity: 0.7;
-      animation: laserAnimation 1s infinite; /* تأثير الحركة العمودية */
+      animation: laserAnimation 1s infinite;
     }
     @keyframes laserAnimation {
-      0%   { opacity: 0.7; transform: translateY(-100%); }
-      50%  { opacity: 1; transform: translateY(0%); }
-      100% { opacity: 0.7; transform: translateY(100%); }
+      0%   { transform: translateY(0px); opacity: 0.7; }
+      50%  { transform: translateY(150px); opacity: 1; }
+      100% { transform: translateY(298px); opacity: 0.7; }
     }
-    /* نمط المودال (نافذة الإجراءات) */
+    /* تنسيق المودال (نافذة الإجراءات) */
     .modal {
       display: none; /* مخفية افتراضيًا */
       position: fixed;
@@ -76,7 +78,7 @@
     .modal-content {
       background-color: #fefefe;
       margin: 10% auto;
-      padding: 20px 20px 60px;  /* زيادة الحشوة بالسفلى للمودال-footer */
+      padding: 20px 20px 60px;  /* حشوة إضافية في الأسفل لمودال-footer */
       border: 1px solid #888;
       width: 90%;
       max-width: 400px;
@@ -106,7 +108,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    /* أزرار الإجراءات */
+    /* أزرار إجراءات المنتج */
     .btn-add { background-color: #28a745; color: white; }
     .btn-edit { background-color: #ffc107; color: white; }
     .btn-delete { background-color: #dc3545; color: white; }
@@ -123,7 +125,7 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-    /* مودال-footer لزر الحفظ والإلغاء */
+    /* مودال-footer يحتوي على زر حفظ وإلغاء */
     .modal-footer {
       position: absolute;
       bottom: 10px;
@@ -145,17 +147,16 @@
   </style>
 </head>
 <body>
-  <!-- زر قراءة الباركود -->
-  <button class="camera-btn" onclick="scanBarcode()">
-    <i class="fas fa-camera"></i> قراءة الباركود
-  </button>
-
-  <!-- حاوية عرض الكاميرا مع مؤشر الليزر العمودي -->
+  <h1>منتجات - قارئ الباركود</h1>
+  <!-- زر بدء المسح -->
+  <button onclick="startScan()">ابدأ المسح</button>
+  
+  <!-- منطقة المسح -->
   <div id="scanner-container">
     <div class="scanner-laser"></div>
   </div>
-
-  <!-- المودال لإجراءات المنتج -->
+  
+  <!-- مودال إجراءات المنتج -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
@@ -163,21 +164,21 @@
       <div id="modalActions" class="modal-actions">
         <!-- تُبنى الإجراءات هنا بواسطة buildModalActions() -->
       </div>
-      <!-- قسم إدخال الكمية يظهر إذا كان المنتج موجوداً -->
+      <!-- قسم إدخال الكمية (يظهر إذا كان المنتج موجوداً) -->
       <div id="quantitySection" style="display:none;">
         <input type="number" class="quantity-input" id="quantityInput" placeholder="ادخل عدد القطع">
         <button class="btn-quantity" onclick="updateQuantity()">
           <i class="fas fa-check"></i> حفظ الكمية
         </button>
       </div>
-      <!-- قسم إدخال الثمن يظهر تحت قسم الكمية -->
+      <!-- قسم إدخال الثمن (يظهر تحت قسم الكمية) -->
       <div id="priceSection" style="display:none;">
         <input type="number" class="price-input" id="priceInput" placeholder="ادخل الثمن">
         <button class="btn-price" onclick="updatePrice()">
           <i class="fas fa-check"></i> حفظ الثمن
         </button>
       </div>
-      <!-- مودال-footer يحتوي على زري "حفظ" و "إلغاء" -->
+      <!-- مودال-footer يحتوي على زر حفظ وزر إلغاء -->
       <div class="modal-footer">
         <button class="btn-save" onclick="saveChanges()">
           <i class="fas fa-check"></i> حفظ
@@ -188,20 +189,24 @@
       </div>
     </div>
   </div>
-
+  
   <!-- سكربت الجافاسكريبت -->
   <script>
     // دالة بدء قراءة الباركود باستخدام QuaggaJS
-    function scanBarcode() {
-      // إظهار حاوية الكاميرا مع مؤشر الليزر
+    function startScan() {
+      // إظهار منطقة المسح
       document.getElementById("scanner-container").style.display = "block";
-
+      
       Quagga.init({
         inputStream: {
           name: "Live",
           type: "LiveStream",
           target: document.querySelector('#scanner-container'),
-          constraints: { facingMode: "environment" }  // استخدم الكاميرا الخلفية
+          constraints: {
+            width: 300,
+            height: 300,
+            facingMode: "environment"  // استخدام الكاميرا الخلفية
+          }
         },
         decoder: {
           readers: ["code_128_reader", "ean_reader", "ean_8_reader", "upc_reader", "upc_e_reader"]
@@ -215,11 +220,12 @@
           }
           Quagga.start();
       });
-
+      
       // عند اكتشاف الباركود
       Quagga.onDetected(function(result) {
           var barcode = result.codeResult.code;
           console.log("تم اكتشاف الباركود: " + barcode);
+          // إيقاف الماسح وإخفاء منطقة المسح
           Quagga.stop();
           document.getElementById("scanner-container").style.display = "none";
           // للمحاكاة: استخدام حالة عشوائية لتحديد وجود المنتج
@@ -231,17 +237,19 @@
           Quagga.offDetected();
       });
     }
-
+    
     // بناء إجراءات المودال بناءً على حالة وجود المنتج
     function buildModalActions(productExists) {
       var modalActions = document.getElementById('modalActions');
-      modalActions.innerHTML = '';
-
+      modalActions.innerHTML = ''; // مسح المحتوى السابق
+      
       if (!productExists) {
+        // في حالة عدم وجود المنتج: عرض زر إضافة المنتج فقط
         modalActions.innerHTML += '<button class="btn-add" onclick="addProduct()"><i class="fas fa-plus"></i> إضافة منتج</button>';
         document.getElementById('quantitySection').style.display = 'none';
         document.getElementById('priceSection').style.display = 'none';
       } else {
+        // في حالة وجود المنتج: عرض أزرار حذف، تعديل، وإرجاع المنتج
         modalActions.innerHTML += '<button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>';
         modalActions.innerHTML += '<button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>';
         modalActions.innerHTML += '<button class="btn-return" onclick="returnProduct()"><i class="fas fa-undo-alt"></i> إرجاع منتج</button>';
@@ -249,8 +257,8 @@
         document.getElementById('priceSection').style.display = 'block';
       }
     }
-
-    // دالة إغلاق المودال وإعادة تعيين الحقول
+    
+    // دالة إغلاق المودال وإعادة تعيين القيم
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
       document.getElementById('quantitySection').style.display = 'none';
@@ -258,7 +266,7 @@
       document.getElementById('quantityInput').value = '';
       document.getElementById('priceInput').value = '';
     }
-
+    
     // دوال إجراءات المنتج (محاكاة)
     function addProduct() {
       alert("تمت إضافة المنتج!");
