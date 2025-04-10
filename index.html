@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="ar">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>PARAMEDICAL LILYAN ROSE</title>
+  <style>
+    /* إعداد الصفحة العامة */
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      direction: rtl;
+    }
+    /* تنسيق الرأس */
+    header {
+      background-color: pink;
+      color: white;
+      padding: 10px;
+      text-align: center;
+      position: relative;
+    }
+    header h1 {
+      margin: 0;
+      font-size: 1.5em;
+    }
+    /* أيقونة الهامبرغر */
+    .hamburger {
+      position: absolute;
+      top: 50%;
+      left: 10px;
+      transform: translateY(-50%);
+      font-size: 24px;
+      cursor: pointer;
+      user-select: none;
+    }
+    /* القائمة الجانبية المخفية */
+    .sidebar {
+      position: fixed;
+      top: 0;
+      bottom: 0;
+      right: -200px;
+      width: 200px;
+      background-color: #f2f2f2;
+      padding: 20px;
+      overflow-y: auto;
+      transition: right 0.3s ease;
+      z-index: 1000;
+    }
+    .sidebar.active {
+      right: 0;
+    }
+    .sidebar ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+    }
+    .sidebar ul li {
+      margin-bottom: 15px;
+    }
+    .sidebar ul li a {
+      text-decoration: none;
+      color: #333;
+    }
+    /* تنسيق المحتوى الرئيسي */
+    main {
+      padding: 20px;
+      margin-top: 10px;
+      margin-bottom: 60px; /* ترك مجال للتذييل */
+    }
+    /* توسيط عنوان الصفحة داخل main */
+    main h2 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    /* تنسيق حاويات الرسوم البيانية لتكون في المنتصف */
+    .chart-container {
+      position: relative;
+      width: 80%;
+      max-width: 500px;
+      margin: 20px auto;
+      height: 300px;
+    }
+    /* تنسيق التذييل */
+    footer {
+      background-color: #222;
+      color: white;
+      text-align: center;
+      padding: 10px;
+      font-size: 0.9em;
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+    }
+    /* تحسين استجابة التصميم على الشاشات الصغيرة */
+    @media (max-width: 600px) {
+      .sidebar {
+        width: 150px;
+      }
+      header h1 {
+        font-size: 1.3em;
+      }
+      .hamburger {
+        font-size: 20px;
+        left: 5px;
+      }
+      .chart-container {
+        width: 90%;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- رأس الموقع مع أيقونة الهامبرغر -->
+  <header>
+    <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+    <h1>PARAMEDICAL LILYAN ROSE</h1>
+  </header>
+  
+  <!-- القائمة الجانبية المخفية -->
+  <nav id="sidebar" class="sidebar">
+    <ul>
+      <li><a href="#">الصفحة الرئيسية</a></li>
+      <li><a href="#">منتجات</a></li>
+      <li><a href="#">خدمات اضافية</a></li>
+      <li><a href="#">الارباح و الحسابات</a></li>
+    </ul>
+  </nav>
+  
+  <!-- المحتوى الرئيسي مع عدة رسوم بيانية -->
+  <main>
+    <h2>الرئيسية - رسوم بيانية للمبيعات</h2>
+    
+    <!-- رسم بياني شريطي للمبيعات -->
+    <div class="chart-container">
+      <canvas id="salesChart"></canvas>
+    </div>
+    
+    <!-- رسم بياني دائري (Doughnut Chart) إضافي -->
+    <div class="chart-container">
+      <canvas id="doughnutChart"></canvas>
+    </div>
+  </main>
+  
+  <!-- تذييل الصفحة -->
+  <footer>
+    جميع الحقوق محفوظة 2025 LILYAN ROSE
+  </footer>
+  
+  <!-- تضمين مكتبة Chart.js من CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <script>
+    // دالة تبديل القائمة الجانبية عند الضغط على أيقونة الهامبرغر
+    function toggleSidebar() {
+      var sidebar = document.getElementById('sidebar');
+      sidebar.classList.toggle('active');
+    }
+
+    // إعداد البيانات والرسم البياني الشريطي للمبيعات
+    var ctxSales = document.getElementById('salesChart').getContext('2d');
+    var salesChart = new Chart(ctxSales, {
+      type: 'bar',  // الرسم البياني الشريطي
+      data: {
+        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+        datasets: [{
+          label: 'المبيعات (بالآلاف)',
+          data: [12, 19, 3, 5, 2, 3],
+          backgroundColor: 'rgba(255, 99, 132, 0.2)',
+          borderColor: 'rgba(255, 99, 132, 1)',
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        scales: {
+          y: {
+            beginAtZero: true
+          }
+        }
+      }
+    });
+    
+    // إعداد رسم بياني دائري (Doughnut Chart) لإظهار توزيع بيانات إضافية
+    var ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+    var doughnutChart = new Chart(ctxDoughnut, {
+      type: 'doughnut',
+      data: {
+        labels: ['منتج أ', 'منتج ب', 'منتج ج', 'منتج د'],
+        datasets: [{
+          label: 'توزيع المنتجات',
+          data: [30, 20, 25, 25],
+          backgroundColor: [
+            'rgba(54, 162, 235, 0.6)',
+            'rgba(255, 206, 86, 0.6)',
+            'rgba(75, 192, 192, 0.6)',
+            'rgba(153, 102, 255, 0.6)'
+          ],
+          borderColor: [
+            'rgba(54, 162, 235, 1)',
+            'rgba(255, 206, 86, 1)',
+            'rgba(75, 192, 192, 1)',
+            'rgba(153, 102, 255, 1)'
+          ],
+          borderWidth: 1
+        }]
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false
+      }
+    });
+  </script>
+</body>
+</html>
