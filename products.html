@@ -9,11 +9,14 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+  
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-  <!-- تحميل مكتبة ZXing -->
+  
+  <!-- تحميل مكتبة ZXing لمسح الأكواد -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
-  <!-- تحميل Font Awesome -->
+  
+  <!-- تحميل مكتبة Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   
   <style>
@@ -53,7 +56,7 @@
       height: 100%;
       object-fit: cover;
     }
-    /* تنسيق المودال */
+    /* تنسيق المودال لإجراءات المنتج */
     .modal {
       display: none;
       position: fixed;
@@ -97,7 +100,7 @@
     .btn-add { background-color: #28a745; color: white; }
     .btn-edit { background-color: #ffc107; color: white; }
     .btn-delete { background-color: #dc3545; color: white; }
-    /* تعريف مدخلات النموذج بنفس نمط الحقول */
+    /* تعريف مدخلات النموذج */
     .input-field {
       padding: 10px;
       font-size: 16px;
@@ -115,6 +118,7 @@
       display: flex;
       justify-content: space-around;
     }
+    /* هنا قمنا بحذف زر "حفظ" لتبقي الزر الوحيد "إلغاء" في المودال-footer */
     .modal-footer button {
       width: 40%;
       padding: 10px;
@@ -123,7 +127,6 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    .btn-save { background-color: #28a745; color: white; }
     .btn-cancel { background-color: #dc3545; color: white; }
   </style>
 </head>
@@ -144,27 +147,24 @@
       <!-- هنا يتم بناء واجهة الإجراءات اعتمادًا على حالة المنتج -->
       <div id="modalActions"></div>
       
-      <!-- قسم إضافة المنتج (للمنتج الذي لا يوجد بعد) -->
+      <!-- قسم إضافة المنتج (عند عدم وجوده) -->
       <div id="addProductSection" style="display:none;">
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
         <input type="file" id="productImage" class="input-field" accept="image/*">
-        <!-- زر إضافة المنتج يظهر في هذا القسم -->
+        <!-- زر إضافة المنتج يظهر هنا -->
         <button class="btn-add" onclick="addProduct()">إضافة منتج</button>
       </div>
       
-      <!-- قسم خيارات إدارة المنتج (للمنتجات الموجودة) -->
+      <!-- قسم إدارة المنتج (للمنتج الموجود) -->
       <div id="manageProductSection" style="display:none;">
-        <!-- فقط زرين: حذف وتعديل منتج -->
         <button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>
         <button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>
       </div>
       
-      <!-- إذا رغبت لاحقاً بإضافة زر حفظ التغييرات يمكن إضافته هنا -->
+      <!-- المودال-footer يحتوي الآن على زر "إلغاء" فقط -->
       <div class="modal-footer">
-        <!-- يمكن استخدام زر حفظ في حالة تعديل المنتج -->
-        <button class="btn-save" onclick="saveChanges()">حفظ</button>
         <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
       </div>
     </div>
@@ -226,13 +226,13 @@
       document.getElementById("manageProductSection").style.display = "none";
 
       var modalActions = document.getElementById('modalActions');
-      modalActions.innerHTML = ""; // يمكن إضافة عنوان أو تعليمات هنا إذا رغبت
+      modalActions.innerHTML = ""; // يمكنك إضافة عنوان أو تعليمات هنا إذا رغبت
 
       if (!productExists) {
-        // المنتج غير موجود: عرض قسم الإضافة الذي يحتوي على الحقول المطلوبة
+        // المنتج غير موجود: عرض قسم الإضافة
         document.getElementById("addProductSection").style.display = "block";
       } else {
-        // المنتج موجود: عرض قسم إدارة المنتج (حذف وتعديل فقط)
+        // المنتج موجود: عرض قسم إدارة المنتج
         document.getElementById("manageProductSection").style.display = "block";
       }
     }
@@ -261,7 +261,7 @@
       }
       
       // في هذه الحالة سنقوم بتخزين اسم الصورة كـ placeholder،
-      // يمكنك لاحقاً دمج رفع الصورة إلى Firebase Storage والحصول على رابطها.
+      // ويمكن لاحقاً دمج رفع الصورة إلى Firebase Storage والحصول على رابطها.
       var imagePlaceholder = imageFile ? imageFile.name : "";
 
       firebase.database().ref("products/" + currentCode).set({
@@ -292,10 +292,8 @@
       });
     }
 
-    // دالة تعديل المنتج (يمكنك ضبطها لتعديل الحقول المطلوبة)
+    // دالة تعديل المنتج
     function editProduct() {
-      // هنا يمكنك فتح نافذة جديدة أو إعادة عرض الحقول للسماح بالتعديل.
-      // في المثال الحالي نقوم ببساطة بطلب إدخال كمية جديدة للتعديل.
       var newQuantity = prompt("أدخل الكمية الجديدة:");
       if (newQuantity && parseInt(newQuantity) > 0) {
         firebase.database().ref("products/" + currentCode).update({
@@ -311,46 +309,6 @@
       } else {
         alert("يرجى إدخال رقم صالح للقطع!");
       }
-    }
-
-    // وظائف تحديث الكمية والثمن (في حال أردت استخدامها أثناء التعديل)
-    function updateQuantity() {
-      var quantity = document.getElementById('quantityInput').value;
-      if (quantity && quantity > 0) {
-        firebase.database().ref("products/" + currentCode).update({
-          quantity: parseInt(quantity)
-        })
-        .then(function() {
-          alert("تم تحديث عدد القطع إلى: " + quantity);
-        })
-        .catch(function(error) {
-          alert("فشل التحديث: " + error);
-        });
-      } else {
-        alert("يرجى إدخال رقم صالح للقطع!");
-      }
-    }
-
-    function updatePrice() {
-      var price = document.getElementById('priceInput').value;
-      if (price && price > 0) {
-        firebase.database().ref("products/" + currentCode).update({
-          price: parseFloat(price)
-        })
-        .then(function() {
-          alert("تم تحديث الثمن إلى: " + price);
-        })
-        .catch(function(error) {
-          alert("فشل التحديث: " + error);
-        });
-      } else {
-        alert("يرجى إدخال رقم صالح للثمن!");
-      }
-    }
-
-    function saveChanges() {
-      alert("تم حفظ التغييرات!");
-      closeModal();
     }
 
     window.onclick = function(event) {
