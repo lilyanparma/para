@@ -10,7 +10,7 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
   <!-- تضمين مكتبة html5-qrcode من CDN -->
   <script src="https://unpkg.com/html5-qrcode@2.3.7/minified/html5-qrcode.min.js"></script>
-  <!-- تضمين ملف firebase-setup.js الذي يحتوي على تهيئة Firebase -->
+  <!-- تضمين ملف firebase-setup.js الذي يحتوي على إعدادات Firebase -->
   <script src="firebase-setup.js"></script>
   <style>
     /* تنسيق الصفحة العام */
@@ -55,11 +55,11 @@
     #scanner-container {
       width: 640px;
       height: 480px;
-      margin: 0 auto 20px auto;
+      margin: 20px auto; /* مركزية */
       position: relative;
       border: 2px solid #333;
       background: #000;
-      display: none; /* مخفية افتراضيًا */
+      display: none;
     }
     .scanner-laser {
       position: absolute;
@@ -79,13 +79,12 @@
     /* منطقة المسح الخاصة بـ html5-qrcode */
     #qr-scanner-container {
       width: 640px;
-      margin: 0 auto 20px auto;
-      display: none; /* مخفية افتراضيًا */
+      margin: 20px auto; /* للتوسيط */
+      display: none;
     }
-    
-    /* تنسيق المودال لإجراءات المنتج (يصبح كما هو سابقًا) */
+    /* تنسيق المودال لإجراءات المنتج */
     .modal {
-      display: none; 
+      display: none;
       position: fixed;
       z-index: 1000;
       left: 0;
@@ -171,21 +170,21 @@
     <button class="btn-qr" onclick="startQrScan()">مسح QR Code</button>
   </div>
   
-  <!-- منطقة المسح الخاصة بقراءة الأكواد الخطية -->
+  <!-- منطقة المسح الخاصة بالباركود الخطي -->
   <div id="scanner-container">
     <div class="scanner-laser"></div>
   </div>
   
-  <!-- منطقة المسح الخاصة بقراءة QR Code -->
+  <!-- منطقة المسح الخاصة بالـ QR Code -->
   <div id="qr-scanner-container"></div>
   
-  <!-- مودال إجراءات المنتج (نفس المودال السابق للإجراءات) -->
+  <!-- مودال إجراءات المنتج -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <div class="modal-header">إجراءات المنتج</div>
       <div id="modalActions" class="modal-actions">
-        <!-- تُبنى الإجراءات هنا بواسطة buildModalActions() -->
+        <!-- سيُبنى المحتوى هنا بواسطة buildModalActions() -->
       </div>
       <!-- قسم إدخال الكمية -->
       <div id="quantitySection" style="display:none;">
@@ -201,7 +200,7 @@
           <i class="fas fa-check"></i> حفظ الثمن
         </button>
       </div>
-      <!-- مودال-footer يحتوي على زر حفظ وإلغاء -->
+      <!-- مودال-footer يحتوي على زر حفظ وزر إلغاء -->
       <div class="modal-footer">
         <button class="btn-save" onclick="saveChanges()">
           <i class="fas fa-check"></i> حفظ
@@ -217,6 +216,7 @@
   <script>
     var currentScanMode = null; // "linear" أو "qr"
     var html5QrcodeScanner; // لكائن html5-qrcode
+    var currentBarcode = null; // لتخزين الباركود/QR المستخرج
     
     // إيقاف أي مسح نشط
     function stopScanning() {
@@ -282,17 +282,14 @@
       Quagga.onDetected(function(result) {
         var barcode = result.codeResult.code;
         console.log("تم اكتشاف الباركود: " + barcode);
-        // إيقاف المسح عند الاكتشاف
         stopScanning();
-        // هنا يمكنك التعامل مع الباركود (مثلاً البحث عنه في قاعدة البيانات)
-        // على سبيل المثال: بناء إجراءات المودال واستدعاء buildModalActions() حسب حالة المنتج
-        // للمحاكاة، نستخدم قراءة من Firebase كما شرحت سابقًا:
+        // البحث عن المنتج في Firebase باستخدام الباركود
         firebase.database().ref('products/' + barcode).once('value')
         .then(function(snapshot) {
           var productData = snapshot.val();
-          window.currentBarcode = barcode;
+          currentBarcode = barcode;
           if (productData) {
-            // المنتج موجود؛ تعبئة الحقول إذا رغبت
+            // المنتج موجود، تعبئة البيانات
             document.getElementById("quantityInput").value = productData.quantity || '';
             document.getElementById("priceInput").value = productData.price || '';
             buildModalActions(true);
@@ -304,7 +301,7 @@
           console.error("خطأ أثناء استرجاع المنتج:", error);
         });
         
-        // إزالة المستمع لتفادي التكرار
+        // إزالة المستمع لمنع تكرار الأحداث
         Quagga.offDetected();
       });
     }
@@ -316,47 +313,54 @@
       var qrContainer = document.getElementById("qr-scanner-container");
       qrContainer.style.display = "block";
       
-      // إعداد html5-qrcode
-      html5QrcodeScanner = new Html5Qrcode("qr-scanner-container");
-      html5QrcodeScanner.start(
-        { facingMode: "environment" },
-        {
-          fps: 10,
-          qrbox: 250
-        },
-        function(decodedText, decodedResult) {
-          console.log("تم اكتشاف QR Code: ", decodedText);
-          // إيقاف المسح عند الاكتشاف
-          stopScanning();
-          // تعامل مع النص المستخرج؛ على سبيل المثال:
-          firebase.database().ref('products/' + decodedText).once('value')
-            .then(function(snapshot) {
-              var productData = snapshot.val();
-              window.currentBarcode = decodedText;
-              if (productData) {
-                document.getElementById("quantityInput").value = productData.quantity || '';
-                document.getElementById("priceInput").value = productData.price || '';
-                buildModalActions(true);
-              } else {
-                buildModalActions(false);
-              }
-              document.getElementById("productModal").style.display = "block";
-            }).catch(function(error) {
-              console.error("خطأ أثناء استرجاع المنتج:", error);
-            });
-        },
-        function(errorMessage) {
-          // يمكن تجاهل الأخطاء هنا أو تسجيلها
-          console.warn("QR Code scanning error: ", errorMessage);
+      Html5Qrcode.getCameras().then(cameras => {
+        if (cameras && cameras.length) {
+          var cameraId = cameras[0].id;
+          html5QrcodeScanner = new Html5Qrcode("qr-scanner-container");
+          html5QrcodeScanner.start(
+            cameraId,
+            {
+              fps: 10,
+              qrbox: 250
+            },
+            (decodedText, decodedResult) => {
+              console.log("تم اكتشاف QR Code: ", decodedText);
+              stopScanning();
+              // البحث عن المنتج في Firebase باستخدام النص المستخرج
+              firebase.database().ref('products/' + decodedText).once('value')
+              .then(function(snapshot) {
+                var productData = snapshot.val();
+                currentBarcode = decodedText;
+                if (productData) {
+                  document.getElementById("quantityInput").value = productData.quantity || '';
+                  document.getElementById("priceInput").value = productData.price || '';
+                  buildModalActions(true);
+                } else {
+                  buildModalActions(false);
+                }
+                document.getElementById("productModal").style.display = "block";
+              }).catch(function(error) {
+                console.error("خطأ أثناء استرجاع المنتج:", error);
+              });
+            },
+            (errorMessage) => {
+              console.warn("QR Code scanning error: ", errorMessage);
+            }
+          ).catch(function(err) {
+            console.error("خطأ عند بدء QR scanner:", err);
+            alert("حدث خطأ أثناء فتح الكاميرا لـ QR Code");
+            stopScanning();
+          });
+        } else {
+          alert("لم يتم العثور على كاميرا!");
         }
-      ).catch(function(err){
-        console.error("خطأ عند بدء QR scanner:", err);
-        alert("حدث خطأ أثناء فتح الكاميرا لـ QR Code");
-        stopScanning();
+      }).catch(err => {
+        console.error("خطأ في الحصول على الكاميرات:", err);
+        alert("حدث خطأ أثناء الوصول إلى الكاميرا!");
       });
     }
     
-    // دالة لبناء الإجراءات في المودال استنادًا إلى حالة وجود المنتج
+    // بناء إجراءات المودال استنادًا إلى حالة وجود المنتج
     function buildModalActions(productExists) {
       var modalActions = document.getElementById('modalActions');
       modalActions.innerHTML = '';
@@ -374,7 +378,7 @@
       }
     }
     
-    // دالة إغلاق المودال وإعادة تعيين القيم
+    // دوال إغلاق المودال
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
       document.getElementById('quantitySection').style.display = 'none';
@@ -391,7 +395,7 @@
         alert("يرجى إدخال الكمية والثمن!");
         return;
       }
-      firebase.database().ref('products/' + window.currentBarcode).set({
+      firebase.database().ref('products/' + currentBarcode).set({
         quantity: quantity,
         price: price
       }).then(function(){
@@ -405,7 +409,7 @@
     
     function deleteProduct() {
       if (!confirm("هل أنت متأكد من حذف المنتج؟")) return;
-      firebase.database().ref('products/' + window.currentBarcode).remove()
+      firebase.database().ref('products/' + currentBarcode).remove()
       .then(function() {
         alert("تم حذف المنتج!");
         closeModal();
@@ -417,14 +421,14 @@
     
     function editProduct() {
       alert("يمكنك تعديل المنتج من خلال حفظ التغييرات بعد تعديل الكمية والثمن.");
-      // يُمكنك تنفيذ عمليات معينة هنا حسب احتياجات التطبيق.
+      // هنا يمكنك إضافة منطق إضافي إذا أردت التعامل مع التعديل بشكل مختلف.
     }
     
     function returnProduct() {
-      firebase.database().ref('products/' + window.currentBarcode + '/quantity').once('value')
+      firebase.database().ref('products/' + currentBarcode + '/quantity').once('value')
       .then(snapshot => {
         var currentQty = snapshot.val() || 0;
-        return firebase.database().ref('products/' + window.currentBarcode).update({
+        return firebase.database().ref('products/' + currentBarcode).update({
           quantity: currentQty + 1
         });
       }).then(() => {
@@ -440,7 +444,7 @@
         alert("يرجى إدخال رقم صالح للكمية!");
         return;
       }
-      firebase.database().ref('products/' + window.currentBarcode).update({ quantity: quantity })
+      firebase.database().ref('products/' + currentBarcode).update({ quantity: quantity })
       .then(() => { alert("تم تحديث الكمية!"); })
       .catch(err => { console.error(err); });
     }
@@ -451,7 +455,7 @@
         alert("يرجى إدخال رقم صالح للثمن!");
         return;
       }
-      firebase.database().ref('products/' + window.currentBarcode).update({ price: price })
+      firebase.database().ref('products/' + currentBarcode).update({ price: price })
       .then(() => { alert("تم تحديث الثمن!"); })
       .catch(err => { console.error(err); });
     }
