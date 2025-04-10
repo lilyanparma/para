@@ -3,25 +3,24 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>مشروع Pharmacy System</title>
+  <title>منتجات - قارئ الباركود والـ QR باستخدام ZXing</title>
 
   <!-- تحميل مكتبات Firebase من CDN -->
-  <!-- تحميل الملف الأساسي -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
-  <!-- تحميل مكتبة Analytics -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
-  <!-- تحميل مكتبة Realtime Database -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-
-  <!-- تحميل باقي المكتبات (مثل QuaggaJS و jsQR) لوحدة قراءة الباركود والـ QR -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
-  <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
+  
+  <!-- تحميل مكتبة ZXing لمسح الأكواد -->
+  <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
+  
+  <!-- تحميل مكتبة Font Awesome للأيقونات -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   
   <style>
-    /* التنسيق الأساسي للصفحة */
+    /* تنسيق الصفحة العام */
     body {
       font-family: Arial, sans-serif;
       direction: rtl;
@@ -35,7 +34,7 @@
     }
     button {
       display: block;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 20px;
       padding: 10px 20px;
       font-size: 16px;
       background-color: #007BFF;
@@ -47,30 +46,22 @@
     button:hover {
       background-color: #0056b3;
     }
+    /* منطقة عرض الكاميرا */
     #scanner-container {
       display: none;
       width: 300px;
       height: 300px;
-      margin: 0 auto 20px auto;
+      margin: 0 auto 20px;
       position: relative;
       border: 2px solid #333;
       background: #000;
       overflow: hidden;
     }
-    .scanner-laser {
-      position: absolute;
-      left: 0;
-      top: 0;
+    /* جعل فيديو الكاميرا يغطي كامل المنطقة */
+    #scanner-container video {
       width: 100%;
-      height: 2px;
-      background: red;
-      opacity: 0.7;
-      animation: laserAnimation 1s infinite;
-    }
-    @keyframes laserAnimation {
-      0%   { transform: translateY(0px); opacity: 0.7; }
-      50%  { transform: translateY(150px); opacity: 1; }
-      100% { transform: translateY(298px); opacity: 0.7; }
+      height: 100%;
+      object-fit: cover;
     }
     /* تنسيق المودال لإجراءات المنتج */
     .modal {
@@ -122,8 +113,7 @@
     .btn-return { background-color: #17a2b8; color: white; }
     .btn-quantity { background-color: #6c757d; color: white; }
     .btn-price { background-color: #007BFF; color: white; }
-    .quantity-input,
-    .price-input {
+    .quantity-input, .price-input {
       padding: 10px;
       font-size: 16px;
       width: 80%;
@@ -152,12 +142,12 @@
   </style>
 </head>
 <body>
-  <h1>منتجات - قارئ الباركود والـ QR</h1>
+  <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
   <button onclick="startScan()">ابدأ المسح</button>
   
   <!-- منطقة عرض الكاميرا -->
   <div id="scanner-container">
-    <div class="scanner-laser"></div>
+    <video id="video" autoplay></video>
   </div>
   
   <!-- مودال إجراءات المنتج -->
@@ -180,99 +170,45 @@
       </div>
     </div>
   </div>
-  
-  <!-- كود الجافاسكريبت المشترك لقراءة الباركود والـ QR والتعامل مع Firebase -->
+
+  <!-- كود الجافاسكريبت الكامل -->
   <script>
-    // متغير لتخزين الكود (باركود أو QR) المكتشف
+    // متغير لتخزين الكود المكتشف
     var currentCode = "";
-    var scanCompleted = false;
-    var qrScanInterval;
-    
-    // دالة بدء عملية المسح
+    // كائن قارئ الأكواد من ZXing
+    var codeReader = null;
+
+    // دالة بدء عملية المسح باستخدام ZXing
     function startScan() {
-      scanCompleted = false;
+      currentCode = "";
       document.getElementById("scanner-container").style.display = "block";
       
-      // إعداد QuaggaJS لقراءة الباركود 1D
-      Quagga.init({
-        inputStream: {
-          name: "Live",
-          type: "LiveStream",
-          target: document.querySelector('#scanner-container'),
-          constraints: { width: 300, height: 300, facingMode: "environment" }
-        },
-        decoder: {
-          readers: [
-            "code_128_reader",
-            "ean_reader",
-            "ean_8_reader",
-            "upc_reader",
-            "upc_e_reader",
-            "code_39_reader",
-            "code_39_vin_reader",
-            "codabar_reader",
-            "i2of5_reader",
-            "2of5_reader"
-          ]
-        }
-      }, function(err) {
-          if (err) {
-              console.error(err);
-              alert("حدث خطأ أثناء فتح الكاميرا");
-              document.getElementById("scanner-container").style.display = "none";
-              return;
-          }
-          Quagga.start();
-      });
-      
-      Quagga.onDetected(function(result) {
-          if (scanCompleted) return;
-          currentCode = result.codeResult.code;
-          console.log("تم اكتشاف الباركود: " + currentCode);
-          scanCompleted = true;
-          stopScanners();
+      // إنشاء قارئ الأكواد باستخدام ZXing
+      codeReader = new ZXing.BrowserMultiFormatReader();
+
+      // بدء قراءة الكود من الجهاز (إذا كان null يتم طلب اختيار الجهاز الافتراضي)
+      codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
+        if (result) {
+          currentCode = result.getText();
+          console.log("تم اكتشاف الكود: " + currentCode);
+          stopScanner();
           processCode();
-      });
-      
-      // بدء مسح رموز QR باستخدام jsQR
-      startQRScan();
-    }
-    
-    // دالة بدء مسح رموز QR من خلال التقاط إطار من فيديو QuaggaJS
-    function startQRScan() {
-      var video = document.querySelector('#scanner-container video');
-      if (!video) {
-        setTimeout(startQRScan, 500);
-        return;
-      }
-      var canvasElement = document.createElement("canvas");
-      var canvas = canvasElement.getContext("2d", { willReadFrequently: true });
-      qrScanInterval = setInterval(function() {
-        if (video.readyState === video.HAVE_ENOUGH_DATA) {
-          canvasElement.width = video.videoWidth;
-          canvasElement.height = video.videoHeight;
-          canvas.drawImage(video, 0, 0, canvasElement.width, canvasElement.height);
-          var imageData = canvas.getImageData(0, 0, canvasElement.width, canvasElement.height);
-          var code = jsQR(imageData.data, imageData.width, imageData.height);
-          if (code && !scanCompleted) {
-            currentCode = code.data;
-            console.log("تم اكتشاف رمز QR: " + currentCode);
-            scanCompleted = true;
-            stopScanners();
-            processCode();
-          }
         }
-      }, 500);
+        if (err && !(err instanceof ZXing.NotFoundException)) {
+          console.error(err);
+        }
+      });
     }
-    
-    // دالة إيقاف عمليات المسح
-    function stopScanners() {
-      Quagga.stop();
-      clearInterval(qrScanInterval);
+
+    // دالة لإيقاف عملية المسح
+    function stopScanner() {
+      if (codeReader) {
+        codeReader.reset();
+      }
       document.getElementById("scanner-container").style.display = "none";
     }
-    
-    // دالة لمعالجة الكود المكتشف والبحث عنه في Firebase
+
+    // دالة لمعالجة الكود المكتشف والبحث عنه في Firebase (Realtime Database)
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
@@ -285,8 +221,8 @@
           alert("حدث خطأ أثناء الاتصال بقاعدة البيانات");
         });
     }
-    
-    // بناء إجراءات المودال بناءً على وجود المنتج
+
+    // بناء واجهة الإجراءات بناءً على وجود المنتج
     function buildModalActions(productExists) {
       var modalActions = document.getElementById('modalActions');
       modalActions.innerHTML = '';
@@ -302,7 +238,7 @@
         document.getElementById('priceSection').style.display = 'block';
       }
     }
-    
+
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
       document.getElementById('quantitySection').style.display = 'none';
@@ -310,7 +246,7 @@
       document.getElementById('quantityInput').value = '';
       document.getElementById('priceInput').value = '';
     }
-    
+
     // دوال التعامل مع المنتجات على Firebase باستخدام Realtime Database
     function addProduct() {
       firebase.database().ref("products/" + currentCode).set({
@@ -326,7 +262,7 @@
         alert("فشل إضافة المنتج: " + error);
       });
     }
-    
+
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
       .then(function() {
@@ -337,7 +273,7 @@
         alert("فشل حذف المنتج: " + error);
       });
     }
-    
+
     function editProduct() {
       var quantity = document.getElementById('quantityInput').value;
       if (quantity && quantity > 0) {
@@ -355,12 +291,12 @@
         alert("يرجى إدخال رقم صالح للقطع!");
       }
     }
-    
+
     function returnProduct() {
       alert("تم إرجاع المنتج!");
       closeModal();
     }
-    
+
     function updateQuantity() {
       var quantity = document.getElementById('quantityInput').value;
       if (quantity && quantity > 0) {
@@ -377,7 +313,7 @@
         alert("يرجى إدخال رقم صالح للقطع!");
       }
     }
-    
+
     function updatePrice() {
       var price = document.getElementById('priceInput').value;
       if (price && price > 0) {
@@ -394,12 +330,12 @@
         alert("يرجى إدخال رقم صالح للثمن!");
       }
     }
-    
+
     function saveChanges() {
       alert("تم حفظ التغييرات!");
       closeModal();
     }
-    
+
     window.onclick = function(event) {
       var modal = document.getElementById('productModal');
       if (event.target == modal) {
