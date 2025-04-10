@@ -14,33 +14,69 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    /* تنسيق الجدول */
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-bottom: 20px;
-    }
-    table, th, td {
+    /* تنسيق بطاقة الخدمة */
+    .service-card {
       border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      overflow: hidden;
     }
-    th, td {
+    /* حاوية اسم الخدمة مع تمييز اللون */
+    .service-header {
+      background-color: #f2f2f2;
       padding: 10px;
+      font-weight: bold;
       text-align: center;
     }
-    th {
-      background-color: #f2f2f2;
+    /* باقي بيانات الخدمة */
+    .service-info {
+      padding: 10px;
     }
-    /* حقول الإدخال في صف الإضافة */
-    input[type="text"],
-    input[type="date"],
-    input[type="number"] {
-      width: 90%;
-      padding: 5px;
+    .service-info p {
       margin: 5px 0;
-      box-sizing: border-box;
     }
-    .btn-add {
-      background-color: #28a745;
+    /* تنسيق نموذج الإدخال */
+    .form-container {
+      max-width: 600px;
+      margin: 0 auto 30px;
+      padding: 20px;
+      border: 1px solid #ccc;
+      border-radius: 10px;
+    }
+    /* شريط العناوين فوق حقول الإدخال */
+    .header-row {
+      display: flex;
+      justify-content: space-between;
+      background-color: #f2f2f2;
+      padding: 8px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 10px;
+      text-align: center;
+    }
+    .header-row span {
+      flex: 1;
+      font-weight: bold;
+    }
+    .form-container label {
+      display: block;
+      font-weight: bold;
+      margin: 8px 0 4px;
+    }
+    .form-container input {
+      width: 100%;
+      padding: 8px;
+      box-sizing: border-box;
+      margin-bottom: 10px;
+    }
+    /* حاوية الأزرار لتوزيعهم جنبًا إلى جنب */
+    .button-group {
+      display: flex;
+      justify-content: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .btn-add, .btn-edit-service {
       border: none;
       padding: 8px 15px;
       color: #fff;
@@ -48,26 +84,21 @@
       cursor: pointer;
       font-size: 16px;
     }
+    .btn-add {
+      background-color: #28a745;
+    }
     .btn-add:hover {
       background-color: #218838;
     }
-    /* زر تعديل الخدمة الخارجي */
     .btn-edit-service {
       background-color: #007BFF;
-      color: #fff;
-      border: none;
-      padding: 10px 20px;
-      border-radius: 5px;
-      cursor: pointer;
-      font-size: 16px;
-      margin-bottom: 20px;
     }
     .btn-edit-service:hover {
       background-color: #0056b3;
     }
-    /* نمط المودال (للبحث وتعديل الخدمة) */
+    /* تنسيق المودال (للبحث وتعديل الخدمة) */
     .modal {
-      display: none;  /* مخفي افتراضيًا */
+      display: none;
       position: fixed;
       z-index: 1000;
       left: 0;
@@ -95,10 +126,13 @@
       font-size: 24px;
       cursor: pointer;
     }
-    /* تنسيق النماذج داخل المودال */
-    .modal-content input[type="text"],
-    .modal-content input[type="date"],
-    .modal-content input[type="number"] {
+    /* تنسيق المدخلات داخل المودال */
+    .modal-content label {
+      display: block;
+      font-weight: bold;
+      margin: 8px 0 4px;
+    }
+    .modal-content input {
       width: 90%;
       padding: 8px;
       margin: 8px 0;
@@ -122,34 +156,34 @@
 <body>
   <h1>خدمات إضافية</h1>
   
-  <!-- زر تعديل الخدمة (للبحث وتعديل سجل موجود) -->
-  <button class="btn-edit-service" onclick="openEditModal()">تعديل خدمة</button>
+  <!-- نموذج إضافة خدمة جديدة -->
+  <div class="form-container">
+    <!-- شريط العناوين فوق الحقول -->
+    <div class="header-row">
+      <span>اسم الخدمة</span>
+      <span>التاريخ</span>
+      <span>الثمن</span>
+    </div>
+    
+    <!-- حقول الإدخال -->
+    <label for="serviceName">أدخل اسم الخدمة:</label>
+    <input type="text" id="serviceName" placeholder="مثال: تنظيف">
+    
+    <label for="serviceDate">أدخل التاريخ:</label>
+    <input type="date" id="serviceDate">
+    
+    <label for="servicePrice">أدخل الثمن:</label>
+    <input type="number" id="servicePrice" placeholder="مثال: 100">
+    
+    <!-- حاوية الأزرار -->
+    <div class="button-group">
+      <button class="btn-add" onclick="addService()">أضف الخدمة</button>
+      <button class="btn-edit-service" onclick="openEditModal()">تعديل خدمة</button>
+    </div>
+  </div>
   
-  <!-- جدول عرض الخدمات -->
-  <table id="servicesTable">
-    <thead>
-      <tr>
-        <th>اسم الخدمة</th>
-        <th>التاريخ</th>
-        <th>الثمن</th>
-      </tr>
-    </thead>
-    <tbody>
-      <!-- سيتم إضافة الصفوف عند الضغط على "أضف الخدمة" -->
-    </tbody>
-    <tfoot>
-      <tr>
-        <td><input type="text" id="serviceName" placeholder="أدخل اسم الخدمة"></td>
-        <td><input type="date" id="serviceDate"></td>
-        <td><input type="number" id="servicePrice" placeholder="أدخل الثمن"></td>
-      </tr>
-      <tr>
-        <td colspan="3">
-          <button class="btn-add" onclick="addService()">أضف الخدمة</button>
-        </td>
-      </tr>
-    </tfoot>
-  </table>
+  <!-- حاوية عرض الخدمات -->
+  <div id="servicesContainer"></div>
   
   <!-- مودال تعديل الخدمة -->
   <div id="editModal" class="modal">
@@ -162,9 +196,15 @@
       
       <!-- نموذج تحرير بيانات الخدمة (يظهر عند إيجاد الخدمة) -->
       <div id="editForm" style="display:none; margin-top: 20px;">
+        <label for="editName">اسم الخدمة:</label>
         <input type="text" id="editName" placeholder="اسم الخدمة">
+        
+        <label for="editDate">التاريخ:</label>
         <input type="date" id="editDate">
+        
+        <label for="editPrice">الثمن:</label>
         <input type="number" id="editPrice" placeholder="الثمن">
+        
         <div style="margin-top: 15px;">
           <button onclick="saveEdit()">حفظ</button>
           <button class="btn-cancel" onclick="closeEditModal()">إلغاء</button>
@@ -174,7 +214,7 @@
   </div>
   
   <script>
-    // دالة إضافة خدمة جديدة إلى الجدول
+    // وظيفة إضافة خدمة جديدة: إنشاء بطاقة تعرض البيانات مع حاوية خاصة باسم الخدمة
     function addService() {
       var name = document.getElementById('serviceName').value;
       var date = document.getElementById('serviceDate').value;
@@ -185,16 +225,25 @@
         return;
       }
       
-      var tableBody = document.getElementById('servicesTable').getElementsByTagName('tbody')[0];
-      var newRow = tableBody.insertRow();
+      var servicesContainer = document.getElementById('servicesContainer');
+      var serviceCard = document.createElement('div');
+      serviceCard.className = 'service-card';
       
-      var cell1 = newRow.insertCell(0);
-      var cell2 = newRow.insertCell(1);
-      var cell3 = newRow.insertCell(2);
+      // إنشاء حاوية الاسم مع لون تمييز
+      var header = document.createElement('div');
+      header.className = 'service-header';
+      header.textContent = name;
       
-      cell1.textContent = name;
-      cell2.textContent = date;
-      cell3.textContent = price;
+      // إنشاء حاوية المعلومات لبقية الحقول
+      var info = document.createElement('div');
+      info.className = 'service-info';
+      info.innerHTML = '<p><strong>التاريخ:</strong> ' + date + '</p>' +
+                       '<p><strong>الثمن:</strong> ' + price + '</p>';
+      
+      // تجميع البطاقة
+      serviceCard.appendChild(header);
+      serviceCard.appendChild(info);
+      servicesContainer.appendChild(serviceCard);
       
       // إعادة تعيين الحقول
       document.getElementById('serviceName').value = '';
@@ -205,7 +254,6 @@
     // فتح مودال تعديل الخدمة
     function openEditModal() {
       document.getElementById('editModal').style.display = 'block';
-      // إعادة تعيين الحقول في مودال البحث
       document.getElementById('searchServiceName').value = '';
       document.getElementById('editForm').style.display = 'none';
     }
@@ -215,7 +263,7 @@
       document.getElementById('editModal').style.display = 'none';
     }
     
-    // البحث عن الخدمة في الجدول بناءً على الاسم
+    // البحث عن الخدمة في بطاقات العرض باستخدام الاسم (من حاوية header)
     function searchService() {
       var searchName = document.getElementById('searchServiceName').value.trim().toLowerCase();
       if (searchName === '') {
@@ -223,26 +271,33 @@
         return;
       }
       
-      var tableBody = document.getElementById('servicesTable').getElementsByTagName('tbody')[0];
-      var rows = tableBody.getElementsByTagName('tr');
-      var foundRow = null;
+      var servicesContainer = document.getElementById('servicesContainer');
+      var serviceCards = servicesContainer.getElementsByClassName('service-card');
+      var foundCard = null;
       
-      // البحث عن الصف الذي يحتوي على اسم الخدمة المطابق
-      for (var i = 0; i < rows.length; i++) {
-        var cellText = rows[i].cells[0].textContent.trim().toLowerCase();
-        if (cellText === searchName) {
-          foundRow = rows[i];
+      // البحث من خلال مقارنة النص الموجود في حاوية header
+      for (var i = 0; i < serviceCards.length; i++) {
+        var headerText = serviceCards[i].getElementsByClassName('service-header')[0].textContent.toLowerCase();
+        if (headerText === searchName) {
+          foundCard = serviceCards[i];
           break;
         }
       }
       
-      if (foundRow) {
-        // تعبئة نموذج التعديل بالبيانات الحالية للصف
-        document.getElementById('editName').value = foundRow.cells[0].textContent;
-        document.getElementById('editDate').value = foundRow.cells[1].textContent;
-        document.getElementById('editPrice').value = foundRow.cells[2].textContent;
-        // تخزين الصف المرجعي للإصدار في متغير عام
-        window.currentEditRow = foundRow;
+      if (foundCard) {
+        // تعبئة نموذج التعديل بالبيانات من البطاقة
+        var header = foundCard.getElementsByClassName('service-header')[0];
+        var infoParagraphs = foundCard.getElementsByClassName('service-info')[0].getElementsByTagName('p');
+        var currentName = header.textContent;
+        var currentDate = infoParagraphs[0].textContent.split(':')[1].trim();
+        var currentPrice = infoParagraphs[1].textContent.split(':')[1].trim();
+        
+        document.getElementById('editName').value = currentName;
+        document.getElementById('editDate').value = currentDate;
+        document.getElementById('editPrice').value = currentPrice;
+        
+        // تخزين البطاقة الحالية للتعديل
+        window.currentEditCard = foundCard;
         document.getElementById('editForm').style.display = 'block';
       } else {
         alert("الخدمة غير موجودة!");
@@ -250,9 +305,9 @@
       }
     }
     
-    // حفظ التعديلات على الخدمة
+    // حفظ التعديلات على الخدمة المحددة
     function saveEdit() {
-      if (!window.currentEditRow) return;
+      if (!window.currentEditCard) return;
       
       var newName = document.getElementById('editName').value;
       var newDate = document.getElementById('editDate').value;
@@ -263,11 +318,11 @@
         return;
       }
       
-      // تحديث بيانات الصف في الجدول
-      window.currentEditRow.cells[0].textContent = newName;
-      window.currentEditRow.cells[1].textContent = newDate;
-      window.currentEditRow.cells[2].textContent = newPrice;
-      
+      // تحديث حاوية الاسم
+      window.currentEditCard.getElementsByClassName('service-header')[0].textContent = newName;
+      // تحديث معلومات التاريخ والثمن
+      window.currentEditCard.getElementsByClassName('service-info')[0].innerHTML = '<p><strong>التاريخ:</strong> ' + newDate + '</p>' +
+                                                                                    '<p><strong>الثمن:</strong> ' + newPrice + '</p>';
       alert("تم حفظ التعديلات!");
       closeEditModal();
     }
