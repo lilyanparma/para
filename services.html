@@ -96,6 +96,19 @@
     .btn-edit-service:hover {
       background-color: #0056b3;
     }
+    /* تنسيق زر الحذف */
+    .btn-delete {
+      background-color: #dc3545;
+      border: none;
+      padding: 10px 15px;
+      color: #fff;
+      border-radius: 5px;
+      cursor: pointer;
+      font-size: 16px;
+    }
+    .btn-delete:hover {
+      background-color: #c82333;
+    }
     /* تنسيق المودال (للبحث وتعديل الخدمة) */
     .modal {
       display: none;
@@ -152,6 +165,7 @@
       background-color: #dc3545;
     }
   </style>
+  
   <!-- تضمين مكتبات Firebase عبر CDN -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
@@ -213,6 +227,7 @@
         <div style="margin-top: 15px;">
           <button onclick="saveEdit()">حفظ</button>
           <button class="btn-cancel" onclick="closeEditModal()">إلغاء</button>
+          <button class="btn-delete" onclick="deleteService()">حذف</button>
         </div>
       </div>
     </div>
@@ -242,7 +257,7 @@
         
         serviceCard.appendChild(header);
         serviceCard.appendChild(info);
-        // تخزين مفتاح firebase للعنصر لتسهيل التعديل لاحقًا
+        // تخزين مفتاح Firebase للعنصر لتسهيل التعديل والحذف لاحقًا
         serviceCard.setAttribute('data-key', key);
         
         servicesContainer.appendChild(serviceCard);
@@ -260,7 +275,6 @@
         return;
       }
       
-      // دفع البيانات إلى Firebase تحت مسار "services"
       firebase.database().ref('services').push({
         name: name,
         date: date,
@@ -277,17 +291,19 @@
       });
     }
     
-    // دوال التعديل
+    // فتح مودال تعديل الخدمة
     function openEditModal() {
       document.getElementById('editModal').style.display = 'block';
       document.getElementById('searchServiceName').value = '';
       document.getElementById('editForm').style.display = 'none';
     }
     
+    // إغلاق مودال تعديل الخدمة
     function closeEditModal() {
       document.getElementById('editModal').style.display = 'none';
     }
     
+    // دالة البحث عن الخدمة
     function searchService() {
       var searchName = document.getElementById('searchServiceName').value.trim().toLowerCase();
       if (searchName === '') {
@@ -318,7 +334,7 @@
         document.getElementById('editDate').value = currentDate;
         document.getElementById('editPrice').value = currentPrice;
         
-        // تخزين مفتاح الخدمة لتحديثها لاحقًا
+        // تخزين مفتاح الخدمة لتحديثها أو حذفها لاحقًا
         window.currentKey = foundCard.getAttribute('data-key');
         document.getElementById('editForm').style.display = 'block';
       } else {
@@ -327,6 +343,7 @@
       }
     }
     
+    // دالة حفظ التعديلات على الخدمة
     function saveEdit() {
       if (!window.currentKey) {
         alert("لم يتم تحديد الخدمة للتعديل!");
@@ -342,7 +359,6 @@
         return;
       }
       
-      // تحديث بيانات الخدمة في Firebase باستخدام المفتاح الحالي
       firebase.database().ref('services/' + window.currentKey).update({
         name: newName,
         date: newDate,
@@ -353,6 +369,28 @@
       }).catch(function(error){
         console.error("خطأ في تحديث الخدمة:", error);
         alert("حدث خطأ أثناء حفظ التعديلات!");
+      });
+    }
+    
+    // دالة حذف الخدمة
+    function deleteService() {
+      if (!window.currentKey) {
+        alert("لم يتم تحديد الخدمة للحذف!");
+        return;
+      }
+      
+      if (!confirm("هل أنت متأكد من حذف الخدمة؟")) {
+        return;
+      }
+      
+      firebase.database().ref('services/' + window.currentKey).remove()
+      .then(function() {
+        alert("تم حذف الخدمة!");
+        closeEditModal();
+      })
+      .catch(function(error) {
+        console.error("خطأ في حذف الخدمة:", error);
+        alert("حدث خطأ أثناء حذف الخدمة!");
       });
     }
   </script>
