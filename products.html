@@ -3,21 +3,20 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>صفحة المنتجات - قارئ الباركود والـ QR</title>
-  <!-- أيقونات Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  
-  <!-- تحميل مكتبات Firebase -->
+  <title>مشروع Pharmacy System</title>
+
+  <!-- تحميل مكتبات Firebase من CDN -->
+  <!-- تحميل الملف الأساسي -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <!-- تحميل مكتبة Analytics -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
-  <!-- تحميل مكتبة Firestore (أو أي خدمة أخرى تحتاجها) -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-firestore.js"></script>
+  <!-- تحميل مكتبة Realtime Database -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
   
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-  
-  <!-- تحميل مكتبات قراءة الباركود والـ QR -->
+
+  <!-- تحميل باقي المكتبات (مثل QuaggaJS و jsQR) لوحدة قراءة الباركود والـ QR -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/quagga/0.12.1/quagga.min.js"></script>
   <script src="https://unpkg.com/jsqr/dist/jsQR.js"></script>
   
@@ -30,7 +29,10 @@
       padding: 20px;
       background: #f5f5f5;
     }
-    h1 { text-align: center; margin-bottom: 20px; }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
     button {
       display: block;
       margin: 0 auto 20px auto;
@@ -42,7 +44,9 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover { background-color: #0056b3; }
+    button:hover {
+      background-color: #0056b3;
+    }
     #scanner-container {
       display: none;
       width: 300px;
@@ -68,7 +72,7 @@
       50%  { transform: translateY(150px); opacity: 1; }
       100% { transform: translateY(298px); opacity: 0.7; }
     }
-    /* تنسيق المودال */
+    /* تنسيق المودال لإجراءات المنتج */
     .modal {
       display: none;
       position: fixed;
@@ -78,7 +82,7 @@
       width: 100%;
       height: 100%;
       overflow: auto;
-      background-color: rgba(0, 0, 0, 0.5);
+      background-color: rgba(0,0,0,0.5);
     }
     .modal-content {
       background-color: #fefefe;
@@ -98,7 +102,10 @@
       font-size: 24px;
       cursor: pointer;
     }
-    .modal-header { font-size: 20px; margin-bottom: 15px; }
+    .modal-header {
+      font-size: 20px;
+      margin-bottom: 15px;
+    }
     .modal-actions button {
       display: block;
       width: 100%;
@@ -176,7 +183,7 @@
   
   <!-- كود الجافاسكريبت المشترك لقراءة الباركود والـ QR والتعامل مع Firebase -->
   <script>
-    // متغير لتخزين الكود (باركود أو QR) الذي تم اكتشافه
+    // متغير لتخزين الكود (باركود أو QR) المكتشف
     var currentCode = "";
     var scanCompleted = false;
     var qrScanInterval;
@@ -231,7 +238,7 @@
       startQRScan();
     }
     
-    // الدالة التي تستخدم jsQR لمسح رموز QR من تيار الفيديو
+    // دالة بدء مسح رموز QR من خلال التقاط إطار من فيديو QuaggaJS
     function startQRScan() {
       var video = document.querySelector('#scanner-container video');
       if (!video) {
@@ -239,7 +246,7 @@
         return;
       }
       var canvasElement = document.createElement("canvas");
-      var canvas = canvasElement.getContext("2d");
+      var canvas = canvasElement.getContext("2d", { willReadFrequently: true });
       qrScanInterval = setInterval(function() {
         if (video.readyState === video.HAVE_ENOUGH_DATA) {
           canvasElement.width = video.videoWidth;
@@ -258,18 +265,18 @@
       }, 500);
     }
     
-    // إيقاف كل من QuaggaJS والـ QR Scan
+    // دالة إيقاف عمليات المسح
     function stopScanners() {
       Quagga.stop();
       clearInterval(qrScanInterval);
       document.getElementById("scanner-container").style.display = "none";
     }
     
-    // معالجة الكود المستلم والبحث عنه في Firebase
+    // دالة لمعالجة الكود المكتشف والبحث عنه في Firebase
     function processCode() {
-      firebase.firestore().collection("products").doc(currentCode).get()
-        .then(function(doc) {
-          var productExists = doc.exists;
+      firebase.database().ref("products/" + currentCode).once('value')
+        .then(function(snapshot) {
+          var productExists = snapshot.exists();
           buildModalActions(productExists);
           document.getElementById("productModal").style.display = "block";
         })
@@ -279,7 +286,7 @@
         });
     }
     
-    // بناء واجهة الإجراءات بناءً على وجود المنتج
+    // بناء إجراءات المودال بناءً على وجود المنتج
     function buildModalActions(productExists) {
       var modalActions = document.getElementById('modalActions');
       modalActions.innerHTML = '';
@@ -304,9 +311,9 @@
       document.getElementById('priceInput').value = '';
     }
     
-    // دوال التعامل مع المنتجات على Firebase
+    // دوال التعامل مع المنتجات على Firebase باستخدام Realtime Database
     function addProduct() {
-      firebase.firestore().collection("products").doc(currentCode).set({
+      firebase.database().ref("products/" + currentCode).set({
         code: currentCode,
         quantity: 1,
         price: 0
@@ -321,7 +328,7 @@
     }
     
     function deleteProduct() {
-      firebase.firestore().collection("products").doc(currentCode).delete()
+      firebase.database().ref("products/" + currentCode).remove()
       .then(function() {
         alert("تم حذف المنتج!");
         closeModal();
@@ -334,7 +341,7 @@
     function editProduct() {
       var quantity = document.getElementById('quantityInput').value;
       if (quantity && quantity > 0) {
-        firebase.firestore().collection("products").doc(currentCode).update({
+        firebase.database().ref("products/" + currentCode).update({
           quantity: parseInt(quantity)
         })
         .then(function() {
@@ -357,7 +364,7 @@
     function updateQuantity() {
       var quantity = document.getElementById('quantityInput').value;
       if (quantity && quantity > 0) {
-        firebase.firestore().collection("products").doc(currentCode).update({
+        firebase.database().ref("products/" + currentCode).update({
           quantity: parseInt(quantity)
         })
         .then(function() {
@@ -374,7 +381,7 @@
     function updatePrice() {
       var price = document.getElementById('priceInput').value;
       if (price && price > 0) {
-        firebase.firestore().collection("products").doc(currentCode).update({
+        firebase.database().ref("products/" + currentCode).update({
           price: parseFloat(price)
         })
         .then(function() {
