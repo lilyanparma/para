@@ -145,9 +145,16 @@
     .btn-save { background-color: #28a745; color: white; }
     .btn-cancel { background-color: #dc3545; color: white; }
   </style>
+  
+  <!-- تضمين مكتبات Firebase -->
+  <!-- تأكد من تضمين ملف firebase-setup.js الذي يحتوي إعدادات التهيئة -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
+  <script src="firebase-setup.js"></script>
 </head>
 <body>
   <h1>منتجات - قارئ الباركود</h1>
+  
   <!-- زر بدء المسح -->
   <button onclick="startScan()">ابدأ المسح</button>
   
@@ -167,18 +174,14 @@
       <!-- قسم إدخال الكمية (يظهر إذا كان المنتج موجوداً) -->
       <div id="quantitySection" style="display:none;">
         <input type="number" class="quantity-input" id="quantityInput" placeholder="ادخل عدد القطع">
-        <button class="btn-quantity" onclick="updateQuantity()">
-          <i class="fas fa-check"></i> حفظ الكمية
-        </button>
+        <!-- يمكن حفظ الكمية ضمن حفظ التغييرات -->
       </div>
       <!-- قسم إدخال الثمن (يظهر تحت قسم الكمية) -->
       <div id="priceSection" style="display:none;">
         <input type="number" class="price-input" id="priceInput" placeholder="ادخل الثمن">
-        <button class="btn-price" onclick="updatePrice()">
-          <i class="fas fa-check"></i> حفظ الثمن
-        </button>
+        <!-- يمكن حفظ الثمن ضمن حفظ التغييرات -->
       </div>
-      <!-- مودال-footer يحتوي على زر حفظ وزر إلغاء -->
+      <!-- مودال-footer يحتوي على زر حفظ وإلغاء -->
       <div class="modal-footer">
         <button class="btn-save" onclick="saveChanges()">
           <i class="fas fa-check"></i> حفظ
@@ -192,7 +195,7 @@
   
   <!-- سكربت الجافاسكريبت -->
   <script>
-    // دالة بدء قراءة الباركود باستخدام QuaggaJS
+    // عند اكتشاف الباركود من خلال QuaggaJS
     function startScan() {
       // إظهار منطقة المسح
       document.getElementById("scanner-container").style.display = "block";
@@ -228,23 +231,33 @@
           // إيقاف الماسح وإخفاء منطقة المسح
           Quagga.stop();
           document.getElementById("scanner-container").style.display = "none";
-          // للمحاكاة: استخدام حالة عشوائية لتحديد وجود المنتج
-          var productExists = Math.random() < 0.5;
-          buildModalActions(productExists);
-          // عرض نافذة المودال
-          document.getElementById("productModal").style.display = "block";
+          
+          // تخزين الباركود عالميًا
+          window.currentBarcode = barcode;
+          // التحقق من وجود المنتج في قاعدة البيانات باستخدام رقم الباركود كمفتاح
+          firebase.database().ref('products/' + barcode).once('value')
+            .then(function(snapshot) {
+              var productExists = snapshot.exists();
+              buildModalActions(productExists);
+              document.getElementById("productModal").style.display = "block";
+            })
+            .catch(function(error) {
+              console.error("خطأ أثناء التحقق من المنتج:", error);
+              alert("حدث خطأ أثناء التحقق من المنتج");
+            });
+          
           // إزالة المستمع لتفادي التكرار
           Quagga.offDetected();
       });
     }
     
-    // بناء إجراءات المودال بناءً على حالة وجود المنتج
+    // بناء إجراءات المودال بناءً على وجود المنتج في قاعدة البيانات
     function buildModalActions(productExists) {
       var modalActions = document.getElementById('modalActions');
       modalActions.innerHTML = ''; // مسح المحتوى السابق
       
       if (!productExists) {
-        // في حالة عدم وجود المنتج: عرض زر إضافة المنتج فقط
+        // في حالة عدم وجود المنتج: عرض زر إضافة المنتج
         modalActions.innerHTML += '<button class="btn-add" onclick="addProduct()"><i class="fas fa-plus"></i> إضافة منتج</button>';
         document.getElementById('quantitySection').style.display = 'none';
         document.getElementById('priceSection').style.display = 'none';
@@ -253,8 +266,18 @@
         modalActions.innerHTML += '<button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>';
         modalActions.innerHTML += '<button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>';
         modalActions.innerHTML += '<button class="btn-return" onclick="returnProduct()"><i class="fas fa-undo-alt"></i> إرجاع منتج</button>';
+        // عرض أقسام الكمية والثمن
         document.getElementById('quantitySection').style.display = 'block';
         document.getElementById('priceSection').style.display = 'block';
+        // تعبئة حقول الكمية والثمن إذا كانت موجودة
+        firebase.database().ref('products/' + window.currentBarcode).once('value')
+          .then(function(snapshot) {
+            var product = snapshot.val();
+            if(product) {
+              document.getElementById('quantityInput').value = product.quantity || '';
+              document.getElementById('priceInput').value = product.price || '';
+            }
+          });
       }
     }
     
@@ -267,43 +290,121 @@
       document.getElementById('priceInput').value = '';
     }
     
-    // دوال إجراءات المنتج (محاكاة)
+    // دوال إجراءات المنتج مع الربط بقاعدة البيانات
+    
+    // إضافة منتج (في حال عدم وجوده)
     function addProduct() {
-      alert("تمت إضافة المنتج!");
-      closeModal();
+      if(!window.currentBarcode) {
+        alert("لم يتم تحديد منتج!");
+        return;
+      }
+      // قراءة الكمية والثمن من الأقسام (يمكن تزويدها بقيم افتراضية إذا لم يدخل المستخدم)
+      var quantity = document.getElementById('quantityInput').value || 0;
+      var price = document.getElementById('priceInput').value || 0;
+      
+      firebase.database().ref('products/' + window.currentBarcode).set({
+        barcode: window.currentBarcode,
+        quantity: quantity,
+        price: price
+      }).then(function(){
+        alert("تمت إضافة المنتج!");
+        closeModal();
+      }).catch(function(error){
+        console.error("خطأ في إضافة المنتج:", error);
+        alert("حدث خطأ أثناء إضافة المنتج!");
+      });
     }
+    
+    // حذف المنتج
     function deleteProduct() {
-      alert("تم حذف المنتج!");
-      closeModal();
+      if (!window.currentBarcode) {
+        alert("لم يتم تحديد المنتج للحذف!");
+        return;
+      }
+      if (!confirm("هل أنت متأكد من حذف المنتج؟")) {
+        return;
+      }
+      firebase.database().ref('products/' + window.currentBarcode).remove()
+      .then(function() {
+        alert("تم حذف المنتج!");
+        closeModal();
+      })
+      .catch(function(error) {
+        console.error("خطأ في حذف المنتج:", error);
+        alert("حدث خطأ أثناء حذف المنتج!");
+      });
     }
+    
+    // تعديل المنتج: تعبئة حقول الكمية والثمن لإمكانية التحديث
     function editProduct() {
-      alert("تم تعديل المنتج!");
-      closeModal();
+      if (!window.currentBarcode) {
+        alert("لم يتم تحديد المنتج للتعديل!");
+        return;
+      }
+      firebase.database().ref('products/' + window.currentBarcode).once('value')
+      .then(function(snapshot) {
+        var product = snapshot.val();
+        if (product) {
+          document.getElementById('quantityInput').value = product.quantity || '';
+          document.getElementById('priceInput').value = product.price || '';
+          // تم عرض الأقسام بالفعل بواسطة buildModalActions
+        }
+      }).catch(function(error) {
+        console.error("خطأ في جلب بيانات المنتج:", error);
+        alert("حدث خطأ أثناء جلب بيانات المنتج!");
+      });
     }
+    
+    // إرجاع المنتج: تقليل الكمية بواحد إن أمكن
     function returnProduct() {
-      alert("تم إرجاع المنتج!");
-      closeModal();
-    }
-    function updateQuantity() {
-      var quantity = document.getElementById('quantityInput').value;
-      if (quantity && quantity > 0) {
-        alert("تم تحديث عدد القطع إلى: " + quantity);
-      } else {
-        alert("يرجى إدخال رقم صالح للقطع!");
+      if (!window.currentBarcode) {
+        alert("لم يتم تحديد المنتج!");
+        return;
       }
+      firebase.database().ref('products/' + window.currentBarcode).once('value')
+      .then(function(snapshot) {
+        var product = snapshot.val();
+        if(product && product.quantity > 0) {
+          var newQuantity = parseInt(product.quantity) - 1;
+          firebase.database().ref('products/' + window.currentBarcode).update({ quantity: newQuantity })
+          .then(function(){
+            alert("تم إرجاع المنتج. الكمية الجديدة: " + newQuantity);
+            closeModal();
+          });
+        } else {
+          alert("لا توجد كمية كافية للإرجاع!");
+        }
+      })
+      .catch(function(error){
+        console.error("خطأ أثناء إرجاع المنتج:", error);
+        alert("حدث خطأ أثناء إرجاع المنتج!");
+      });
     }
-    function updatePrice() {
-      var price = document.getElementById('priceInput').value;
-      if (price && price > 0) {
-        alert("تم تحديث الثمن إلى: " + price);
-      } else {
-        alert("يرجى إدخال رقم صالح للثمن!");
-      }
-    }
-    // دالة حفظ التغييرات النهائية (محاكاة)
+    
+    // حفظ التغييرات على المنتج (تحديث الكمية والثمن)
     function saveChanges() {
-      alert("تم حفظ التغييرات!");
-      closeModal();
+      if (!window.currentBarcode) {
+        alert("لم يتم تحديد المنتج للتعديل!");
+        return;
+      }
+      var quantity = document.getElementById('quantityInput').value;
+      var price = document.getElementById('priceInput').value;
+      
+      if (!quantity || quantity <= 0 || !price || price <= 0) {
+        alert("يرجى إدخال كمية وثمن صالحين!");
+        return;
+      }
+      
+      firebase.database().ref('products/' + window.currentBarcode).update({
+        quantity: quantity,
+        price: price
+      }).then(function(){
+        alert("تم حفظ التغييرات!");
+        closeModal();
+      }).catch(function(error){
+        console.error("خطأ أثناء حفظ التغييرات:", error);
+        alert("حدث خطأ أثناء حفظ التغييرات!");
+      });
     }
     
     // إغلاق المودال عند النقر خارج محتواه
