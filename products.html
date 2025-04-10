@@ -9,18 +9,14 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
-  
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-  
-  <!-- تحميل مكتبة ZXing لمسح الأكواد -->
+  <!-- تحميل مكتبة ZXing -->
   <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
-  
-  <!-- تحميل مكتبة Font Awesome للأيقونات -->
+  <!-- تحميل Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   
   <style>
-    /* تنسيق الصفحة العام */
     body {
       font-family: Arial, sans-serif;
       direction: rtl;
@@ -28,10 +24,7 @@
       padding: 20px;
       background: #f5f5f5;
     }
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
+    h1 { text-align: center; margin-bottom: 20px; }
     button {
       display: block;
       margin: 0 auto 20px;
@@ -43,9 +36,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
-    button:hover {
-      background-color: #0056b3;
-    }
+    button:hover { background-color: #0056b3; }
     /* منطقة عرض الكاميرا */
     #scanner-container {
       display: none;
@@ -57,13 +48,12 @@
       background: #000;
       overflow: hidden;
     }
-    /* جعل فيديو الكاميرا يغطي كامل المنطقة */
     #scanner-container video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-    /* تنسيق المودال لإجراءات المنتج */
+    /* تنسيق المودال */
     .modal {
       display: none;
       position: fixed;
@@ -93,10 +83,7 @@
       font-size: 24px;
       cursor: pointer;
     }
-    .modal-header {
-      font-size: 20px;
-      margin-bottom: 15px;
-    }
+    .modal-header { font-size: 20px; margin-bottom: 15px; }
     .modal-actions button {
       display: block;
       width: 100%;
@@ -110,14 +97,13 @@
     .btn-add { background-color: #28a745; color: white; }
     .btn-edit { background-color: #ffc107; color: white; }
     .btn-delete { background-color: #dc3545; color: white; }
-    .btn-return { background-color: #17a2b8; color: white; }
-    .btn-quantity { background-color: #6c757d; color: white; }
-    .btn-price { background-color: #007BFF; color: white; }
-    .quantity-input, .price-input {
+    /* تعريف مدخلات النموذج بنفس نمط الحقول */
+    .input-field {
       padding: 10px;
       font-size: 16px;
       width: 80%;
-      margin-top: 10px;
+      margin: 10px auto;
+      display: block;
       border: 1px solid #ccc;
       border-radius: 5px;
     }
@@ -155,22 +141,35 @@
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
       <div class="modal-header">إجراءات المنتج</div>
-      <div id="modalActions" class="modal-actions"></div>
-      <div id="quantitySection" style="display:none;">
-        <input type="number" class="quantity-input" id="quantityInput" placeholder="ادخل عدد القطع">
-        <button class="btn-quantity" onclick="updateQuantity()"><i class="fas fa-check"></i> حفظ الكمية</button>
+      <!-- هنا يتم بناء واجهة الإجراءات اعتمادًا على حالة المنتج -->
+      <div id="modalActions"></div>
+      
+      <!-- قسم إضافة المنتج (للمنتج الذي لا يوجد بعد) -->
+      <div id="addProductSection" style="display:none;">
+        <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
+        <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
+        <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
+        <input type="file" id="productImage" class="input-field" accept="image/*">
+        <!-- زر إضافة المنتج يظهر في هذا القسم -->
+        <button class="btn-add" onclick="addProduct()">إضافة منتج</button>
       </div>
-      <div id="priceSection" style="display:none;">
-        <input type="number" class="price-input" id="priceInput" placeholder="ادخل الثمن">
-        <button class="btn-price" onclick="updatePrice()"><i class="fas fa-check"></i> حفظ الثمن</button>
+      
+      <!-- قسم خيارات إدارة المنتج (للمنتجات الموجودة) -->
+      <div id="manageProductSection" style="display:none;">
+        <!-- فقط زرين: حذف وتعديل منتج -->
+        <button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>
+        <button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>
       </div>
+      
+      <!-- إذا رغبت لاحقاً بإضافة زر حفظ التغييرات يمكن إضافته هنا -->
       <div class="modal-footer">
-        <button class="btn-save" onclick="saveChanges()"><i class="fas fa-check"></i> حفظ</button>
-        <button class="btn-cancel" onclick="closeModal()"><i class="fas fa-times"></i> إلغاء</button>
+        <!-- يمكن استخدام زر حفظ في حالة تعديل المنتج -->
+        <button class="btn-save" onclick="saveChanges()">حفظ</button>
+        <button class="btn-cancel" onclick="closeModal()">إلغاء</button>
       </div>
     </div>
   </div>
-
+  
   <!-- كود الجافاسكريبت الكامل -->
   <script>
     // متغير لتخزين الكود المكتشف
@@ -185,8 +184,6 @@
       
       // إنشاء قارئ الأكواد باستخدام ZXing
       codeReader = new ZXing.BrowserMultiFormatReader();
-
-      // بدء قراءة الكود من الجهاز (إذا كان null يتم طلب اختيار الجهاز الافتراضي)
       codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
         if (result) {
           currentCode = result.getText();
@@ -200,7 +197,7 @@
       });
     }
 
-    // دالة لإيقاف عملية المسح
+    // دالة إيقاف عملية المسح
     function stopScanner() {
       if (codeReader) {
         codeReader.reset();
@@ -208,7 +205,7 @@
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة لمعالجة الكود المكتشف والبحث عنه في Firebase (Realtime Database)
+    // دالة لمعالجة الكود والبحث عنه في Firebase
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
@@ -222,37 +219,57 @@
         });
     }
 
-    // بناء واجهة الإجراءات بناءً على وجود المنتج
+    // بناء واجهة الإجراءات حسب حالة المنتج
     function buildModalActions(productExists) {
+      // إخفاء كلا القسمين أولاً
+      document.getElementById("addProductSection").style.display = "none";
+      document.getElementById("manageProductSection").style.display = "none";
+
       var modalActions = document.getElementById('modalActions');
-      modalActions.innerHTML = '';
+      modalActions.innerHTML = ""; // يمكن إضافة عنوان أو تعليمات هنا إذا رغبت
+
       if (!productExists) {
-        modalActions.innerHTML += '<button class="btn-add" onclick="addProduct()"><i class="fas fa-plus"></i> إضافة منتج</button>';
-        document.getElementById('quantitySection').style.display = 'none';
-        document.getElementById('priceSection').style.display = 'none';
+        // المنتج غير موجود: عرض قسم الإضافة الذي يحتوي على الحقول المطلوبة
+        document.getElementById("addProductSection").style.display = "block";
       } else {
-        modalActions.innerHTML += '<button class="btn-delete" onclick="deleteProduct()"><i class="fas fa-trash-alt"></i> حذف منتج</button>';
-        modalActions.innerHTML += '<button class="btn-edit" onclick="editProduct()"><i class="fas fa-edit"></i> تعديل منتج</button>';
-        modalActions.innerHTML += '<button class="btn-return" onclick="returnProduct()"><i class="fas fa-undo-alt"></i> إرجاع منتج</button>';
-        document.getElementById('quantitySection').style.display = 'block';
-        document.getElementById('priceSection').style.display = 'block';
+        // المنتج موجود: عرض قسم إدارة المنتج (حذف وتعديل فقط)
+        document.getElementById("manageProductSection").style.display = "block";
       }
     }
 
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
-      document.getElementById('quantitySection').style.display = 'none';
-      document.getElementById('priceSection').style.display = 'none';
+      // إعادة تعيين قيمة الحقول في قسم إضافة المنتج
+      document.getElementById('productName').value = '';
       document.getElementById('quantityInput').value = '';
       document.getElementById('priceInput').value = '';
+      document.getElementById('productImage').value = '';
     }
 
     // دوال التعامل مع المنتجات على Firebase باستخدام Realtime Database
+
+    // دالة إضافة المنتج (عند عدم وجوده)
     function addProduct() {
+      var name = document.getElementById("productName").value;
+      var quantity = document.getElementById("quantityInput").value;
+      var price = document.getElementById("priceInput").value;
+      var imageFile = document.getElementById("productImage").files[0];
+      
+      if (!name || !quantity || !price) {
+        alert("يرجى تعبئة جميع الحقول (اسم المنتج، عدد القطع، الثمن)!");
+        return;
+      }
+      
+      // في هذه الحالة سنقوم بتخزين اسم الصورة كـ placeholder،
+      // يمكنك لاحقاً دمج رفع الصورة إلى Firebase Storage والحصول على رابطها.
+      var imagePlaceholder = imageFile ? imageFile.name : "";
+
       firebase.database().ref("products/" + currentCode).set({
         code: currentCode,
-        quantity: 1,
-        price: 0
+        name: name,
+        quantity: parseInt(quantity),
+        price: parseFloat(price),
+        image: imagePlaceholder
       })
       .then(function() {
         alert("تمت إضافة المنتج بنجاح!");
@@ -263,6 +280,7 @@
       });
     }
 
+    // دالة حذف المنتج
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
       .then(function() {
@@ -274,11 +292,14 @@
       });
     }
 
+    // دالة تعديل المنتج (يمكنك ضبطها لتعديل الحقول المطلوبة)
     function editProduct() {
-      var quantity = document.getElementById('quantityInput').value;
-      if (quantity && quantity > 0) {
+      // هنا يمكنك فتح نافذة جديدة أو إعادة عرض الحقول للسماح بالتعديل.
+      // في المثال الحالي نقوم ببساطة بطلب إدخال كمية جديدة للتعديل.
+      var newQuantity = prompt("أدخل الكمية الجديدة:");
+      if (newQuantity && parseInt(newQuantity) > 0) {
         firebase.database().ref("products/" + currentCode).update({
-          quantity: parseInt(quantity)
+          quantity: parseInt(newQuantity)
         })
         .then(function() {
           alert("تم تعديل المنتج بنجاح!");
@@ -292,11 +313,7 @@
       }
     }
 
-    function returnProduct() {
-      alert("تم إرجاع المنتج!");
-      closeModal();
-    }
-
+    // وظائف تحديث الكمية والثمن (في حال أردت استخدامها أثناء التعديل)
     function updateQuantity() {
       var quantity = document.getElementById('quantityInput').value;
       if (quantity && quantity > 0) {
