@@ -50,6 +50,18 @@
     .btn-warning { background-color: #ffc107; color: white; }
     .btn-danger { background-color: #dc3545; color: white; }
     .btn-cancel { background-color: #6c757d; color: white; }
+    /* قسم الإدخال اليدوي لرقم المنتج */
+    #manualEntry {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    #manualEntry input {
+      padding: 10px;
+      font-size: 16px;
+      width: 70%;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
     /* منطقة عرض الكاميرا */
     #scanner-container {
       display: none;
@@ -120,13 +132,20 @@
       margin: 10px;
       font-size: 16px;
       padding-bottom: 5px;
-      white-space: pre-line; /* للسماح بانتقال السطور */
+      white-space: pre-line;
     }
   </style>
 </head>
 <body>
   <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
-  <button class="btn-primary" onclick="startScan()">ابدأ المسح</button>
+  
+  <!-- قسم الإدخال اليدوي لرقم المنتج -->
+  <div id="manualEntry">
+    <input type="text" id="manualProductCode" placeholder="أدخل رقم المنتج">
+    <button class="btn-primary" onclick="searchProduct()">بحث</button>
+  </div>
+  
+  <button class="btn-primary" onclick="startScan()">ابدأ المسح باستخدام الكاميرا</button>
   
   <!-- منطقة عرض الكاميرا -->
   <div id="scanner-container">
@@ -156,26 +175,25 @@
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
         <input type="number" id="discountInput" class="input-field" placeholder="ادخل الخصم">
-        <!-- حقل المبلغ النهائي يتم إدخاله يدويًا من قبل المستخدم -->
+        <!-- حقل المبلغ النهائي يدخله المستخدم يدويًا -->
         <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي">
         <!-- حقل تاريخ انتهاء الصلاحية -->
         <input type="date" id="expiryDate" class="input-field" placeholder="تاريخ انتهاء الصلاحية">
-        <!-- رفع الصورة أو التقاطها مباشرة -->
         <input type="file" id="productImage" class="input-field" accept="image/*" capture="environment">
       </div>
       
-      <!-- المودال-footer: الأزرار ستظهر بناءً على الوضع -->
+      <!-- المودال-footer: الأزرار تظهر بناءً على الوضع -->
       <div class="modal-footer" id="modalFooter"></div>
     </div>
   </div>
   
   <!-- كود JavaScript -->
   <script>
-    // متغير لتخزين الكود المكتشف
+    // متغير لتخزين الكود المكتشف أو المدخل يدويًا
     var currentCode = "";
     // كائن قارئ الأكواد من ZXing
     var codeReader = null;
-    // متغير لحالة المودال: "add" أو "view" أو "edit"
+    // حالة المودال: "add" أو "view" أو "edit"
     var modalMode = "";
 
     // دالة بدء عملية المسح باستخدام ZXing
@@ -202,7 +220,18 @@
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة البحث في قاعدة البيانات حسب الكود
+    // دالة البحث في قاعدة البيانات باستخدام الكود المُدخل يدويًا
+    function searchProduct() {
+      var code = document.getElementById("manualProductCode").value;
+      if (code.trim() === "") {
+        alert("يرجى إدخال رقم المنتج.");
+        return;
+      }
+      currentCode = code;
+      processCode();
+    }
+
+    // دالة البحث في قاعدة البيانات باستخدام الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
@@ -211,7 +240,7 @@
             showProductInfo(snapshot.val());
           } else {
             modalMode = "add";
-            showProductForm(); // الحقول ستكون فارغة
+            showProductForm();
           }
           document.getElementById("productModal").style.display = "block";
         })
@@ -232,12 +261,10 @@
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
-      // تعبئة المعلومات الأساسية
       document.getElementById("infoName").innerText = "اسم المنتج: " + data.name;
       document.getElementById("infoQuantity").innerText = "عدد القطع: " + data.quantity;
       document.getElementById("infoPrice").innerText = "الثمن: " + data.price;
       
-      // تعبئة التفاصيل الإضافية
       var extra = "";
       if(data.addedDate) { extra += "تاريخ الإضافة: " + data.addedDate + "\n"; }
       if(data.discount) { extra += "الخصم: " + data.discount + "\n"; }
@@ -245,7 +272,6 @@
       if(data.expiryDate) { extra += "تاريخ انتهاء الصلاحية: " + data.expiryDate + "\n"; }
       document.getElementById("infoExtra").innerText = extra;
       
-      // عرض الصورة إن وجدت
       if (data.image) {
         document.getElementById("infoImage").innerHTML = '<img src="' + data.image + '" alt="صورة المنتج" style="max-width:100%; max-height:150px;"/>';
       } else {
@@ -256,7 +282,7 @@
       // فحص المخزون للتنبيه
       checkInventory(data.quantity);
       
-      // إعداد أزرار وضع العرض (تُعرض عموديًا)
+      // إعداد أزرار وضع العرض (ترتيب عمودي)
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
       
@@ -309,20 +335,17 @@
         showProductForm(data);
       };
       
-      // ترتيب الأزرار عموديًا
       footer.appendChild(btnSale);
       footer.appendChild(btnReturn);
       footer.appendChild(btnDelete);
       footer.appendChild(btnEdit);
     }
 
-    // دالة عرض نموذج المنتج للإضافة أو التعديل (Add/Edit Mode)
+    // دالة عرض نموذج المنتج (Add/Edit Mode)
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
       document.getElementById("productInfoSection").style.display = "none";
       document.getElementById("productFormSection").style.display = "block";
-      
-      // تعبئة الحقول في وضع التعديل إن وجدت البيانات
       document.getElementById("productName").value = data.name || "";
       document.getElementById("addedDate").value = data.addedDate || "";
       document.getElementById("quantityInput").value = data.quantity || "";
@@ -343,7 +366,6 @@
         actionButton.innerText = "تعديل المنتج";
         actionButton.onclick = updateProduct;
       }
-      
       var btnCancel = document.createElement("button");
       btnCancel.className = "btn-cancel";
       btnCancel.innerText = "إلغاء";
