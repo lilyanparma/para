@@ -107,7 +107,12 @@
     .modal-footer {
       margin-top: 20px;
       display: flex;
-      justify-content: space-around;
+      flex-direction: column;  /* ترتيب عمودي للأزرار */
+      align-items: center;
+    }
+    .modal-footer button {
+      width: 90%;
+      margin: 5px 0;
     }
     .info-field {
       text-align: left;
@@ -132,7 +137,7 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <div id="modalHeader" class="modal-header">إجراءات المنتج</div>
       
-      <!-- قسم عرض معلومات المنتج (وضع العرض - View) -->
+      <!-- قسم عرض معلومات المنتج (View Mode) -->
       <div id="productInfoSection" style="display:none;">
         <div id="infoName" class="info-field"></div>
         <div id="infoQuantity" class="info-field"></div>
@@ -140,15 +145,20 @@
         <div id="infoImage" class="info-field"></div>
       </div>
       
-      <!-- قسم نموذج المنتج (يستخدم في وضعي الإضافة والتعديل) -->
+      <!-- قسم نموذج المنتج (Add/Edit Mode) -->
       <div id="productFormSection" style="display:none;">
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
+        <!-- إضافة تاريخ الإضافة -->
+        <input type="date" id="addedDate" class="input-field" placeholder="تاريخ الإضافة">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
-        <input type="file" id="productImage" class="input-field" accept="image/*">
+        <input type="number" id="discountInput" class="input-field" placeholder="ادخل الخصم">
+        <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي" readonly>
+        <input type="date" id="expiryDate" class="input-field" placeholder="تاريخ انتهاء الصلاحية">
+        <input type="file" id="productImage" class="input-field" accept="image/*" capture="environment">
       </div>
       
-      <!-- المودال-footer: تُعرض الأزرار بناءً على الوضع -->
+      <!-- المودال-footer: الأزرار تظهر بناءً على الوضع -->
       <div class="modal-footer" id="modalFooter"></div>
     </div>
   </div>
@@ -194,13 +204,11 @@
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
           if (snapshot.exists()) {
-            // المنتج موجود: وضع العرض
             modalMode = "view";
             showProductInfo(snapshot.val());
           } else {
-            // المنتج غير موجود: وضع الإضافة
             modalMode = "add";
-            showProductForm();  // الحقول فارغة
+            showProductForm(); // الحقول فارغة
           }
           document.getElementById("productModal").style.display = "block";
         })
@@ -213,13 +221,18 @@
     // دالة عرض معلومات المنتج (View Mode)
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
-      // إخفاء نموذج الإدخال
       document.getElementById("productFormSection").style.display = "none";
-      // تعبئة المعلومات
       document.getElementById("infoName").innerText = "اسم المنتج: " + data.name;
       document.getElementById("infoQuantity").innerText = "عدد القطع: " + data.quantity;
       document.getElementById("infoPrice").innerText = "الثمن: " + data.price;
-      // عرض الصورة: إذا كان data.image يحتوي على رابط URL، سيتم إنشاء عنصر img
+      // عرض التفاصيل الإضافية إن وجدت
+      var extraDetails = "";
+      if(data.addedDate) { extraDetails += "\nتاريخ الإضافة: " + data.addedDate; }
+      if(data.discount) { extraDetails += "\nالخصم: " + data.discount; }
+      if(data.finalAmount) { extraDetails += "\nالمبلغ النهائي: " + data.finalAmount; }
+      if(data.expiryDate) { extraDetails += "\nتاريخ انتهاء الصلاحية: " + data.expiryDate; }
+      document.getElementById("infoPrice").innerText += extraDetails;
+      
       if (data.image) {
         document.getElementById("infoImage").innerHTML = '<img src="' + data.image + '" alt="صورة المنتج" style="max-width:100%; max-height:150px;"/>';
       } else {
@@ -227,9 +240,46 @@
       }
       document.getElementById("productInfoSection").style.display = "block";
       
-      // إعداد أزرار وضع العرض
+      // إعداد أزرار وضع العرض (عرضها عمودياً)
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
+      
+      var btnSale = document.createElement("button");
+      btnSale.className = "btn-success";
+      btnSale.innerText = "تم البيع";
+      btnSale.onclick = function() {
+        if (data.quantity > 0) {
+          firebase.database().ref("products/" + currentCode).update({
+            quantity: data.quantity - 1
+          })
+          .then(function() {
+            alert("تم تسجيل عملية البيع!");
+            closeModal();
+          })
+          .catch(function(error) {
+            alert("فشل تسجيل البيع: " + error);
+          });
+        } else {
+          alert("المخزون غير كافٍ!");
+        }
+      };
+      
+      var btnReturn = document.createElement("button");
+      btnReturn.className = "btn-warning";
+      btnReturn.innerText = "ارجاع المنتج";
+      btnReturn.onclick = function() {
+        firebase.database().ref("products/" + currentCode).update({
+          quantity: data.quantity + 1
+        })
+        .then(function() {
+          alert("تم تسجيل عملية الإرجاع!");
+          closeModal();
+        })
+        .catch(function(error) {
+          alert("فشل تسجيل عملية الإرجاع: " + error);
+        });
+      };
+      
       var btnDelete = document.createElement("button");
       btnDelete.className = "btn-danger";
       btnDelete.innerHTML = '<i class="fas fa-trash-alt"></i> حذف منتج';
@@ -240,25 +290,30 @@
       btnEdit.innerHTML = '<i class="fas fa-edit"></i> تعديل منتج';
       btnEdit.onclick = function() {
         modalMode = "edit";
-        showProductForm(data); // تعبئة الحقول بالبيانات الحالية
+        showProductForm(data);
       };
       
+      footer.appendChild(btnSale);
+      footer.appendChild(btnReturn);
       footer.appendChild(btnDelete);
       footer.appendChild(btnEdit);
     }
 
     // دالة عرض نموذج المنتج (Add/Edit Mode)
-    // إذا تم تزويد الدالة بالمعطيات (data) يكون وضع التعديل
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
       document.getElementById("productInfoSection").style.display = "none";
       document.getElementById("productFormSection").style.display = "block";
-      // تعبئة الحقول إذا كانت موجودة (في وضع التعديل)
       document.getElementById("productName").value = data.name || "";
+      document.getElementById("addedDate").value = data.addedDate || "";
       document.getElementById("quantityInput").value = data.quantity || "";
       document.getElementById("priceInput").value = data.price || "";
-      document.getElementById("productImage").value = ""; // عدم تعبئة حقل الصورة تلقائيًا
-      // إعداد أزرار المودال: زر الإجراء (إضافة أو تعديل) وزر الإلغاء
+      document.getElementById("discountInput").value = data.discount || "";
+      // احتساب المبلغ النهائي تلقائيًا إذا كانت القيم متوفرة
+      document.getElementById("finalAmountInput").value = data.finalAmount || ( (data.price && data.discount) ? (data.price - data.discount) : "");
+      document.getElementById("expiryDate").value = data.expiryDate || "";
+      document.getElementById("productImage").value = "";
+      
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
       var actionButton = document.createElement("button");
@@ -279,59 +334,46 @@
       footer.appendChild(btnCancel);
     }
 
-    // دالة إغلاق المودال
+    // دالة إغلاق المودال وإعادة تعيين الحقول
     function closeModal() {
       document.getElementById("productModal").style.display = "none";
       document.getElementById("productName").value = "";
+      document.getElementById("addedDate").value = "";
       document.getElementById("quantityInput").value = "";
       document.getElementById("priceInput").value = "";
+      document.getElementById("discountInput").value = "";
+      document.getElementById("finalAmountInput").value = "";
+      document.getElementById("expiryDate").value = "";
       document.getElementById("productImage").value = "";
     }
 
     // دالة إضافة المنتج مع رفع الصورة إلى Firebase Storage
     function addProduct() {
       var name = document.getElementById("productName").value;
+      var addedDate = document.getElementById("addedDate").value;
       var quantity = document.getElementById("quantityInput").value;
       var price = document.getElementById("priceInput").value;
+      var discount = document.getElementById("discountInput").value;
+      var finalAmount = document.getElementById("finalAmountInput").value;
+      var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
       
-      if (!name || !quantity || !price) {
-        alert("يرجى تعبئة جميع الحقول (اسم المنتج، عدد القطع، الثمن)!");
+      if (!name || !addedDate || !quantity || !price) {
+        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن)!");
         return;
       }
       
-      if (imageFile) {
-        // رفع الصورة إلى Firebase Storage
-        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
-        storageRef.put(imageFile)
-          .then(function(snapshot) {
-            return storageRef.getDownloadURL();
-          })
-          .then(function(downloadURL) {
-            // حفظ بيانات المنتج مع رابط الصورة
-            return firebase.database().ref("products/" + currentCode).set({
-              code: currentCode,
-              name: name,
-              quantity: parseInt(quantity),
-              price: parseFloat(price),
-              image: downloadURL
-            });
-          })
-          .then(function() {
-            alert("تمت إضافة المنتج بنجاح!");
-            closeModal();
-          })
-          .catch(function(error) {
-            alert("فشل إضافة المنتج: " + error);
-          });
-      } else {
-        // إذا لم يتم اختيار صورة
+      function saveProduct(imageURL) {
         firebase.database().ref("products/" + currentCode).set({
           code: currentCode,
           name: name,
+          addedDate: addedDate,
           quantity: parseInt(quantity),
           price: parseFloat(price),
-          image: ""
+          discount: discount ? parseFloat(discount) : 0,
+          finalAmount: finalAmount ? parseFloat(finalAmount) : (parseFloat(price) - (discount ? parseFloat(discount) : 0)),
+          expiryDate: expiryDate || "",
+          image: imageURL || ""
         })
         .then(function() {
           alert("تمت إضافة المنتج بنجاح!");
@@ -341,48 +383,48 @@
           alert("فشل إضافة المنتج: " + error);
         });
       }
+      
+      if (imageFile) {
+        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
+        storageRef.put(imageFile)
+          .then(() => storageRef.getDownloadURL())
+          .then((downloadURL) => {
+            saveProduct(downloadURL);
+          })
+          .catch((error) => {
+            alert("فشل رفع الصورة: " + error);
+          });
+      } else {
+        saveProduct("");
+      }
     }
 
-    // دالة تعديل المنتج مع رفع صورة جديدة إذا تم اختيارها
+    // دالة تحديث المنتج مع رفع صورة جديدة إذا تم اختيارها
     function updateProduct() {
       var name = document.getElementById("productName").value;
+      var addedDate = document.getElementById("addedDate").value;
       var quantity = document.getElementById("quantityInput").value;
       var price = document.getElementById("priceInput").value;
+      var discount = document.getElementById("discountInput").value;
+      var finalAmount = document.getElementById("finalAmountInput").value;
+      var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
       
-      if (!name || !quantity || !price) {
-        alert("يرجى تعبئة جميع الحقول (اسم المنتج، عدد القطع، الثمن)!");
+      if (!name || !addedDate || !quantity || !price) {
+        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن)!");
         return;
       }
       
-      if (imageFile) {
-        // رفع الصورة الجديدة إلى Firebase Storage
-        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
-        storageRef.put(imageFile)
-          .then(function(snapshot) {
-            return storageRef.getDownloadURL();
-          })
-          .then(function(downloadURL) {
-            return firebase.database().ref("products/" + currentCode).update({
-              name: name,
-              quantity: parseInt(quantity),
-              price: parseFloat(price),
-              image: downloadURL
-            });
-          })
-          .then(function() {
-            alert("تم تعديل المنتج بنجاح!");
-            closeModal();
-          })
-          .catch(function(error) {
-            alert("فشل تعديل المنتج: " + error);
-          });
-      } else {
-        // بدون تغيير الصورة
+      function updateData(imageURL) {
         firebase.database().ref("products/" + currentCode).update({
           name: name,
+          addedDate: addedDate,
           quantity: parseInt(quantity),
-          price: parseFloat(price)
+          price: parseFloat(price),
+          discount: discount ? parseFloat(discount) : 0,
+          finalAmount: finalAmount ? parseFloat(finalAmount) : (parseFloat(price) - (discount ? parseFloat(discount) : 0)),
+          expiryDate: expiryDate || "",
+          image: imageURL || ""
         })
         .then(function() {
           alert("تم تعديل المنتج بنجاح!");
@@ -391,6 +433,20 @@
         .catch(function(error) {
           alert("فشل تعديل المنتج: " + error);
         });
+      }
+      
+      if (imageFile) {
+        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
+        storageRef.put(imageFile)
+          .then(() => storageRef.getDownloadURL())
+          .then((downloadURL) => {
+            updateData(downloadURL);
+          })
+          .catch((error) => {
+            alert("فشل رفع الصورة: " + error);
+          });
+      } else {
+        updateData("");
       }
     }
 
