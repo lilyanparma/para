@@ -53,7 +53,7 @@
     /* قسم الإدخال اليدوي لرقم المنتج */
     #manualEntry {
       text-align: center;
-      margin-bottom: 20px;
+      margin-bottom: 10px;
     }
     #manualEntry input {
       padding: 10px;
@@ -62,6 +62,13 @@
       border: 1px solid #ccc;
       border-radius: 5px;
       margin-bottom: 10px;
+    }
+    /* قسم عرض نتيجة البحث */
+    #searchResult {
+      text-align: center;
+      margin-bottom: 20px;
+      font-size: 16px;
+      color: red;
     }
     /* زر مسح الكاميرا يظهر أسفل قسم الإدخال اليدوي */
     #cameraScanButton {
@@ -162,13 +169,16 @@
 <body>
   <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
   
-  <!-- قسم الإدخال اليدوي لرقم المنتج مع زرين منفصلين -->
+  <!-- قسم الإدخال اليدوي لرقم المنتج -->
   <div id="manualEntry">
     <input type="text" id="manualProductCode" placeholder="أدخل رقم المنتج">
     <br>
     <button class="btn-primary" onclick="searchProduct()">بحث عن المنتج</button>
     <button class="btn-primary" onclick="manualEntryMode()">إدخال المنتج يدويًا</button>
   </div>
+  
+  <!-- قسم عرض نتيجة البحث -->
+  <div id="searchResult"></div>
   
   <!-- زر مسح الكاميرا يظهر الآن أسفل قسم الإدخال اليدوي -->
   <button id="cameraScanButton" class="btn-primary" onclick="startScan()">ابدأ المسح باستخدام الكاميرا</button>
@@ -184,7 +194,7 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <div id="modalHeader" class="modal-header">إجراءات المنتج</div>
       
-      <!-- قسم عرض معلومات المنتج (View Mode) مع جدول -->
+      <!-- قسم عرض معلومات المنتج (View Mode) باستخدام جدول -->
       <div id="productInfoSection" style="display:none;">
         <table class="info-table">
           <tr>
@@ -250,6 +260,8 @@
 
     // دالة بدء عملية المسح باستخدام ZXing
     function startScan() {
+      // إزالة رسالة البحث إن وجدت
+      document.getElementById("searchResult").innerText = "";
       currentCode = "";
       document.getElementById("scanner-container").style.display = "block";
       codeReader = new ZXing.BrowserMultiFormatReader();
@@ -280,7 +292,22 @@
         return;
       }
       currentCode = code;
-      processCode();
+      firebase.database().ref("products/" + currentCode).once('value')
+        .then(function(snapshot) {
+          if (snapshot.exists()) {
+            modalMode = "view";
+            showProductInfo(snapshot.val());
+            document.getElementById("productModal").style.display = "block";
+            document.getElementById("searchResult").innerText = "";
+          } else {
+            // إذا لم يتم العثور على المنتج، يعرض رسالة بدون فتح المودال
+            document.getElementById("searchResult").innerText = "لم يتم العثور على منتج.";
+          }
+        })
+        .catch(function(error) {
+          console.error("خطأ في الحصول على المنتج:", error);
+          alert("حدث خطأ أثناء الاتصال بقاعدة البيانات");
+        });
     }
     
     // دالة الدخول إلى وضع الإدخال اليدوي (إضافة منتج جديد) باستخدام رقم المنتج المُدخل يدويًا
@@ -294,9 +321,10 @@
       modalMode = "add";
       showProductForm();
       document.getElementById("productModal").style.display = "block";
+      document.getElementById("searchResult").innerText = "";
     }
     
-    // دالة البحث في قاعدة البيانات باستخدام الكود
+    // دالة البحث في قاعدة البيانات باستخدام currentCode (يستخدم عند المسح بالكاميرا أو الدخول اليدوي)
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
