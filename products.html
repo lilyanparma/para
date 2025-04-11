@@ -61,6 +61,12 @@
       width: 70%;
       border: 1px solid #ccc;
       border-radius: 5px;
+      margin-bottom: 10px;
+    }
+    /* زر المسح باستخدام الكاميرا يظهر أسفل قسم الإدخال اليدوي */
+    #cameraScanButton {
+      display: block;
+      margin: 10px auto 20px auto;
     }
     /* منطقة عرض الكاميرا */
     #scanner-container {
@@ -142,10 +148,13 @@
   <!-- قسم الإدخال اليدوي لرقم المنتج -->
   <div id="manualEntry">
     <input type="text" id="manualProductCode" placeholder="أدخل رقم المنتج">
-    <button class="btn-primary" onclick="searchProduct()">بحث</button>
+    <br>
+    <button class="btn-primary" onclick="searchProduct()">بحث عن المنتج</button>
+    <button class="btn-primary" onclick="manualEntryMode()">إدخال المنتج يدويًا</button>
   </div>
   
-  <button class="btn-primary" onclick="startScan()">ابدأ المسح باستخدام الكاميرا</button>
+  <!-- زر مسح الكاميرا يظهر الآن أسفل قسم الإدخال اليدوي -->
+  <button id="cameraScanButton" class="btn-primary" onclick="startScan()">ابدأ المسح باستخدام الكاميرا</button>
   
   <!-- منطقة عرض الكاميرا -->
   <div id="scanner-container">
@@ -220,7 +229,7 @@
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة البحث في قاعدة البيانات باستخدام الكود المُدخل يدويًا
+    // دالة البحث باستخدام رقم المنتج المُدخل يدويًا (لبحث عن المنتج)
     function searchProduct() {
       var code = document.getElementById("manualProductCode").value;
       if (code.trim() === "") {
@@ -229,6 +238,19 @@
       }
       currentCode = code;
       processCode();
+    }
+    
+    // دالة الدخول إلى وضع الإدخال اليدوي (إضافة منتج جديد) باستخدام رقم المنتج المُدخل يدويًا
+    function manualEntryMode() {
+      var code = document.getElementById("manualProductCode").value;
+      if (code.trim() === "") {
+        alert("يرجى إدخال رقم المنتج.");
+        return;
+      }
+      currentCode = code;
+      modalMode = "add";
+      showProductForm();
+      document.getElementById("productModal").style.display = "block";
     }
 
     // دالة البحث في قاعدة البيانات باستخدام الكود
@@ -256,6 +278,19 @@
         alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
       }
     }
+    
+    // دالة لفحص انتهاء صلاحية المنتج (تنبيه قبل 30 يوم)
+    function checkExpiry(expiryDate) {
+      if (expiryDate) {
+        var exp = new Date(expiryDate);
+        var today = new Date();
+        var diffTime = exp.getTime() - today.getTime();
+        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+        if (diffDays > 0 && diffDays <= 30) {
+          alert("تنبيه: انتهاء صلاحية المنتج قريب (" + diffDays + " يوم/أيام متبقية)!");
+        }
+      }
+    }
 
     // دالة عرض معلومات المنتج (View Mode)
     function showProductInfo(data) {
@@ -279,8 +314,10 @@
       }
       document.getElementById("productInfoSection").style.display = "block";
       
-      // فحص المخزون للتنبيه
+      // فحص المخزون والتنبيه
       checkInventory(data.quantity);
+      // فحص انتهاء الصلاحية والتنبيه
+      checkExpiry(data.expiryDate);
       
       // إعداد أزرار وضع العرض (ترتيب عمودي)
       var footer = document.getElementById("modalFooter");
@@ -310,16 +347,21 @@
       btnReturn.className = "btn-warning";
       btnReturn.innerText = "ارجاع المنتج";
       btnReturn.onclick = function() {
-        firebase.database().ref("products/" + currentCode).update({
-          quantity: data.quantity + 1
-        })
-        .then(function() {
-          alert("تم تسجيل عملية الإرجاع!");
-          closeModal();
-        })
-        .catch(function(error) {
-          alert("فشل تسجيل الإرجاع: " + error);
-        });
+        // لا يمكن زيادة المخزون عن القيمة الأصلية (maxQuantity)
+        if (data.quantity < data.maxQuantity) {
+          firebase.database().ref("products/" + currentCode).update({
+            quantity: data.quantity + 1
+          })
+          .then(function() {
+            alert("تم تسجيل عملية الإرجاع!");
+            closeModal();
+          })
+          .catch(function(error) {
+            alert("فشل تسجيل الإرجاع: " + error);
+          });
+        } else {
+          alert("لا يمكن ارجاع المنتج أكثر من المخزون الأصلي (" + data.maxQuantity + " قطعة)!");
+        }
       };
       
       var btnDelete = document.createElement("button");
@@ -414,7 +456,8 @@
           discount: discount ? parseFloat(discount) : 0,
           finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
-          image: imageURL || ""
+          image: imageURL || "",
+          maxQuantity: parseInt(quantity)  // حفظ المخزون الأصلي
         })
         .then(function() {
           alert("تمت إضافة المنتج بنجاح!");
@@ -466,6 +509,7 @@
           finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || ""
+          // لا يتم تعديل maxQuantity عند التعديل
         })
         .then(function() {
           alert("تم تعديل المنتج بنجاح!");
