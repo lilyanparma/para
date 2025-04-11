@@ -22,6 +22,7 @@
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
   
   <style>
+    /* تنسيق الصفحة العام */
     body {
       font-family: Arial, sans-serif;
       direction: rtl;
@@ -119,6 +120,7 @@
       margin: 10px;
       font-size: 16px;
       padding-bottom: 5px;
+      white-space: pre-line; /* للسماح بانتقال السطور */
     }
   </style>
 </head>
@@ -142,23 +144,27 @@
         <div id="infoName" class="info-field"></div>
         <div id="infoQuantity" class="info-field"></div>
         <div id="infoPrice" class="info-field"></div>
+        <div id="infoExtra" class="info-field"></div>
         <div id="infoImage" class="info-field"></div>
       </div>
       
       <!-- قسم نموذج المنتج (Add/Edit Mode) -->
       <div id="productFormSection" style="display:none;">
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
-        <!-- إضافة تاريخ الإضافة -->
+        <!-- حقل تاريخ الإضافة -->
         <input type="date" id="addedDate" class="input-field" placeholder="تاريخ الإضافة">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
         <input type="number" id="discountInput" class="input-field" placeholder="ادخل الخصم">
-        <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي" readonly>
+        <!-- حقل المبلغ النهائي يتم إدخاله يدويًا من قبل المستخدم -->
+        <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي">
+        <!-- حقل تاريخ انتهاء الصلاحية -->
         <input type="date" id="expiryDate" class="input-field" placeholder="تاريخ انتهاء الصلاحية">
+        <!-- رفع الصورة أو التقاطها مباشرة -->
         <input type="file" id="productImage" class="input-field" accept="image/*" capture="environment">
       </div>
       
-      <!-- المودال-footer: الأزرار تظهر بناءً على الوضع -->
+      <!-- المودال-footer: الأزرار ستظهر بناءً على الوضع -->
       <div class="modal-footer" id="modalFooter"></div>
     </div>
   </div>
@@ -169,14 +175,13 @@
     var currentCode = "";
     // كائن قارئ الأكواد من ZXing
     var codeReader = null;
-    // نمط المودال: "add" أو "view" أو "edit"
+    // متغير لحالة المودال: "add" أو "view" أو "edit"
     var modalMode = "";
 
     // دالة بدء عملية المسح باستخدام ZXing
     function startScan() {
       currentCode = "";
       document.getElementById("scanner-container").style.display = "block";
-      
       codeReader = new ZXing.BrowserMultiFormatReader();
       codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
         if (result) {
@@ -193,13 +198,11 @@
 
     // دالة إيقاف عملية المسح
     function stopScanner() {
-      if (codeReader) {
-        codeReader.reset();
-      }
+      if (codeReader) { codeReader.reset(); }
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة البحث في قاعدة البيانات باستخدام الكود
+    // دالة البحث في قاعدة البيانات حسب الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(function(snapshot) {
@@ -208,7 +211,7 @@
             showProductInfo(snapshot.val());
           } else {
             modalMode = "add";
-            showProductForm(); // الحقول فارغة
+            showProductForm(); // الحقول ستكون فارغة
           }
           document.getElementById("productModal").style.display = "block";
         })
@@ -218,21 +221,31 @@
         });
     }
 
+    // دالة لفحص المخزون وتنبيه المستخدم إذا كان منخفضًا (5 قطع أو أقل)
+    function checkInventory(quantity) {
+      if (quantity <= 5) {
+        alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
+      }
+    }
+
     // دالة عرض معلومات المنتج (View Mode)
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
+      // تعبئة المعلومات الأساسية
       document.getElementById("infoName").innerText = "اسم المنتج: " + data.name;
       document.getElementById("infoQuantity").innerText = "عدد القطع: " + data.quantity;
       document.getElementById("infoPrice").innerText = "الثمن: " + data.price;
-      // عرض التفاصيل الإضافية إن وجدت
-      var extraDetails = "";
-      if(data.addedDate) { extraDetails += "\nتاريخ الإضافة: " + data.addedDate; }
-      if(data.discount) { extraDetails += "\nالخصم: " + data.discount; }
-      if(data.finalAmount) { extraDetails += "\nالمبلغ النهائي: " + data.finalAmount; }
-      if(data.expiryDate) { extraDetails += "\nتاريخ انتهاء الصلاحية: " + data.expiryDate; }
-      document.getElementById("infoPrice").innerText += extraDetails;
       
+      // تعبئة التفاصيل الإضافية
+      var extra = "";
+      if(data.addedDate) { extra += "تاريخ الإضافة: " + data.addedDate + "\n"; }
+      if(data.discount) { extra += "الخصم: " + data.discount + "\n"; }
+      if(data.finalAmount) { extra += "المبلغ النهائي: " + data.finalAmount + "\n"; }
+      if(data.expiryDate) { extra += "تاريخ انتهاء الصلاحية: " + data.expiryDate + "\n"; }
+      document.getElementById("infoExtra").innerText = extra;
+      
+      // عرض الصورة إن وجدت
       if (data.image) {
         document.getElementById("infoImage").innerHTML = '<img src="' + data.image + '" alt="صورة المنتج" style="max-width:100%; max-height:150px;"/>';
       } else {
@@ -240,7 +253,10 @@
       }
       document.getElementById("productInfoSection").style.display = "block";
       
-      // إعداد أزرار وضع العرض (عرضها عمودياً)
+      // فحص المخزون للتنبيه
+      checkInventory(data.quantity);
+      
+      // إعداد أزرار وضع العرض (تُعرض عموديًا)
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
       
@@ -276,7 +292,7 @@
           closeModal();
         })
         .catch(function(error) {
-          alert("فشل تسجيل عملية الإرجاع: " + error);
+          alert("فشل تسجيل الإرجاع: " + error);
         });
       };
       
@@ -293,24 +309,26 @@
         showProductForm(data);
       };
       
+      // ترتيب الأزرار عموديًا
       footer.appendChild(btnSale);
       footer.appendChild(btnReturn);
       footer.appendChild(btnDelete);
       footer.appendChild(btnEdit);
     }
 
-    // دالة عرض نموذج المنتج (Add/Edit Mode)
+    // دالة عرض نموذج المنتج للإضافة أو التعديل (Add/Edit Mode)
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
       document.getElementById("productInfoSection").style.display = "none";
       document.getElementById("productFormSection").style.display = "block";
+      
+      // تعبئة الحقول في وضع التعديل إن وجدت البيانات
       document.getElementById("productName").value = data.name || "";
       document.getElementById("addedDate").value = data.addedDate || "";
       document.getElementById("quantityInput").value = data.quantity || "";
       document.getElementById("priceInput").value = data.price || "";
       document.getElementById("discountInput").value = data.discount || "";
-      // احتساب المبلغ النهائي تلقائيًا إذا كانت القيم متوفرة
-      document.getElementById("finalAmountInput").value = data.finalAmount || ( (data.price && data.discount) ? (data.price - data.discount) : "");
+      document.getElementById("finalAmountInput").value = data.finalAmount || "";
       document.getElementById("expiryDate").value = data.expiryDate || "";
       document.getElementById("productImage").value = "";
       
@@ -325,6 +343,7 @@
         actionButton.innerText = "تعديل المنتج";
         actionButton.onclick = updateProduct;
       }
+      
       var btnCancel = document.createElement("button");
       btnCancel.className = "btn-cancel";
       btnCancel.innerText = "إلغاء";
@@ -358,8 +377,8 @@
       var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
       
-      if (!name || !addedDate || !quantity || !price) {
-        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن)!");
+      if (!name || !addedDate || !quantity || !price || !finalAmount) {
+        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن، المبلغ النهائي)!");
         return;
       }
       
@@ -371,7 +390,7 @@
           quantity: parseInt(quantity),
           price: parseFloat(price),
           discount: discount ? parseFloat(discount) : 0,
-          finalAmount: finalAmount ? parseFloat(finalAmount) : (parseFloat(price) - (discount ? parseFloat(discount) : 0)),
+          finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || ""
         })
@@ -399,7 +418,7 @@
       }
     }
 
-    // دالة تحديث المنتج مع رفع صورة جديدة إذا تم اختيارها
+    // دالة تحديث المنتج مع رفع صورة جديدة إن وُجدت
     function updateProduct() {
       var name = document.getElementById("productName").value;
       var addedDate = document.getElementById("addedDate").value;
@@ -410,8 +429,8 @@
       var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
       
-      if (!name || !addedDate || !quantity || !price) {
-        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن)!");
+      if (!name || !addedDate || !quantity || !price || !finalAmount) {
+        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن، المبلغ النهائي)!");
         return;
       }
       
@@ -422,7 +441,7 @@
           quantity: parseInt(quantity),
           price: parseFloat(price),
           discount: discount ? parseFloat(discount) : 0,
-          finalAmount: finalAmount ? parseFloat(finalAmount) : (parseFloat(price) - (discount ? parseFloat(discount) : 0)),
+          finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || ""
         })
