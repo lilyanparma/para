@@ -63,7 +63,7 @@
       border-radius: 5px;
       margin-bottom: 10px;
     }
-    /* زر المسح باستخدام الكاميرا يظهر أسفل قسم الإدخال اليدوي */
+    /* زر مسح الكاميرا يظهر أسفل قسم الإدخال اليدوي */
     #cameraScanButton {
       display: block;
       margin: 10px auto 20px auto;
@@ -113,7 +113,7 @@
       font-size: 24px;
       cursor: pointer;
     }
-    /* أقسام المودال */
+    /* أقسام المودال - حقول الإدخال */
     .input-field {
       padding: 10px;
       font-size: 16px;
@@ -123,29 +123,46 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
+    /* تنسيق الجدول في قسم معلومات المنتج */
+    .info-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 0 auto;
+    }
+    .info-table td {
+      border: 1px solid #ccc;
+      padding: 8px;
+    }
+    .info-label {
+      font-weight: bold;
+      background-color: #f0f0f0;
+      width: 40%;
+    }
+    .info-value {
+      width: 60%;
+    }
+    /* تنسيق الحاوية الخاصة بصورة المنتج */
+    .info-image-container {
+      margin-top: 15px;
+      text-align: center;
+    }
+    /* تنسيق المودال-footer */
     .modal-footer {
       margin-top: 20px;
       display: flex;
-      flex-direction: column;  /* ترتيب عمودي للأزرار */
+      flex-direction: column;
       align-items: center;
     }
     .modal-footer button {
       width: 90%;
       margin: 5px 0;
     }
-    .info-field {
-      text-align: left;
-      margin: 10px;
-      font-size: 16px;
-      padding-bottom: 5px;
-      white-space: pre-line;
-    }
   </style>
 </head>
 <body>
   <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
   
-  <!-- قسم الإدخال اليدوي لرقم المنتج -->
+  <!-- قسم الإدخال اليدوي لرقم المنتج مع زرين منفصلين -->
   <div id="manualEntry">
     <input type="text" id="manualProductCode" placeholder="أدخل رقم المنتج">
     <br>
@@ -167,13 +184,39 @@
       <span class="close" onclick="closeModal()">&times;</span>
       <div id="modalHeader" class="modal-header">إجراءات المنتج</div>
       
-      <!-- قسم عرض معلومات المنتج (View Mode) -->
+      <!-- قسم عرض معلومات المنتج (View Mode) مع جدول -->
       <div id="productInfoSection" style="display:none;">
-        <div id="infoName" class="info-field"></div>
-        <div id="infoQuantity" class="info-field"></div>
-        <div id="infoPrice" class="info-field"></div>
-        <div id="infoExtra" class="info-field"></div>
-        <div id="infoImage" class="info-field"></div>
+        <table class="info-table">
+          <tr>
+            <td class="info-label">اسم المنتج:</td>
+            <td id="infoName" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">تاريخ الإضافة:</td>
+            <td id="infoAddedDate" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">عدد القطع:</td>
+            <td id="infoQuantity" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">الثمن:</td>
+            <td id="infoPrice" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">الخصم:</td>
+            <td id="infoDiscount" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">المبلغ النهائي:</td>
+            <td id="infoFinalAmount" class="info-value"></td>
+          </tr>
+          <tr>
+            <td class="info-label">تاريخ انتهاء الصلاحية:</td>
+            <td id="infoExpiryDate" class="info-value"></td>
+          </tr>
+        </table>
+        <div id="infoImage" class="info-image-container"></div>
       </div>
       
       <!-- قسم نموذج المنتج (Add/Edit Mode) -->
@@ -198,7 +241,7 @@
   
   <!-- كود JavaScript -->
   <script>
-    // متغير لتخزين الكود المكتشف أو المدخل يدويًا
+    // متغير لتخزين الكود المكتشف أو المُدخل يدويًا
     var currentCode = "";
     // كائن قارئ الأكواد من ZXing
     var codeReader = null;
@@ -252,7 +295,7 @@
       showProductForm();
       document.getElementById("productModal").style.display = "block";
     }
-
+    
     // دالة البحث في قاعدة البيانات باستخدام الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
@@ -271,7 +314,7 @@
           alert("حدث خطأ أثناء الاتصال بقاعدة البيانات");
         });
     }
-
+    
     // دالة لفحص المخزون وتنبيه المستخدم إذا كان منخفضًا (5 قطع أو أقل)
     function checkInventory(quantity) {
       if (quantity <= 5) {
@@ -291,28 +334,27 @@
         }
       }
     }
-
-    // دالة عرض معلومات المنتج (View Mode)
+    
+    // دالة عرض معلومات المنتج (View Mode) باستخدام جدول منسق
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
-      document.getElementById("infoName").innerText = "اسم المنتج: " + data.name;
-      document.getElementById("infoQuantity").innerText = "عدد القطع: " + data.quantity;
-      document.getElementById("infoPrice").innerText = "الثمن: " + data.price;
+      document.getElementById("productInfoSection").style.display = "block";
       
-      var extra = "";
-      if(data.addedDate) { extra += "تاريخ الإضافة: " + data.addedDate + "\n"; }
-      if(data.discount) { extra += "الخصم: " + data.discount + "\n"; }
-      if(data.finalAmount) { extra += "المبلغ النهائي: " + data.finalAmount + "\n"; }
-      if(data.expiryDate) { extra += "تاريخ انتهاء الصلاحية: " + data.expiryDate + "\n"; }
-      document.getElementById("infoExtra").innerText = extra;
+      // تعبئة بيانات المنتج في الجدول
+      document.getElementById("infoName").innerText = data.name || "";
+      document.getElementById("infoAddedDate").innerText = data.addedDate || "";
+      document.getElementById("infoQuantity").innerText = data.quantity || "";
+      document.getElementById("infoPrice").innerText = data.price || "";
+      document.getElementById("infoDiscount").innerText = data.discount || "";
+      document.getElementById("infoFinalAmount").innerText = data.finalAmount || "";
+      document.getElementById("infoExpiryDate").innerText = data.expiryDate || "";
       
       if (data.image) {
         document.getElementById("infoImage").innerHTML = '<img src="' + data.image + '" alt="صورة المنتج" style="max-width:100%; max-height:150px;"/>';
       } else {
         document.getElementById("infoImage").innerText = "لا يوجد صورة للمنتج";
       }
-      document.getElementById("productInfoSection").style.display = "block";
       
       // فحص المخزون والتنبيه
       checkInventory(data.quantity);
@@ -347,7 +389,7 @@
       btnReturn.className = "btn-warning";
       btnReturn.innerText = "ارجاع المنتج";
       btnReturn.onclick = function() {
-        // لا يمكن زيادة المخزون عن القيمة الأصلية (maxQuantity)
+        // منع زيادة الكمية عن القيمة الأصلية (maxQuantity)
         if (data.quantity < data.maxQuantity) {
           firebase.database().ref("products/" + currentCode).update({
             quantity: data.quantity + 1
@@ -382,7 +424,7 @@
       footer.appendChild(btnDelete);
       footer.appendChild(btnEdit);
     }
-
+    
     // دالة عرض نموذج المنتج (Add/Edit Mode)
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
@@ -416,7 +458,7 @@
       footer.appendChild(actionButton);
       footer.appendChild(btnCancel);
     }
-
+    
     // دالة إغلاق المودال وإعادة تعيين الحقول
     function closeModal() {
       document.getElementById("productModal").style.display = "none";
@@ -429,7 +471,7 @@
       document.getElementById("expiryDate").value = "";
       document.getElementById("productImage").value = "";
     }
-
+    
     // دالة إضافة المنتج مع رفع الصورة إلى Firebase Storage
     function addProduct() {
       var name = document.getElementById("productName").value;
@@ -457,7 +499,7 @@
           finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || "",
-          maxQuantity: parseInt(quantity)  // حفظ المخزون الأصلي
+          maxQuantity: parseInt(quantity) // حفظ المخزون الأصلي
         })
         .then(function() {
           alert("تمت إضافة المنتج بنجاح!");
@@ -482,7 +524,7 @@
         saveProduct("");
       }
     }
-
+    
     // دالة تحديث المنتج مع رفع صورة جديدة إن وُجدت
     function updateProduct() {
       var name = document.getElementById("productName").value;
@@ -534,7 +576,7 @@
         updateData("");
       }
     }
-
+    
     // دالة حذف المنتج
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
@@ -546,12 +588,10 @@
         alert("فشل حذف المنتج: " + error);
       });
     }
-
+    
     window.onclick = function(event) {
       var modal = document.getElementById("productModal");
-      if (event.target == modal) {
-        closeModal();
-      }
+      if (event.target == modal) { closeModal(); }
     }
   </script>
 </body>
