@@ -13,6 +13,19 @@
       text-align: center;
       color: #d6336c;
     }
+    /* حقل البحث */
+    .search-container {
+      max-width: 400px;
+      margin: 0 auto 20px;
+    }
+    .search-container input {
+      width: 100%;
+      padding: 10px;
+      font-size: 16px;
+      border: 1px solid #ccc;
+      border-radius: 5px;
+    }
+    /* بطاقة المنتج */
     .product-card {
       border: 1px solid #ccc;
       border-radius: 5px;
@@ -49,14 +62,29 @@
 
 <h1>قائمة المنتجات</h1>
 
+<!-- حقل البحث -->
+<div class="search-container">
+  <input type="text" id="searchProductInput" placeholder="ابحث عن منتج...">
+</div>
+
+<!-- حاوية عرض المنتجات -->
 <div id="productsContainer">
-  <div id="noProducts">لا توجد منتجات مضافة بعد</div>
+  <div id="noProducts">لا توجد منتجات مضافة</div>
 </div>
 
 <script>
+  // تخزين عالمي للمنتجات لتسهيل عملية البحث
+  window.allProducts = {};
+
   // مستمع لبيانات "products" من Firebase لتحديث عرض المنتجات تلقائيًا
   firebase.database().ref('products').on('value', function(snapshot) {
     var products = snapshot.val();
+    window.allProducts = products || {};
+    displayProducts(products);
+  });
+
+  // دالة لعرض المنتجات
+  function displayProducts(products) {
     var container = document.getElementById('productsContainer');
     container.innerHTML = ''; // مسح المحتوى الحالي
 
@@ -87,6 +115,24 @@
 
       container.appendChild(card);
     }
+  }
+
+  // دالة البحث الفوري أثناء الكتابة
+  document.getElementById('searchProductInput').addEventListener('input', function() {
+    var searchTerm = this.value.toLowerCase();
+
+    if (!window.allProducts || Object.keys(window.allProducts).length === 0) return;
+
+    var filteredProducts = {};
+
+    for (var key in window.allProducts) {
+      var product = window.allProducts[key];
+      if (product.name.toLowerCase().includes(searchTerm)) {
+        filteredProducts[key] = product;
+      }
+    }
+
+    displayProducts(filteredProducts);
   });
 </script>
 
