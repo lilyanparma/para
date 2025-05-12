@@ -2,7 +2,7 @@
 <html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8">
-  <title>عرض المنتجات</title>
+  <title>قائمة المنتجات</title>
   <style>
     body {
       font-family: Arial, sans-serif;
@@ -31,6 +31,10 @@
       border-radius: 5px;
       margin-bottom: 20px;
       overflow: hidden;
+      display: none; /* Initially hide all products */
+    }
+    .product-card.visible {
+      display: block; /* Show only visible products */
     }
     .product-header {
       background-color: #f2f2f2;
@@ -52,8 +56,8 @@
   </style>
 
   <!-- Firebase SDK -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js "></script>
 
   <!-- Firebase Setup -->
   <script src="firebase-setup.js"></script>
@@ -97,7 +101,7 @@
       var product = products[key];
 
       var card = document.createElement('div');
-      card.className = 'product-card';
+      card.className = 'product-card visible'; // Add the "visible" class to show it initially
 
       var header = document.createElement('div');
       header.className = 'product-header';
@@ -121,18 +125,18 @@
   document.getElementById('searchProductInput').addEventListener('input', function() {
     var searchTerm = this.value.toLowerCase();
 
-    if (!window.allProducts || Object.keys(window.allProducts).length === 0) return;
+    // تحديد جميع بطاقات المنتجات
+    var productCards = document.querySelectorAll('.product-card');
 
-    var filteredProducts = {};
-
-    for (var key in window.allProducts) {
-      var product = window.allProducts[key];
-      if (product.name.toLowerCase().includes(searchTerm)) {
-        filteredProducts[key] = product;
+    // تصفية المنتجات بناءً على البحث
+    productCards.forEach(function(card) {
+      var productName = card.querySelector('.product-header').textContent.toLowerCase();
+      if (productName.includes(searchTerm)) {
+        card.classList.add('visible'); // إظهار البطاقة إذا كانت مطابقة
+      } else {
+        card.classList.remove('visible'); // إخفاء البطاقة إذا لم تكن مطابقة
       }
-    }
-
-    displayProducts(filteredProducts);
+    });
   });
 </script>
 
