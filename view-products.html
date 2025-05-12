@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+  <meta charset="UTF-8">
+  <title>عرض المنتجات</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background-color: #fff5f7;
+    }
+    h2 {
+      text-align: center;
+      color: #d6336c;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 20px;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #ddd;
+    }
+    th {
+      background-color: pink;
+      color: white;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .empty {
+      text-align: center;
+      color: #888;
+      font-style: italic;
+    }
+  </style>
+</head>
+<body>
+
+<h2>قائمة المنتجات</h2>
+
+<table>
+  <thead>
+    <tr>
+      <th>#</th>
+      <th>اسم المنتج</th>
+      <th>السعر</th>
+      <th>الكمية</th>
+    </tr>
+  </thead>
+  <tbody id="products-table">
+    <!-- سيتم تحميل البيانات هنا -->
+  </tbody>
+</table>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js "></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js "></script>
+
+<!-- Firebase Setup -->
+<script src="firebase-setup.js"></script>
+
+<script>
+  // التأكد من وجود Firebase مهيأ
+  if (!firebase.apps.length) {
+    firebase.initializeApp(firebaseConfig);
+  }
+
+  const tableBody = document.getElementById('products-table');
+
+  // قراءة البيانات من Firebase Realtime Database باستخدام المتغير من firebase-setup.js
+  database.ref('products').once('value')
+    .then((snapshot) => {
+      if (!snapshot.exists()) {
+        tableBody.innerHTML = "<tr><td colspan='4' class='empty'>لا توجد منتجات مضافة</td></tr>";
+        return;
+      }
+
+      const products = snapshot.val();
+      let index = 1;
+
+      for (const key in products) {
+        const product = products[key];
+
+        const row = `
+          <tr>
+            <td>${index++}</td>
+            <td>${product.name}</td>
+            <td>${parseFloat(product.price).toFixed(2)} ريال</td>
+            <td>${product.quantity}</td>
+          </tr>
+        `;
+        tableBody.innerHTML += row;
+      }
+    })
+    .catch((error) => {
+      console.error("فشل جلب البيانات:", error);
+      tableBody.innerHTML = "<tr><td colspan='4' class='empty'>فشل تحميل البيانات</td></tr>";
+    });
+</script>
+
+</body>
+</html>
