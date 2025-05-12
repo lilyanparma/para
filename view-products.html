@@ -9,97 +9,85 @@
       margin: 20px;
       background-color: #fff5f7;
     }
-    h2 {
+    h1 {
       text-align: center;
       color: #d6336c;
     }
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin-top: 20px;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+    .product-card {
+      border: 1px solid #ccc;
+      border-radius: 5px;
+      margin-bottom: 20px;
+      overflow: hidden;
     }
-    th, td {
-      padding: 12px;
+    .product-header {
+      background-color: #f2f2f2;
+      padding: 10px;
+      font-weight: bold;
       text-align: center;
-      border: 1px solid #ddd;
     }
-    th {
-      background-color: pink;
-      color: white;
+    .product-info {
+      padding: 10px;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    .product-info p {
+      margin: 5px 0;
     }
-    .empty {
+    #noProducts {
       text-align: center;
       color: #888;
       font-style: italic;
     }
   </style>
+
+  <!-- Firebase SDK -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
+
+  <!-- Firebase Setup -->
+  <script src="firebase-setup.js"></script>
 </head>
 <body>
 
-<h2>قائمة المنتجات</h2>
+<h1>قائمة المنتجات</h1>
 
-<table>
-  <thead>
-    <tr>
-      <th>#</th>
-      <th>اسم المنتج</th>
-      <th>السعر</th>
-      <th>الكمية</th>
-    </tr>
-  </thead>
-  <tbody id="products-table">
-    <!-- سيتم تحميل البيانات هنا -->
-  </tbody>
-</table>
-
-<!-- Firebase SDK -->
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js "></script>
-<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js "></script>
-
-<!-- Firebase Setup -->
-<script src="firebase-setup.js"></script>
+<div id="productsContainer">
+  <div id="noProducts">لا توجد منتجات مضافة بعد</div>
+</div>
 
 <script>
-  // التأكد من وجود Firebase مهيأ
-  if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-  }
+  // مستمع لبيانات "products" من Firebase لتحديث عرض المنتجات تلقائيًا
+  firebase.database().ref('products').on('value', function(snapshot) {
+    var products = snapshot.val();
+    var container = document.getElementById('productsContainer');
+    container.innerHTML = ''; // مسح المحتوى الحالي
 
-  const tableBody = document.getElementById('products-table');
+    if (!products || Object.keys(products).length === 0) {
+      container.innerHTML = '<div id="noProducts">لا توجد منتجات مضافة</div>';
+      return;
+    }
 
-  // قراءة البيانات من Firebase Realtime Database باستخدام المتغير من firebase-setup.js
-  database.ref('products').once('value')
-    .then((snapshot) => {
-      if (!snapshot.exists()) {
-        tableBody.innerHTML = "<tr><td colspan='4' class='empty'>لا توجد منتجات مضافة</td></tr>";
-        return;
-      }
+    for (var key in products) {
+      var product = products[key];
 
-      const products = snapshot.val();
-      let index = 1;
+      var card = document.createElement('div');
+      card.className = 'product-card';
 
-      for (const key in products) {
-        const product = products[key];
+      var header = document.createElement('div');
+      header.className = 'product-header';
+      header.textContent = product.name;
 
-        const row = `
-          <tr>
-            <td>${index++}</td>
-            <td>${product.name}</td>
-            <td>${parseFloat(product.price).toFixed(2)} ريال</td>
-            <td>${product.quantity}</td>
-          </tr>
-        `;
-        tableBody.innerHTML += row;
-      }
-    })
-    .catch((error) => {
-      console.error("فشل جلب البيانات:", error);
-      tableBody.innerHTML = "<tr><td colspan='4' class='empty'>فشل تحميل البيانات</td></tr>";
-    });
+      var info = document.createElement('div');
+      info.className = 'product-info';
+      info.innerHTML = `
+        <p><strong>السعر:</strong> ${parseFloat(product.price).toFixed(2)} ريال</p>
+        <p><strong>الكمية:</strong> ${product.quantity}</p>
+      `;
+
+      card.appendChild(header);
+      card.appendChild(info);
+
+      container.appendChild(card);
+    }
+  });
 </script>
 
 </body>
