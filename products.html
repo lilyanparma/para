@@ -5,22 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>منتجات - قارئ الباركود والـ QR باستخدام ZXing</title>
 
-  <!-- تحميل مكتبات Firebase من CDN -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js"></script>
-  <!-- تحميل مكتبة Firebase Storage -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-storage.js"></script>
-  
+  <!-- تحميل مكتبات Firebase (بدون Firebase Storage) -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
+
   <!-- تحميل ملف إعداد Firebase -->
   <script src="firebase-setup.js"></script>
-  
+
   <!-- تحميل مكتبة ZXing لمسح الأكواد -->
-  <script src="https://unpkg.com/@zxing/library@0.18.6/umd/index.min.js"></script>
-  
+  <script src="https://unpkg.com/ @zxing/library@0.18.6/umd/index.min.js"></script>
+
   <!-- تحميل Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css">
-  
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css ">
+
+  <!-- التنسيق -->
   <style>
     /* تنسيق الصفحة العام */
     body {
@@ -30,10 +29,12 @@
       padding: 20px;
       background: #f5f5f5;
     }
+
     h1 {
       text-align: center;
       margin-bottom: 20px;
     }
+
     button {
       display: inline-block;
       margin: 5px;
@@ -43,6 +44,7 @@
       border-radius: 5px;
       cursor: pointer;
     }
+
     /* ألوان الأزرار */
     .btn-primary { background-color: #007BFF; color: #fff; }
     .btn-primary:hover { background-color: #0056b3; }
@@ -50,11 +52,13 @@
     .btn-warning { background-color: #ffc107; color: white; }
     .btn-danger { background-color: #dc3545; color: white; }
     .btn-cancel { background-color: #6c757d; color: white; }
+
     /* قسم الإدخال اليدوي لرقم المنتج */
     #manualEntry {
       text-align: center;
       margin-bottom: 10px;
     }
+
     #manualEntry input {
       padding: 10px;
       font-size: 16px;
@@ -63,6 +67,7 @@
       border-radius: 5px;
       margin-bottom: 10px;
     }
+
     /* قسم عرض نتيجة البحث */
     #searchResult {
       text-align: center;
@@ -70,11 +75,13 @@
       font-size: 16px;
       color: red;
     }
-    /* زر مسح الكاميرا يظهر أسفل قسم الإدخال اليدوي */
+
+    /* زر مسح الكاميرا */
     #cameraScanButton {
       display: block;
       margin: 10px auto 20px auto;
     }
+
     /* منطقة عرض الكاميرا */
     #scanner-container {
       display: none;
@@ -86,11 +93,13 @@
       background: #000;
       overflow: hidden;
     }
+
     #scanner-container video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
+
     /* تنسيق المودال */
     .modal {
       display: none;
@@ -102,6 +111,7 @@
       height: 100%;
       background-color: rgba(0,0,0,0.5);
     }
+
     .modal-content {
       background-color: #fff;
       margin: 10% auto;
@@ -113,6 +123,7 @@
       text-align: center;
       position: relative;
     }
+
     .close {
       position: absolute;
       top: 5px;
@@ -120,7 +131,7 @@
       font-size: 24px;
       cursor: pointer;
     }
-    /* أقسام المودال - حقول الإدخال */
+
     .input-field {
       padding: 10px;
       font-size: 16px;
@@ -130,36 +141,40 @@
       border: 1px solid #ccc;
       border-radius: 5px;
     }
-    /* تنسيق الجدول في قسم معلومات المنتج */
+
     .info-table {
       width: 100%;
       border-collapse: collapse;
       margin: 0 auto;
     }
+
     .info-table td {
       border: 1px solid #ccc;
       padding: 8px;
     }
+
     .info-label {
       font-weight: bold;
       background-color: #f0f0f0;
       width: 40%;
     }
+
     .info-value {
       width: 60%;
     }
-    /* تنسيق الحاوية الخاصة بصورة المنتج */
+
     .info-image-container {
       margin-top: 15px;
       text-align: center;
     }
-    /* تنسيق المودال-footer */
+
     .modal-footer {
       margin-top: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
+
     .modal-footer button {
       width: 90%;
       margin: 5px 0;
@@ -168,99 +183,75 @@
 </head>
 <body>
   <h1>منتجات - قارئ الباركود والـ QR باستخدام ZXing</h1>
-  
-  <!-- قسم الإدخال اليدوي لرقم المنتج -->
+
+  <!-- قسم الإدخال اليدوي -->
   <div id="manualEntry">
     <input type="text" id="manualProductCode" placeholder="أدخل رقم المنتج">
     <br>
     <button class="btn-primary" onclick="searchProduct()">بحث عن المنتج</button>
     <button class="btn-primary" onclick="manualEntryMode()">إدخال المنتج يدويًا</button>
   </div>
-  
-  <!-- قسم عرض نتيجة البحث -->
+
+  <!-- رسالة البحث -->
   <div id="searchResult"></div>
-  
-  <!-- زر مسح الكاميرا يظهر الآن أسفل قسم الإدخال اليدوي -->
+
+  <!-- زر المسح بالكاميرا -->
   <button id="cameraScanButton" class="btn-primary" onclick="startScan()">ابدأ المسح باستخدام الكاميرا</button>
-  
-  <!-- منطقة عرض الكاميرا -->
+
+  <!-- منطقة الكاميرا -->
   <div id="scanner-container">
     <video id="video" autoplay></video>
   </div>
-  
+
   <!-- المودال -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
-      <div id="modalHeader" class="modal-header">إجراءات المنتج</div>
-      
-      <!-- قسم عرض معلومات المنتج (View Mode) باستخدام جدول -->
+      <div id="modalHeader">إجراءات المنتج</div>
+
+      <!-- قسم عرض معلومات المنتج -->
       <div id="productInfoSection" style="display:none;">
         <table class="info-table">
-          <tr>
-            <td class="info-label">اسم المنتج:</td>
-            <td id="infoName" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">تاريخ الإضافة:</td>
-            <td id="infoAddedDate" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">عدد القطع:</td>
-            <td id="infoQuantity" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">الثمن:</td>
-            <td id="infoPrice" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">الخصم:</td>
-            <td id="infoDiscount" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">المبلغ النهائي:</td>
-            <td id="infoFinalAmount" class="info-value"></td>
-          </tr>
-          <tr>
-            <td class="info-label">تاريخ انتهاء الصلاحية:</td>
-            <td id="infoExpiryDate" class="info-value"></td>
-          </tr>
+          <tr><td class="info-label">اسم المنتج:</td><td id="infoName" class="info-value"></td></tr>
+          <tr><td class="info-label">تاريخ الإضافة:</td><td id="infoAddedDate" class="info-value"></td></tr>
+          <tr><td class="info-label">عدد القطع:</td><td id="infoQuantity" class="info-value"></td></tr>
+          <tr><td class="info-label">الثمن:</td><td id="infoPrice" class="info-value"></td></tr>
+          <tr><td class="info-label">الخصم:</td><td id="infoDiscount" class="info-value"></td></tr>
+          <tr><td class="info-label">المبلغ النهائي:</td><td id="infoFinalAmount" class="info-value"></td></tr>
+          <tr><td class="info-label">تاريخ انتهاء الصلاحية:</td><td id="infoExpiryDate" class="info-value"></td></tr>
         </table>
         <div id="infoImage" class="info-image-container"></div>
       </div>
-      
-      <!-- قسم نموذج المنتج (Add/Edit Mode) -->
+
+      <!-- نموذج إضافة/تعديل المنتج -->
       <div id="productFormSection" style="display:none;">
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
-        <!-- حقل تاريخ الإضافة -->
-        <input type="date" id="addedDate" class="input-field" placeholder="تاريخ الإضافة">
+        <input type="date" id="addedDate" class="input-field">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
         <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
         <input type="number" id="discountInput" class="input-field" placeholder="ادخل الخصم">
-        <!-- حقل المبلغ النهائي يدخله المستخدم يدويًا -->
         <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي">
-        <!-- حقل تاريخ انتهاء الصلاحية -->
-        <input type="date" id="expiryDate" class="input-field" placeholder="تاريخ انتهاء الصلاحية">
+        <input type="date" id="expiryDate" class="input-field">
         <input type="file" id="productImage" class="input-field" accept="image/*" capture="environment">
       </div>
-      
-      <!-- المودال-footer: الأزرار تظهر بناءً على الوضع -->
+
+      <!-- أزرار التحكم -->
       <div class="modal-footer" id="modalFooter"></div>
     </div>
   </div>
-  
-  <!-- كود JavaScript -->
+
+  <!-- JavaScript -->
   <script>
-    // متغير لتخزين الكود المكتشف أو المُدخل يدويًا
+    // Imgur API Client ID
+    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // استبدل هذا بالـ Client ID الخاص بك إن احتجت لذلك لاحقًا
+
+    // متغيرات النظام
     var currentCode = "";
-    // كائن قارئ الأكواد من ZXing
     var codeReader = null;
-    // حالة المودال: "add" أو "view" أو "edit"
     var modalMode = "";
 
-    // دالة بدء عملية المسح باستخدام ZXing
+    // دالة بدء المسح
     function startScan() {
-      // إزالة رسالة البحث إن وجدت
       document.getElementById("searchResult").innerText = "";
       currentCode = "";
       document.getElementById("scanner-container").style.display = "block";
@@ -268,7 +259,6 @@
       codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
         if (result) {
           currentCode = result.getText();
-          console.log("تم اكتشاف الكود: " + currentCode);
           stopScanner();
           processCode();
         }
@@ -278,56 +268,44 @@
       });
     }
 
-    // دالة إيقاف عملية المسح
+    // إيقاف الكاميرا
     function stopScanner() {
-      if (codeReader) { codeReader.reset(); }
+      if (codeReader) codeReader.reset();
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // دالة البحث باستخدام رقم المنتج المُدخل يدويًا (لبحث عن المنتج)
+    // بحث عن المنتج
     function searchProduct() {
       var code = document.getElementById("manualProductCode").value;
-      if (code.trim() === "") {
-        alert("يرجى إدخال رقم المنتج.");
-        return;
-      }
+      if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
       currentCode = code;
       firebase.database().ref("products/" + currentCode).once('value')
-        .then(function(snapshot) {
+        .then(snapshot => {
           if (snapshot.exists()) {
             modalMode = "view";
             showProductInfo(snapshot.val());
-            document.getElementById("productModal").style.display = "block";
-            document.getElementById("searchResult").innerText = "";
           } else {
-            // إذا لم يتم العثور على المنتج، يعرض رسالة بدون فتح المودال
             document.getElementById("searchResult").innerText = "لم يتم العثور على منتج.";
           }
+          document.getElementById("productModal").style.display = "block";
         })
-        .catch(function(error) {
-          console.error("خطأ في الحصول على المنتج:", error);
-          alert("حدث خطأ أثناء الاتصال بقاعدة البيانات");
-        });
+        .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
-    
-    // دالة الدخول إلى وضع الإدخال اليدوي (إضافة منتج جديد) باستخدام رقم المنتج المُدخل يدويًا
+
+    // وضع إدخال يدوي
     function manualEntryMode() {
       var code = document.getElementById("manualProductCode").value;
-      if (code.trim() === "") {
-        alert("يرجى إدخال رقم المنتج.");
-        return;
-      }
+      if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
       currentCode = code;
       modalMode = "add";
       showProductForm();
       document.getElementById("productModal").style.display = "block";
-      document.getElementById("searchResult").innerText = "";
     }
-    
-    // دالة البحث في قاعدة البيانات باستخدام currentCode (يستخدم عند المسح بالكاميرا أو الدخول اليدوي)
+
+    // معالجة الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
-        .then(function(snapshot) {
+        .then(snapshot => {
           if (snapshot.exists()) {
             modalMode = "view";
             showProductInfo(snapshot.val());
@@ -337,39 +315,31 @@
           }
           document.getElementById("productModal").style.display = "block";
         })
-        .catch(function(error) {
-          console.error("خطأ في الحصول على المنتج:", error);
-          alert("حدث خطأ أثناء الاتصال بقاعدة البيانات");
-        });
+        .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
-    
-    // دالة لفحص المخزون وتنبيه المستخدم إذا كان منخفضًا (5 قطع أو أقل)
+
+    // فحص المخزون
     function checkInventory(quantity) {
-      if (quantity <= 5) {
-        alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
-      }
+      if (quantity <= 5) alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
     }
-    
-    // دالة لفحص انتهاء صلاحية المنتج (تنبيه قبل 30 يوم)
+
+    // فحص انتهاء الصلاحية
     function checkExpiry(expiryDate) {
       if (expiryDate) {
         var exp = new Date(expiryDate);
         var today = new Date();
-        var diffTime = exp.getTime() - today.getTime();
-        var diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-        if (diffDays > 0 && diffDays <= 30) {
+        var diffDays = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+        if (diffDays > 0 && diffDays <= 30)
           alert("تنبيه: انتهاء صلاحية المنتج قريب (" + diffDays + " يوم/أيام متبقية)!");
-        }
       }
     }
-    
-    // دالة عرض معلومات المنتج (View Mode) باستخدام جدول منسق
+
+    // عرض معلومات المنتج
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
       document.getElementById("productInfoSection").style.display = "block";
-      
-      // تعبئة بيانات المنتج في الجدول
+
       document.getElementById("infoName").innerText = data.name || "";
       document.getElementById("infoAddedDate").innerText = data.addedDate || "";
       document.getElementById("infoQuantity").innerText = data.quantity || "";
@@ -377,87 +347,61 @@
       document.getElementById("infoDiscount").innerText = data.discount || "";
       document.getElementById("infoFinalAmount").innerText = data.finalAmount || "";
       document.getElementById("infoExpiryDate").innerText = data.expiryDate || "";
-      
-      if (data.image) {
-        document.getElementById("infoImage").innerHTML = '<img src="' + data.image + '" alt="صورة المنتج" style="max-width:100%; max-height:150px;"/>';
-      } else {
-        document.getElementById("infoImage").innerText = "لا يوجد صورة للمنتج";
-      }
-      
-      // فحص المخزون والتنبيه
+      document.getElementById("infoImage").innerHTML = data.image ? `<img src="${data.image}" alt="صورة المنتج" style="max-width:100%; max-height:150px;">` : "لا يوجد صورة للمنتج";
+
       checkInventory(data.quantity);
-      // فحص انتهاء الصلاحية والتنبيه
       checkExpiry(data.expiryDate);
-      
-      // إعداد أزرار وضع العرض (ترتيب عمودي)
+
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
-      
+
       var btnSale = document.createElement("button");
       btnSale.className = "btn-success";
       btnSale.innerText = "تم البيع";
-      btnSale.onclick = function() {
+      btnSale.onclick = () => {
         if (data.quantity > 0) {
-          firebase.database().ref("products/" + currentCode).update({
-            quantity: data.quantity - 1
-          })
-          .then(function() {
-            alert("تم تسجيل عملية البيع!");
-            closeModal();
-          })
-          .catch(function(error) {
-            alert("فشل تسجيل البيع: " + error);
-          });
-        } else {
-          alert("المخزون غير كافٍ!");
-        }
+          firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity - 1 })
+            .then(() => alert("تم تسجيل عملية البيع!"))
+            .catch(error => alert("فشل تسجيل البيع: " + error));
+        } else alert("المخزون غير كافٍ!");
       };
-      
+
       var btnReturn = document.createElement("button");
       btnReturn.className = "btn-warning";
       btnReturn.innerText = "ارجاع المنتج";
-      btnReturn.onclick = function() {
-        // منع زيادة الكمية عن القيمة الأصلية (maxQuantity)
+      btnReturn.onclick = () => {
         if (data.quantity < data.maxQuantity) {
-          firebase.database().ref("products/" + currentCode).update({
-            quantity: data.quantity + 1
-          })
-          .then(function() {
-            alert("تم تسجيل عملية الإرجاع!");
-            closeModal();
-          })
-          .catch(function(error) {
-            alert("فشل تسجيل الإرجاع: " + error);
-          });
-        } else {
-          alert("لا يمكن ارجاع المنتج أكثر من المخزون الأصلي (" + data.maxQuantity + " قطعة)!");
-        }
+          firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity + 1 })
+            .then(() => alert("تم تسجيل عملية الإرجاع!"))
+            .catch(error => alert("فشل تسجيل الإرجاع: " + error));
+        } else alert("لا يمكن زيادة الكمية أكثر من الأصلية");
       };
-      
+
       var btnDelete = document.createElement("button");
       btnDelete.className = "btn-danger";
       btnDelete.innerHTML = '<i class="fas fa-trash-alt"></i> حذف منتج';
       btnDelete.onclick = deleteProduct;
-      
+
       var btnEdit = document.createElement("button");
       btnEdit.className = "btn-warning";
       btnEdit.innerHTML = '<i class="fas fa-edit"></i> تعديل منتج';
-      btnEdit.onclick = function() {
+      btnEdit.onclick = () => {
         modalMode = "edit";
         showProductForm(data);
       };
-      
+
       footer.appendChild(btnSale);
       footer.appendChild(btnReturn);
       footer.appendChild(btnDelete);
       footer.appendChild(btnEdit);
     }
-    
-    // دالة عرض نموذج المنتج (Add/Edit Mode)
+
+    // عرض نموذج الإضافة أو التعديل
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
       document.getElementById("productInfoSection").style.display = "none";
       document.getElementById("productFormSection").style.display = "block";
+
       document.getElementById("productName").value = data.name || "";
       document.getElementById("addedDate").value = data.addedDate || "";
       document.getElementById("quantityInput").value = data.quantity || "";
@@ -466,28 +410,25 @@
       document.getElementById("finalAmountInput").value = data.finalAmount || "";
       document.getElementById("expiryDate").value = data.expiryDate || "";
       document.getElementById("productImage").value = "";
-      
+
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
+
       var actionButton = document.createElement("button");
       actionButton.className = "btn-success";
-      if (modalMode === "add") {
-        actionButton.innerText = "إضافة منتج";
-        actionButton.onclick = addProduct;
-      } else {
-        actionButton.innerText = "تعديل المنتج";
-        actionButton.onclick = updateProduct;
-      }
+      actionButton.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
+      actionButton.onclick = modalMode === "add" ? addProduct : updateProduct;
+
       var btnCancel = document.createElement("button");
       btnCancel.className = "btn-cancel";
       btnCancel.innerText = "إلغاء";
       btnCancel.onclick = closeModal;
-      
+
       footer.appendChild(actionButton);
       footer.appendChild(btnCancel);
     }
-    
-    // دالة إغلاق المودال وإعادة تعيين الحقول
+
+    // إغلاق المودال
     function closeModal() {
       document.getElementById("productModal").style.display = "none";
       document.getElementById("productName").value = "";
@@ -499,8 +440,25 @@
       document.getElementById("expiryDate").value = "";
       document.getElementById("productImage").value = "";
     }
-    
-    // دالة إضافة المنتج مع رفع الصورة إلى Firebase Storage
+
+    // رفع الصورة إلى Imgur
+    async function uploadToImgur(file) {
+      const formData = new FormData();
+      formData.append("image", file);
+
+      const response = await fetch("https://api.imgur.com/3/image ", {
+        method: "POST",
+        headers: { Authorization: "Client-ID " + IMGUR_CLIENT_ID },
+        body: formData
+      });
+
+      const data = await response.json();
+
+      if (data.success) return data.data.link;
+      throw new Error("فشل رفع الصورة إلى Imgur");
+    }
+
+    // إضافة منتج
     function addProduct() {
       var name = document.getElementById("productName").value;
       var addedDate = document.getElementById("addedDate").value;
@@ -510,12 +468,12 @@
       var finalAmount = document.getElementById("finalAmountInput").value;
       var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
-      
+
       if (!name || !addedDate || !quantity || !price || !finalAmount) {
-        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن، المبلغ النهائي)!");
+        alert("يرجى تعبئة الحقول الأساسية");
         return;
       }
-      
+
       function saveProduct(imageURL) {
         firebase.database().ref("products/" + currentCode).set({
           code: currentCode,
@@ -527,33 +485,23 @@
           finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || "",
-          maxQuantity: parseInt(quantity) // حفظ المخزون الأصلي
-        })
-        .then(function() {
+          maxQuantity: parseInt(quantity)
+        }).then(() => {
           alert("تمت إضافة المنتج بنجاح!");
           closeModal();
-        })
-        .catch(function(error) {
-          alert("فشل إضافة المنتج: " + error);
-        });
+        }).catch(error => alert("فشل إضافة المنتج: " + error));
       }
-      
+
       if (imageFile) {
-        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
-        storageRef.put(imageFile)
-          .then(() => storageRef.getDownloadURL())
-          .then((downloadURL) => {
-            saveProduct(downloadURL);
-          })
-          .catch((error) => {
-            alert("فشل رفع الصورة: " + error);
-          });
+        uploadToImgur(imageFile)
+          .then(url => saveProduct(url))
+          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
       } else {
         saveProduct("");
       }
     }
-    
-    // دالة تحديث المنتج مع رفع صورة جديدة إن وُجدت
+
+    // تعديل منتج
     function updateProduct() {
       var name = document.getElementById("productName").value;
       var addedDate = document.getElementById("addedDate").value;
@@ -563,12 +511,12 @@
       var finalAmount = document.getElementById("finalAmountInput").value;
       var expiryDate = document.getElementById("expiryDate").value;
       var imageFile = document.getElementById("productImage").files[0];
-      
+
       if (!name || !addedDate || !quantity || !price || !finalAmount) {
-        alert("يرجى تعبئة الحقول الأساسية (اسم المنتج، تاريخ الإضافة، عدد القطع، الثمن، المبلغ النهائي)!");
+        alert("يرجى تعبئة الحقول الأساسية");
         return;
       }
-      
+
       function updateData(imageURL) {
         firebase.database().ref("products/" + currentCode).update({
           name: name,
@@ -579,47 +527,28 @@
           finalAmount: parseFloat(finalAmount),
           expiryDate: expiryDate || "",
           image: imageURL || ""
-          // لا يتم تعديل maxQuantity عند التعديل
-        })
-        .then(function() {
+        }).then(() => {
           alert("تم تعديل المنتج بنجاح!");
           closeModal();
-        })
-        .catch(function(error) {
-          alert("فشل تعديل المنتج: " + error);
-        });
+        }).catch(error => alert("فشل تعديل المنتج: " + error));
       }
-      
+
       if (imageFile) {
-        var storageRef = firebase.storage().ref("productImages/" + currentCode + "/" + imageFile.name);
-        storageRef.put(imageFile)
-          .then(() => storageRef.getDownloadURL())
-          .then((downloadURL) => {
-            updateData(downloadURL);
-          })
-          .catch((error) => {
-            alert("فشل رفع الصورة: " + error);
-          });
+        uploadToImgur(imageFile)
+          .then(url => updateData(url))
+          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
       } else {
         updateData("");
       }
     }
-    
-    // دالة حذف المنتج
+
+    // حذف منتج
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
-      .then(function() {
-        alert("تم حذف المنتج!");
-        closeModal();
-      })
-      .catch(function(error) {
-        alert("فشل حذف المنتج: " + error);
-      });
-    }
-    
-    window.onclick = function(event) {
-      var modal = document.getElementById("productModal");
-      if (event.target == modal) { closeModal(); }
+        .then(() => {
+          alert("تم حذف المنتج!");
+          closeModal();
+        }).catch(error => alert("فشل حذف المنتج: " + error));
     }
   </script>
 </body>
