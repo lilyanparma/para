@@ -9,22 +9,22 @@
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
 
-  <!-- jsPDF -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
-  <!-- autoTable for PDF Tables -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js "></script>
+  <!-- html2pdf.js -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js "></script>
 
   <style>
     body {
-      font-family: Arial, sans-serif;
+      font-family: 'Tahoma', 'DejaVu Sans', 'Arial', sans-serif;
       direction: rtl;
-      text-align: center;
+      text-align: right;
       margin-top: 50px;
-      background: #f9f9f9;
+      background: #f4f4f4;
     }
+
     h1 {
       margin-bottom: 20px;
     }
+
     button {
       padding: 12px 24px;
       font-size: 16px;
@@ -34,8 +34,67 @@
       background-color: #007BFF;
       color: white;
     }
+
     button:hover {
       background-color: #0056b3;
+    }
+
+    /* تصميم الفاتورة */
+    #invoiceContent {
+      visibility: hidden;
+      position: absolute;
+      left: -9999px;
+      width: 90%;
+      max-width: 800px;
+      margin: auto;
+      padding: 30px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+
+    .company-name {
+      font-size: 24px;
+      font-weight: bold;
+      color: #007BFF;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 20px 0;
+    }
+
+    th, td {
+      border: 1px solid #ccc;
+      padding: 10px;
+      vertical-align: top;
+    }
+
+    th {
+      background-color: #007BFF;
+      color: white;
+    }
+
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+
+    .total-row td {
+      font-weight: bold;
+      background-color: #e9ecef;
+    }
+
+    .footer {
+      margin-top: 30px;
+      font-style: italic;
+      color: #555;
     }
   </style>
 </head>
@@ -45,30 +104,76 @@
   <p>انقر على الزر أدناه لإنشاء فاتورة شهرية تلقائية بصيغة PDF.</p>
   <button onclick="generateInvoice()">إنشاء فاتورة (PDF)</button>
 
+  <!-- تصميم الفاتورة -->
+  <div id="invoiceContent">
+    <div class="header">
+      <div class="company-name">PARAMEDICAL LILYAN ROSE</div>
+      <h2>فاتورة شهرية</h2>
+      <p><strong>الشهر:</strong> <span id="arMonth"></span></p>
+      <p><strong>تاريخ الإصدار:</strong> <span id="todayDate"></span></p>
+    </div>
+
+    <table>
+      <thead>
+        <tr>
+          <th>#</th>
+          <th>المنتج</th>
+          <th style="width: 100px;">الكمية</th>
+          <th style="width: 100px;">السعر</th>
+          <th style="width: 100px;">الإجمالي</th>
+        </tr>
+      </thead>
+      <tbody id="productsTableBody">
+        <!-- سيتم ملؤها ديناميكيًا -->
+      </tbody>
+    </table>
+
+    <table style="margin-top: 20px;">
+      <tbody>
+        <tr class="total-row">
+          <td colspan="3"><strong>إجمالي المبيعات</strong></td>
+          <td colspan="2"><span dir="ltr" id="totalSales"></span> ريال</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3"><strong>إجمالي المصاريف</strong></td>
+          <td colspan="2"><span dir="ltr" id="totalExpenses"></span> ريال</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="3"><strong>الأرباح</strong></td>
+          <td colspan="2"><span dir="ltr" id="profit"></span> ريال</td>
+        </tr>
+      </tbody>
+    </table>
+
+    <div class="footer">
+      PARAMEDICAL LILYAN ROSE.
+    </div>
+  </div>
+
   <script>
     // إعداد Firebase - استبدل هذه القيم ببيانات مشروعك
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-      authDomain: "pharmacy-system-9def6.firebaseapp.com",
-      databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com ",
-      projectId: "pharmacy-system-9def6",
-      storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-      messagingSenderId: "630855008414",
-      appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-      measurementId: "G-LC5NDKP6QZ"
-    };
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+  authDomain: "pharmacy-system-9def6.firebaseapp.com",
+  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+  projectId: "pharmacy-system-9def6",
+  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
+  messagingSenderId: "630855008414",
+  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+  measurementId: "G-LC5NDKP6QZ"
+};
 
     // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
 
-    // دالة لحساب الفاتورة وإنشاء PDF
     async function generateInvoice() {
       const now = new Date();
       const month = now.toISOString().slice(0, 7); // مثل: "2025-04"
 
       try {
-        // جلب بيانات المنتجات
+        // جلب المنتجات
         const productsSnapshot = await database.ref("products").once("value");
         let totalSales = 0;
         let soldProducts = [];
@@ -95,7 +200,7 @@
           return;
         }
 
-        // جلب المصاريف الشهرية
+        // جلب المصاريف
         const expensesSnapshot = await database.ref("expenses/" + month).once("value");
         const expensesData = expensesSnapshot.val() || {};
         const totalExpenses = parseFloat(expensesData.amount) || 0;
@@ -107,65 +212,53 @@
           "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
         ];
         const arMonth = `${monthsAr[now.getMonth()]} ${now.getFullYear()}`;
+        const today = new Date().toLocaleDateString("ar-EG");
 
-        // إنشاء ملف PDF
-        createPDF(arMonth, totalSales, totalExpenses, profit, soldProducts);
+        // تحديث محتوى الفاتورة
+        document.getElementById("arMonth").innerText = arMonth;
+        document.getElementById("todayDate").innerText = today;
+        document.getElementById("totalSales").innerHTML = `<span dir="ltr">${totalSales.toFixed(2)}</span>`;
+        document.getElementById("totalExpenses").innerHTML = `<span dir="ltr">${totalExpenses.toFixed(2)}</span>`;
+        document.getElementById("profit").innerHTML = `<span dir="ltr">${profit.toFixed(2)}</span>`;
+
+        const tbody = document.getElementById("productsTableBody");
+        tbody.innerHTML = "";
+        soldProducts.forEach((item, index) => {
+          const row = document.createElement("tr");
+          row.innerHTML = `
+            <td>${index + 1}</td>
+            <td>${item.name}</td>
+            <td><span dir="ltr">${item.quantity}</span></td>
+            <td><span dir="ltr">${item.price.toFixed(2)}</span></td>
+            <td><span dir="ltr">${item.amount.toFixed(2)}</span></td>
+          `;
+          tbody.appendChild(row);
+        });
+
+        // إظهار الفاتورة مؤقتًا لإنشاء PDF
+        const element = document.getElementById("invoiceContent");
+        element.style.visibility = 'visible';
+        element.style.position = 'static';
+
+        // تحويل HTML إلى PDF
+        const opt = {
+          margin:       1,
+          filename:     `فاتورة_${arMonth}.pdf`,
+          image:        { type: 'jpeg', quality: 0.98 },
+          html2canvas:  { scale: 2 },
+          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
+        };
+
+        await html2pdf().set(opt).from(element).save();
+
+        // إعادة إخفاء الفاتورة بعد الانتهاء
+        element.style.visibility = 'hidden';
+        element.style.position = 'absolute';
+        element.style.left = '-9999px';
 
       } catch (error) {
         alert("حدث خطأ أثناء جلب البيانات: " + error.message);
       }
-    }
-
-    // دالة إنشاء PDF
-    function createPDF(month, totalSales, totalExpenses, profit, soldProducts) {
-      const { jsPDF } = window.jspdf;
-      const doc = new jsPDF('p', 'mm', 'a4');
-
-      // معلومات الشركة
-      doc.setFontSize(20);
-      doc.setTextColor(0, 123, 255);
-      doc.text("صيدلية المستقبل", 105, 15, { align: "center" });
-
-      doc.setFontSize(16);
-      doc.setTextColor(0, 0, 0);
-      doc.text("فاتورة شهرية", 105, 25, { align: "center" });
-
-      doc.setFontSize(12);
-      doc.text(`الشهر: ${month}`, 20, 35);
-      doc.text(`إجمالي المبيعات: ${totalSales.toFixed(2)} ريال`, 20, 45);
-      doc.text(`إجمالي المصاريف: ${totalExpenses.toFixed(2)} ريال`, 20, 55);
-      doc.text(`الأرباح: ${profit.toFixed(2)} ريال`, 20, 65);
-
-      // جدول المنتجات
-      const tableColumn = ["#", "المنتج", "الكمية", "السعر", "الإجمالي"];
-      const tableRows = [];
-
-      soldProducts.forEach((item, index) => {
-        const itemRow = [
-          index + 1,
-          item.name,
-          item.quantity,
-          item.price.toFixed(2),
-          item.amount.toFixed(2)
-        ];
-        tableRows.push(itemRow);
-      });
-
-      doc.autoTable({
-        head: [tableColumn],
-        body: tableRows,
-        startY: 75,
-        theme: 'grid',
-        styles: { font: 'Arial' },
-        headStyles: { fillColor: [0, 123, 255] }
-      });
-
-      const finalY = doc.lastAutoTable.finalY + 10;
-
-      const today = new Date().toLocaleDateString("ar-EG");
-      doc.text(`تاريخ الإصدار: ${today}`, 20, finalY);
-
-      doc.save(`فاتورة_${month.replace(" ", "_")}.pdf`);
     }
   </script>
 </body>
