@@ -1,59 +1,113 @@
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>فاتورة شهرية</title>
 
-  <title>الحسابات والأرباح - إصدار فاتورة</title>
+  <!-- Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
+  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
+
+  <!-- jsPDF -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+
   <style>
-    body { 
+    body {
       font-family: Arial, sans-serif;
       direction: rtl;
-      margin: 20px;
+      text-align: center;
+      margin-top: 50px;
+      background: #f9f9f9;
     }
     h1 {
-      text-align: center;
       margin-bottom: 20px;
     }
-    .btn-invoice {
-      background-color: #007BFF;
-      color: #fff;
+    button {
+      padding: 12px 24px;
+      font-size: 16px;
       border: none;
-      padding: 10px 20px;
       border-radius: 5px;
       cursor: pointer;
-      font-size: 16px;
-      display: block;
-      margin: 0 auto;
+      background-color: #007BFF;
+      color: white;
     }
-    .btn-invoice:hover {
+    button:hover {
       background-color: #0056b3;
     }
   </style>
 </head>
 <body>
-  <h1>الحسابات والأرباح</h1>
-  <p style="text-align: center;">انقر على الزر التالي لإنشاء فاتورة شهرية تلقائية وتحميلها بصيغة PDF.</p>
-  <button class="btn-invoice" onclick="generateInvoice()">إنشاء فاتورة شهرية (PDF)</button>
-  
-  <!-- تضمين مكتبة jsPDF من CDN -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-  <script>
-    // دالة لإنشاء فاتورة PDF بناءً على بيانات المحاسبة
-    function generateInvoice() {
-      // البيانات الوهمية؛ عند الربط مع القاعدة سيتم استبدالها ببيانات الاستعلام
-      const invoiceData = {
-        month: "أبريل 2025",
-        totalSales: 50000,
-        totalExpenses: 30000,
-        profit: 20000,
-        details: [
-          { description: "بيع المنتجات", amount: 50000 },
-          { description: "المصاريف التشغيلية", amount: 30000 }
-        ]
-      };
 
-      // استخدم jsPDF لإنشاء ملف PDF
+  <h1>إنشاء فاتورة شهرية</h1>
+  <p>انقر على الزر أدناه لإنشاء فاتورة شهرية تلقائية بصيغة PDF.</p>
+  <button onclick="generateInvoice()">إنشاء فاتورة (PDF)</button>
+
+  <script>
+    // إعداد Firebase - استبدل هذه القيم ببيانات مشروعك
+    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+  authDomain: "pharmacy-system-9def6.firebaseapp.com",
+  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+  projectId: "pharmacy-system-9def6",
+  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
+  messagingSenderId: "630855008414",
+  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+  measurementId: "G-LC5NDKP6QZ"
+};
+
+    // تهيئة Firebase
+    firebase.initializeApp(firebaseConfig);
+    const database = firebase.database();
+
+    // دالة لحساب الفاتورة وإنشاء PDF
+    async function generateInvoice() {
+      const month = new Date().toISOString().slice(0, 7); // مثل: "2025-04"
+
+      try {
+        // جلب بيانات المنتجات
+        const productsSnapshot = await database.ref("products").once("value");
+        let totalSales = 0;
+        let soldProducts = [];
+
+        productsSnapshot.forEach(childSnap => {
+          const product = childSnap.val();
+          const soldCount = product.maxQuantity - product.quantity;
+
+          if (soldCount > 0) {
+            const salesAmount = soldCount * product.price;
+            totalSales += salesAmount;
+
+            soldProducts.push({
+              name: product.name,
+              quantity: soldCount,
+              price: product.price,
+              amount: salesAmount
+            });
+          }
+        });
+
+        // جلب المصاريف الشهرية
+        const expensesSnapshot = await database.ref("expenses/" + month).once("value");
+        const expensesData = expensesSnapshot.val() || {};
+        const totalExpenses = parseFloat(expensesData.amount) || 0;
+        const profit = totalSales - totalExpenses;
+
+        // تحويل التاريخ إلى عربي
+        const options = { month: 'long', year: 'numeric' };
+        const arMonth = new Date().toLocaleDateString('ar-EG', options);
+
+        // إنشاء ملف PDF
+        createPDF(arMonth, totalSales, totalExpenses, profit, soldProducts);
+
+      } catch (error) {
+        alert("حدث خطأ أثناء جلب البيانات: " + error.message);
+      }
+    }
+
+    // دالة إنشاء PDF
+    function createPDF(month, totalSales, totalExpenses, profit, soldProducts) {
       const { jsPDF } = window.jspdf;
       const doc = new jsPDF();
 
@@ -61,24 +115,23 @@
       doc.text("فاتورة شهرية", 105, 20, { align: "center" });
 
       doc.setFontSize(12);
-      doc.text("الشهر: " + invoiceData.month, 20, 40);
-      doc.text("إجمالي المبيعات: " + invoiceData.totalSales + " ريال", 20, 50);
-      doc.text("إجمالي المصاريف: " + invoiceData.totalExpenses + " ريال", 20, 60);
-      doc.text("الأرباح: " + invoiceData.profit + " ريال", 20, 70);
+      doc.text("الشهر: " + month, 20, 30);
+      doc.text("إجمالي المبيعات: " + totalSales.toFixed(2) + " ريال", 20, 40);
+      doc.text("إجمالي المصاريف: " + totalExpenses.toFixed(2) + " ريال", 20, 50);
+      doc.text("الأرباح: " + profit.toFixed(2) + " ريال", 20, 60);
 
-      doc.text("التفاصيل:", 20, 80);
-      let yOffset = 90;
-      invoiceData.details.forEach(item => {
-        doc.text("- " + item.description + ": " + item.amount + " ريال", 20, yOffset);
+      doc.text("المنتجات المباعة:", 20, 70);
+      let yOffset = 80;
+
+      soldProducts.forEach((item, index) => {
+        doc.text(`${index + 1}. ${item.name} (${item.quantity} × ${item.price}) = ${item.amount.toFixed(2)} ريال`, 20, yOffset);
         yOffset += 10;
       });
 
-      // إظهار التاريخ الحالي
       const today = new Date().toLocaleDateString("ar-EG");
       doc.text("تاريخ الإصدار: " + today, 20, yOffset + 10);
 
-      // حفظ الملف وتحميله
-      doc.save("Invoice_" + invoiceData.month.replace(" ", "_") + ".pdf");
+      doc.save("فاتورة_" + month.replace(" ", "_") + ".pdf");
     }
   </script>
 </body>
