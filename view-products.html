@@ -110,10 +110,16 @@
 
       var info = document.createElement('div');
       info.className = 'product-info';
-     info.innerHTML = `
+    var imageHtml = product.image 
+  ? `<div class="info-image-container">
+      <img src="${product.image}" alt="صورة المنتج">
+    </div>`
+  : "";
+
+info.innerHTML = `
   <p><strong>السعر:</strong> ${parseFloat(product.price).toFixed(2)} درهم</p>
   <p><strong>الكمية:</strong> ${product.quantity}</p>
-  ${product.image ? `<img src="${product.image}" style="max-width:100%; height:auto; margin-top:10px;"><br>` : ""}
+  ${imageHtml}
 `;
 
       card.appendChild(header);
