@@ -113,17 +113,35 @@
       background-color: rgba(0,0,0,0.5);
     }
 
-    .modal-content {
-      background-color: #fff;
-      margin: 10% auto;
-      padding: 20px 20px 60px;
-      border: 1px solid #888;
-      width: 90%;
-      max-width: 400px;
-      border-radius: 10px;
-      text-align: center;
-      position: relative;
-    }
+   .modal-content {
+  background-color: #fff;
+  margin: 10% auto;
+  padding: 20px 20px 60px;
+  border: 1px solid #888;
+  width: 90%;
+  max-width: 400px;
+  border-radius: 10px;
+  text-align: center;
+  position: relative;
+  max-height: 80vh; /* تحديد أقصى ارتفاع */
+  overflow-y: auto;  /* تفعيل التمرير العمودي عند الحاجة */
+}
+    .modal-content::-webkit-scrollbar {
+  width: 8px;
+}
+
+.modal-content::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.modal-content::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
+}
+
+.modal-content::-webkit-scrollbar-thumb:hover {
+  background: #555;
+}
 
     .close {
       position: absolute;
