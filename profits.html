@@ -11,6 +11,8 @@
 
   <!-- jsPDF -->
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js "></script>
+  <!-- autoTable for PDF Tables -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js "></script>
 
   <style>
     body {
@@ -45,17 +47,16 @@
 
   <script>
     // إعداد Firebase - استبدل هذه القيم ببيانات مشروعك
-    // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-  authDomain: "pharmacy-system-9def6.firebaseapp.com",
-  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
-  projectId: "pharmacy-system-9def6",
-  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-  messagingSenderId: "630855008414",
-  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-  measurementId: "G-LC5NDKP6QZ"
-};
+    const firebaseConfig = {
+      apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+      authDomain: "pharmacy-system-9def6.firebaseapp.com",
+      databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com ",
+      projectId: "pharmacy-system-9def6",
+      storageBucket: "pharmacy-system-9def6.firebasestorage.app",
+      messagingSenderId: "630855008414",
+      appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+      measurementId: "G-LC5NDKP6QZ"
+    };
 
     // تهيئة Firebase
     firebase.initializeApp(firebaseConfig);
@@ -63,7 +64,8 @@ const firebaseConfig = {
 
     // دالة لحساب الفاتورة وإنشاء PDF
     async function generateInvoice() {
-      const month = new Date().toISOString().slice(0, 7); // مثل: "2025-04"
+      const now = new Date();
+      const month = now.toISOString().slice(0, 7); // مثل: "2025-04"
 
       try {
         // جلب بيانات المنتجات
@@ -88,6 +90,11 @@ const firebaseConfig = {
           }
         });
 
+        if (soldProducts.length === 0) {
+          alert("لم يتم بيع أي منتجات خلال هذا الشهر.");
+          return;
+        }
+
         // جلب المصاريف الشهرية
         const expensesSnapshot = await database.ref("expenses/" + month).once("value");
         const expensesData = expensesSnapshot.val() || {};
@@ -95,8 +102,11 @@ const firebaseConfig = {
         const profit = totalSales - totalExpenses;
 
         // تحويل التاريخ إلى عربي
-        const options = { month: 'long', year: 'numeric' };
-        const arMonth = new Date().toLocaleDateString('ar-EG', options);
+        const monthsAr = [
+          "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
+          "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
+        ];
+        const arMonth = `${monthsAr[now.getMonth()]} ${now.getFullYear()}`;
 
         // إنشاء ملف PDF
         createPDF(arMonth, totalSales, totalExpenses, profit, soldProducts);
@@ -109,29 +119,53 @@ const firebaseConfig = {
     // دالة إنشاء PDF
     function createPDF(month, totalSales, totalExpenses, profit, soldProducts) {
       const { jsPDF } = window.jspdf;
-      const doc = new jsPDF();
+      const doc = new jsPDF('p', 'mm', 'a4');
+
+      // معلومات الشركة
+      doc.setFontSize(20);
+      doc.setTextColor(0, 123, 255);
+      doc.text("صيدلية المستقبل", 105, 15, { align: "center" });
 
       doc.setFontSize(16);
-      doc.text("فاتورة شهرية", 105, 20, { align: "center" });
+      doc.setTextColor(0, 0, 0);
+      doc.text("فاتورة شهرية", 105, 25, { align: "center" });
 
       doc.setFontSize(12);
-      doc.text("الشهر: " + month, 20, 30);
-      doc.text("إجمالي المبيعات: " + totalSales.toFixed(2) + " ريال", 20, 40);
-      doc.text("إجمالي المصاريف: " + totalExpenses.toFixed(2) + " ريال", 20, 50);
-      doc.text("الأرباح: " + profit.toFixed(2) + " ريال", 20, 60);
+      doc.text(`الشهر: ${month}`, 20, 35);
+      doc.text(`إجمالي المبيعات: ${totalSales.toFixed(2)} ريال`, 20, 45);
+      doc.text(`إجمالي المصاريف: ${totalExpenses.toFixed(2)} ريال`, 20, 55);
+      doc.text(`الأرباح: ${profit.toFixed(2)} ريال`, 20, 65);
 
-      doc.text("المنتجات المباعة:", 20, 70);
-      let yOffset = 80;
+      // جدول المنتجات
+      const tableColumn = ["#", "المنتج", "الكمية", "السعر", "الإجمالي"];
+      const tableRows = [];
 
       soldProducts.forEach((item, index) => {
-        doc.text(`${index + 1}. ${item.name} (${item.quantity} × ${item.price}) = ${item.amount.toFixed(2)} ريال`, 20, yOffset);
-        yOffset += 10;
+        const itemRow = [
+          index + 1,
+          item.name,
+          item.quantity,
+          item.price.toFixed(2),
+          item.amount.toFixed(2)
+        ];
+        tableRows.push(itemRow);
       });
 
-      const today = new Date().toLocaleDateString("ar-EG");
-      doc.text("تاريخ الإصدار: " + today, 20, yOffset + 10);
+      doc.autoTable({
+        head: [tableColumn],
+        body: tableRows,
+        startY: 75,
+        theme: 'grid',
+        styles: { font: 'Arial' },
+        headStyles: { fillColor: [0, 123, 255] }
+      });
 
-      doc.save("فاتورة_" + month.replace(" ", "_") + ".pdf");
+      const finalY = doc.lastAutoTable.finalY + 10;
+
+      const today = new Date().toLocaleDateString("ar-EG");
+      doc.text(`تاريخ الإصدار: ${today}`, 20, finalY);
+
+      doc.save(`فاتورة_${month.replace(" ", "_")}.pdf`);
     }
   </script>
 </body>
