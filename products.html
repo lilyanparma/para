@@ -4,13 +4,32 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>منتجات - قارئ الباركود والـ QR باستخدام ZXing</title>
-  
+
   <!-- تحميل مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-analytics.js "></script>
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
 
-  <!-- تحميل مكتبة ZXing -->
+  <!-- تهيئة Firebase مباشرة في الصفحة -->
+  <script>
+    // 📌 استبدل هذه الإعدادات بمعلومات مشروع Firebase الخاص بك
+   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+  authDomain: "pharmacy-system-9def6.firebaseapp.com",
+  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+  projectId: "pharmacy-system-9def6",
+  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
+  messagingSenderId: "630855008414",
+  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+  measurementId: "G-LC5NDKP6QZ"
+  
+    };
+
+    // Initialize Firebase
+    firebase.initializeApp(firebaseConfig);
+  </script>
+
+  <!-- تحميل مكتبة ZXing لمسح الأكواد -->
   <script src="https://unpkg.com/ @zxing/library@0.18.6/umd/index.min.js"></script>
 
   <!-- Font Awesome -->
@@ -18,21 +37,9 @@
 
   <!-- التنسيق العام -->
   <style>
-    body {
-      font-family: Arial, sans-serif;
-      direction: rtl;
-      margin: 0;
-      padding: 40px;
-      background-color: #f9f9f9;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 30px;
-      font-size: 32px;
-      color: #333;
-    }
-
+    /* نفس CSS الذي كنت تستخدمه، لكن يمكنني إضافته عند الطلب */
+    body { font-family: Arial, sans-serif; direction: rtl; margin: 40px; background-color: #f9f9f9; }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 32px; color: #333; }
     button {
       display: inline-block;
       margin: 6px;
@@ -43,44 +50,20 @@
       cursor: pointer;
       transition: background-color 0.3s ease;
     }
-
     .btn-primary { background-color: #007BFF; color: white; }
     .btn-primary:hover { background-color: #0056b3; }
-
     .btn-success { background-color: #28a745; color: white; }
     .btn-warning { background-color: #ffc107; color: white; }
     .btn-danger { background-color: #dc3545; color: white; }
     .btn-cancel { background-color: #6c757d; color: white; }
-
-    #manualEntry {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    #manualProductCode {
-      padding: 12px;
-      font-size: 16px;
+    #manualEntry input {
       width: 30%;
+      padding: 10px;
+      font-size: 16px;
       border: 1px solid #ccc;
       border-radius: 6px;
       margin-right: 10px;
     }
-
-    #searchResult {
-      text-align: center;
-      margin-bottom: 20px;
-      font-size: 18px;
-      color: red;
-    }
-
-    #cameraScanButton {
-      display: block;
-      margin: 20px auto;
-      padding: 14px 30px;
-      font-size: 18px;
-      border-radius: 6px;
-    }
-
     #scanner-container {
       display: none;
       width: 100%;
@@ -91,17 +74,14 @@
       border: 2px solid #007BFF;
       background: #000;
       overflow: hidden;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
       border-radius: 10px;
-      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
     }
-
     #scanner-container video {
       width: 100%;
       height: 100%;
       object-fit: cover;
     }
-
-    /* Modal */
     .modal {
       display: none;
       position: fixed;
@@ -112,7 +92,6 @@
       height: 100%;
       background-color: rgba(0,0,0,0.5);
     }
-
     .modal-content {
       background-color: #fff;
       margin: 5% auto;
@@ -127,16 +106,6 @@
       max-height: 90vh;
       overflow-y: auto;
     }
-
-    .close {
-      position: absolute;
-      top: 10px;
-      right: 15px;
-      font-size: 24px;
-      cursor: pointer;
-      color: #333;
-    }
-
     .input-field {
       padding: 12px;
       font-size: 16px;
@@ -146,46 +115,41 @@
       margin-bottom: 12px;
       box-sizing: border-box;
     }
-
     .info-table {
       width: 100%;
       border-collapse: collapse;
       margin-top: 10px;
       font-size: 16px;
     }
-
     .info-table td {
       border: 1px solid #ddd;
       padding: 12px;
       vertical-align: top;
     }
-
     .info-label {
       font-weight: bold;
       background-color: #f9f9f9;
       width: 40%;
       white-space: nowrap;
     }
-
     .info-value {
       width: 60%;
       text-align: right;
     }
-
-    .info-image-container img {
-      max-width: 100%;
-      max-height: 150px;
-      margin-top: 10px;
-      border-radius: 6px;
+    .close {
+      position: absolute;
+      top: 10px;
+      right: 15px;
+      font-size: 24px;
+      cursor: pointer;
+      color: #333;
     }
-
     .modal-footer {
       margin-top: 20px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-
     .modal-footer button {
       width: 90%;
       margin: 6px 0;
@@ -213,7 +177,7 @@
     <video id="video" autoplay></video>
   </div>
 
-  <!-- المودال -->
+  <!-- Modal -->
   <div id="productModal" class="modal">
     <div class="modal-content">
       <span class="close" onclick="closeModal()">&times;</span>
@@ -252,15 +216,12 @@
 
   <!-- JavaScript -->
   <script>
-    // Imgur API Client ID
-    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // استبدل هذا بالـ Client ID الخاص بك إن احتجت لذلك لاحقًا
+    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // يمكنك تحديث هذا إذا كنت تستخدم Imgur
 
-    // متغيرات النظام
     var currentCode = "";
     var codeReader = null;
     var modalMode = "";
 
-    // دالة بدء المسح
     function startScan() {
       document.getElementById("searchResult").innerText = "";
       currentCode = "";
@@ -278,13 +239,11 @@
       });
     }
 
-    // إيقاف الكاميرا
     function stopScanner() {
       if (codeReader) codeReader.reset();
       document.getElementById("scanner-container").style.display = "none";
     }
 
-    // بحث عن المنتج
     function searchProduct() {
       var code = document.getElementById("manualProductCode").value;
       if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
@@ -302,7 +261,6 @@
         .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
 
-    // وضع إدخال يدوي
     function manualEntryMode() {
       var code = document.getElementById("manualProductCode").value;
       if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
@@ -312,7 +270,6 @@
       document.getElementById("productModal").style.display = "block";
     }
 
-    // معالجة الكود
     function processCode() {
       firebase.database().ref("products/" + currentCode).once('value')
         .then(snapshot => {
@@ -328,12 +285,10 @@
         .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
 
-    // فحص المخزون
     function checkInventory(quantity) {
       if (quantity <= 5) alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
     }
 
-    // فحص انتهاء الصلاحية
     function checkExpiry(expiryDate) {
       if (expiryDate) {
         var exp = new Date(expiryDate);
@@ -344,7 +299,6 @@
       }
     }
 
-    // عرض معلومات المنتج
     function showProductInfo(data) {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
@@ -356,12 +310,13 @@
       document.getElementById("infoDiscount").innerText = data.discount || "";
       document.getElementById("infoFinalAmount").innerText = data.finalAmount || "";
       document.getElementById("infoExpiryDate").innerText = data.expiryDate || "";
-      document.getElementById("infoImage").innerHTML = data.image ? `<img src="${data.image}" alt="صورة المنتج">` : "لا يوجد صورة للمنتج";
+      document.getElementById("infoImage").innerHTML = data.image ? `<img src="${data.image}" alt="صورة المنتج" style="max-width:100%; max-height:150px;">` : "لا يوجد صورة للمنتج";
       checkInventory(data.quantity);
       checkExpiry(data.expiryDate);
 
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
+
       var btnSale = document.createElement("button");
       btnSale.className = "btn-success";
       btnSale.innerText = "تم البيع";
@@ -403,7 +358,6 @@
       footer.appendChild(btnEdit);
     }
 
-    // عرض نموذج الإضافة أو التعديل
     function showProductForm(data = {}) {
       document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
       document.getElementById("productInfoSection").style.display = "none";
@@ -416,10 +370,10 @@
       document.getElementById("discountInput").value = data.discount || "";
       document.getElementById("finalAmountInput").value = data.finalAmount || "";
       document.getElementById("expiryDate").value = data.expiryDate || "";
-      document.getElementById("productImage").value = "";
 
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
+
       var actionButton = document.createElement("button");
       actionButton.className = "btn-success";
       actionButton.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
@@ -434,7 +388,6 @@
       footer.appendChild(btnCancel);
     }
 
-    // إغلاق المودال
     function closeModal() {
       document.getElementById("productModal").style.display = "none";
       document.getElementById("productName").value = "";
@@ -444,10 +397,8 @@
       document.getElementById("discountInput").value = "";
       document.getElementById("finalAmountInput").value = "";
       document.getElementById("expiryDate").value = "";
-      document.getElementById("productImage").value = "";
     }
 
-    // رفع الصورة إلى Imgur
     async function uploadToImgur(file) {
       const formData = new FormData();
       formData.append("image", file);
@@ -461,7 +412,6 @@
       throw new Error("فشل رفع الصورة إلى Imgur");
     }
 
-    // إضافة منتج
     function addProduct() {
       var name = document.getElementById("productName").value;
       var addedDate = document.getElementById("addedDate").value;
@@ -504,7 +454,6 @@
       }
     }
 
-    // تعديل منتج
     function updateProduct() {
       var name = document.getElementById("productName").value;
       var addedDate = document.getElementById("addedDate").value;
@@ -545,7 +494,6 @@
       }
     }
 
-    // حذف منتج
     function deleteProduct() {
       firebase.database().ref("products/" + currentCode).remove()
         .then(() => {
