@@ -1,12 +1,14 @@
+
 <!DOCTYPE html>
 <html lang="ar">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>منتجات - قارئ الباركود والـ QR باستخدام ZXing</title>
 
-  <!-- تحميل مكتبات Firebase من CDN -->
+  <!-- تحميل مكتبات Firebase (بدون Firebase Storage) -->
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
+  
   <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
 
   <!-- تحميل ملف إعداد Firebase -->
@@ -16,7 +18,7 @@
   <script src="https://unpkg.com/ @zxing/library@0.18.6/umd/index.min.js"></script>
 
   <!-- تحميل Font Awesome -->
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css "/>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css ">
 
   <!-- التنسيق -->
   <style>
@@ -46,6 +48,7 @@
 
     /* ألوان الأزرار */
     .btn-primary { background-color: #007BFF; color: #fff; }
+    .btn-primary:hover { background-color: #0056b3; }
     .btn-success { background-color: #28a745; color: white; }
     .btn-warning { background-color: #ffc107; color: white; }
     .btn-danger { background-color: #dc3545; color: white; }
@@ -241,24 +244,7 @@
   <!-- JavaScript -->
   <script>
     // Imgur API Client ID
-    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // ← استبدل هذا بالـ Client ID الخاص بك إن احتجت لذلك لاحقًا
-
-    // Firebase Setup
-    const firebaseConfig = {
-      apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-      authDomain: "pharmacy-system-9def6.firebaseapp.com",
-      projectId: "pharmacy-system-9def6",
-      storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-      messagingSenderId: "630855008414",
-      appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-      measurementId: "G-LC5NDKP6QZ"
-    };
-
-    // تهيئة Firebase (بدون Analytics)
-    firebase.initializeApp(firebaseConfig);
-
-    // يمكنك استخدام Firebase Realtime Database الآن
-    const database = firebase.database();
+    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // استبدل هذا بالـ Client ID الخاص بك إن احتجت لذلك لاحقًا
 
     // متغيرات النظام
     var currentCode = "";
@@ -307,7 +293,7 @@
         .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
 
-    // وضع إدخال جديد للمنتج
+    // وضع إدخال يدوي
     function manualEntryMode() {
       var code = document.getElementById("manualProductCode").value;
       if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
@@ -330,12 +316,12 @@
           }
           document.getElementById("productModal").style.display = "block";
         })
-        .catch(error => alert("فشل في الوصول إلى قاعدة البيانات: " + error));
+        .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
     }
 
     // فحص المخزون
     function checkInventory(quantity) {
-      if (quantity <= 5) alert("تنبيه: المخزون منخفض (" + quantity + " قطعة)");
+      if (quantity <= 5) alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
     }
 
     // فحص انتهاء الصلاحية
@@ -376,8 +362,8 @@
       btnSale.onclick = () => {
         if (data.quantity > 0) {
           firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity - 1 })
-            .then(() => alert("تم تسجيل عملية البيع"))
-            .catch(e => alert("فشل تسجيل البيع: " + e));
+            .then(() => alert("تم تسجيل عملية البيع!"))
+            .catch(error => alert("فشل تسجيل البيع: " + error));
         } else alert("المخزون غير كافٍ!");
       };
 
@@ -387,8 +373,8 @@
       btnReturn.onclick = () => {
         if (data.quantity < data.maxQuantity) {
           firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity + 1 })
-            .then(() => alert("تم تسجيل الإرجاع"))
-            .catch(e => alert("فشل تسجيل الإرجاع: " + e));
+            .then(() => alert("تم تسجيل عملية الإرجاع!"))
+            .catch(error => alert("فشل تسجيل الإرجاع: " + error));
         } else alert("لا يمكن زيادة الكمية أكثر من الأصلية");
       };
 
@@ -429,17 +415,17 @@
       var footer = document.getElementById("modalFooter");
       footer.innerHTML = "";
 
-      var actionBtn = document.createElement("button");
-      actionBtn.className = "btn-success";
-      actionBtn.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
-      actionBtn.onclick = modalMode === "add" ? addProduct : updateProduct;
+      var actionButton = document.createElement("button");
+      actionButton.className = "btn-success";
+      actionButton.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
+      actionButton.onclick = modalMode === "add" ? addProduct : updateProduct;
 
       var btnCancel = document.createElement("button");
       btnCancel.className = "btn-cancel";
       btnCancel.innerText = "إلغاء";
       btnCancel.onclick = closeModal;
 
-      footer.appendChild(actionBtn);
+      footer.appendChild(actionButton);
       footer.appendChild(btnCancel);
     }
 
@@ -463,9 +449,7 @@
 
       const response = await fetch("https://api.imgur.com/3/image ", {
         method: "POST",
-        headers: {
-          Authorization: "Client-ID " + IMGUR_CLIENT_ID
-        },
+        headers: { Authorization: "Client-ID " + IMGUR_CLIENT_ID },
         body: formData
       });
 
@@ -506,13 +490,13 @@
         }).then(() => {
           alert("تمت إضافة المنتج بنجاح!");
           closeModal();
-        }).catch(e => alert("فشل إضافة المنتج: " + e));
+        }).catch(error => alert("فشل إضافة المنتج: " + error));
       }
 
       if (imageFile) {
         uploadToImgur(imageFile)
           .then(url => saveProduct(url))
-          .catch(e => alert("فشل رفع الصورة إلى Imgur: " + e));
+          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
       } else {
         saveProduct("");
       }
@@ -547,13 +531,13 @@
         }).then(() => {
           alert("تم تعديل المنتج بنجاح!");
           closeModal();
-        }).catch(e => alert("فشل تعديل المنتج: " + e));
+        }).catch(error => alert("فشل تعديل المنتج: " + error));
       }
 
       if (imageFile) {
         uploadToImgur(imageFile)
           .then(url => updateData(url))
-          .catch(e => alert("فشل رفع الصورة إلى Imgur: " + e));
+          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
       } else {
         updateData("");
       }
@@ -565,13 +549,7 @@
         .then(() => {
           alert("تم حذف المنتج!");
           closeModal();
-        })
-        .catch(e => alert("فشل في الحذف: " + e));
-    }
-
-    window.onclick = function(event) {
-      var modal = document.getElementById("productModal");
-      if (event.target == modal) closeModal();
+        }).catch(error => alert("فشل حذف المنتج: " + error));
     }
   </script>
 </body>
