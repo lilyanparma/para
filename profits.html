@@ -13,15 +13,49 @@
   <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js "></script>
 
   <style>
-    body {
+    /* إعدادات عامة */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow-x: hidden;
       font-family: 'Tahoma', 'DejaVu Sans', 'Arial', sans-serif;
+      background-color: #f4f4f4;
       direction: rtl;
-      text-align: right;
-      margin-top: 50px;
-      background: #f4f4f4;
+    }
+
+    body {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 30px 10px;
+    }
+
+    .container {
+      width: 100%;
+      max-width: 600px;
+      background: white;
+      padding: 30px;
+      border-radius: 10px;
+      box-shadow: 0 0 15px rgba(0,0,0,0.1);
+      text-align: center;
     }
 
     h1 {
+      font-size: 24px;
+      color: #333;
+      margin-bottom: 10px;
+    }
+
+    p {
+      font-size: 16px;
+      color: #555;
       margin-bottom: 20px;
     }
 
@@ -33,32 +67,28 @@
       cursor: pointer;
       background-color: #007BFF;
       color: white;
+      transition: background-color 0.3s ease;
     }
 
     button:hover {
       background-color: #0056b3;
     }
 
-    /* تصميم الفاتورة */
-  #invoiceContent {
-  visibility: hidden;
-  position: absolute;
-  left: -9999px;
-  width: 100%;
-  max-width: 800px;
-  margin: auto;
-  padding: 30px;
-  background: white;
-  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-  font-size: 14px;
-  line-height: 1.6;
-}
-    html, body {
-  overflow-x: hidden;
-  width: 100%;
-  margin: 0;
-  padding: 0;
-}
+    /* تصميم الفاتورة - غير مرئية حتى التوليد */
+    #invoiceContent {
+      visibility: hidden;
+      position: absolute;
+      left: -9999px;
+      width: 100%;
+      max-width: 800px;
+      margin: auto;
+      padding: 30px;
+      background: white;
+      box-shadow: 0 0 10px rgba(0,0,0,0.1);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
     .header {
       text-align: center;
       margin-bottom: 20px;
@@ -105,14 +135,16 @@
 </head>
 <body>
 
-  <h1>إنشاء فاتورة شهرية</h1>
-  <p>انقر على الزر أدناه لإنشاء فاتورة شهرية تلقائية بصيغة PDF.</p>
-  <button onclick="generateInvoice()">إنشاء فاتورة (PDF)</button>
+  <div class="container">
+    <h1>إنشاء فاتورة شهرية</h1>
+    <p>انقر على الزر أدناه لإنشاء فاتورة شهرية تلقائية بصيغة PDF.</p>
+    <button onclick="generateInvoice()">إنشاء فاتورة (PDF)</button>
+  </div>
 
-  <!-- تصميم الفاتورة -->
+  <!-- نموذج الفاتورة -->
   <div id="invoiceContent">
     <div class="header">
-      <div class="company-name">PARAMEDICAL LILYAN ROSE</div>
+      <div class="company-name">صيدلية المستقبل</div>
       <h2>فاتورة شهرية</h2>
       <p><strong>الشهر:</strong> <span id="arMonth"></span></p>
       <p><strong>تاريخ الإصدار:</strong> <span id="todayDate"></span></p>
@@ -128,9 +160,7 @@
           <th style="width: 100px;">الإجمالي</th>
         </tr>
       </thead>
-      <tbody id="productsTableBody">
-        <!-- سيتم ملؤها ديناميكيًا -->
-      </tbody>
+      <tbody id="productsTableBody"></tbody>
     </table>
 
     <table style="margin-top: 20px;">
@@ -151,7 +181,7 @@
     </table>
 
     <div class="footer">
-      PARAMEDICAL LILYAN ROSE.
+      شكرًا لتعاملكم مع صيدلية المستقبل. إذا كانت لديك أي استفسارات، يرجى التواصل معنا.
     </div>
   </div>
 
