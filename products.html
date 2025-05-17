@@ -218,9 +218,9 @@
           <tr><td class="info-label">اسم المنتج:</td><td id="infoName" class="info-value"></td></tr>
           <tr><td class="info-label">تاريخ الإضافة:</td><td id="infoAddedDate" class="info-value"></td></tr>
           <tr><td class="info-label">عدد القطع:</td><td id="infoQuantity" class="info-value"></td></tr>
-          <tr><td class="info-label">الثمن:</td><td id="infoPrice" class="info-value"></td></tr>
+          <tr><td class="info-label">سعر البيع:</td><td id="infoSellingPrice" class="info-value"></td></tr>
+          <tr><td class="info-label">سعر الشراء:</td><td id="infoBuyingPrice" class="info-value"></td></tr>
           <tr><td class="info-label">الخصم:</td><td id="infoDiscount" class="info-value"></td></tr>
-          <tr><td class="info-label">المبلغ النهائي:</td><td id="infoFinalAmount" class="info-value"></td></tr>
           <tr><td class="info-label">تاريخ انتهاء الصلاحية:</td><td id="infoExpiryDate" class="info-value"></td></tr>
         </table>
         <div id="infoImage" class="info-image-container"></div>
@@ -231,9 +231,9 @@
         <input type="text" id="productName" class="input-field" placeholder="ادخل اسم المنتج">
         <input type="date" id="addedDate" class="input-field">
         <input type="number" id="quantityInput" class="input-field" placeholder="ادخل عدد القطع">
-        <input type="number" id="priceInput" class="input-field" placeholder="ادخل الثمن">
+        <input type="number" id="sellingPriceInput" class="input-field" placeholder="ادخل سعر البيع">
+        <input type="number" id="buyingPriceInput" class="input-field" placeholder="ادخل سعر الشراء">
         <input type="number" id="discountInput" class="input-field" placeholder="ادخل الخصم">
-        <input type="number" id="finalAmountInput" class="input-field" placeholder="المبلغ النهائي">
         <input type="date" id="expiryDate" class="input-field">
         <input type="file" id="productImage" class="input-field" accept="image/*" capture="environment">
       </div>
@@ -244,318 +244,310 @@
   </div>
 
   <!-- JavaScript -->
-  <script>
-    // Imgur API Client ID
-    const IMGUR_CLIENT_ID = 'db60b8c699735bb'; // استبدل هذا بالـ Client ID الخاص بك إن احتجت لذلك لاحقًا
+<script>
+  // Imgur API Client ID
+  const IMGUR_CLIENT_ID = 'db60b8c699735bb';
 
-    // متغيرات النظام
-    var currentCode = "";
-    var codeReader = null;
-    var modalMode = "";
+  // متغيرات النظام
+  var currentCode = "";
+  var codeReader = null;
+  var modalMode = "";
 
-    // دالة بدء المسح
-    function startScan() {
-      document.getElementById("searchResult").innerText = "";
-      currentCode = "";
-      document.getElementById("scanner-container").style.display = "block";
-      codeReader = new ZXing.BrowserMultiFormatReader();
-      codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
-        if (result) {
-          currentCode = result.getText();
-          stopScanner();
-          processCode();
+  // دالة بدء المسح
+  function startScan() {
+    document.getElementById("searchResult").innerText = "";
+    currentCode = "";
+    document.getElementById("scanner-container").style.display = "block";
+    codeReader = new ZXing.BrowserMultiFormatReader();
+    codeReader.decodeFromVideoDevice(null, "video", (result, err) => {
+      if (result) {
+        currentCode = result.getText();
+        stopScanner();
+        processCode();
+      }
+      if (err && !(err instanceof ZXing.NotFoundException)) {
+        console.error(err);
+      }
+    });
+  }
+
+  // إيقاف الكاميرا
+  function stopScanner() {
+    if (codeReader) codeReader.reset();
+    document.getElementById("scanner-container").style.display = "none";
+  }
+
+  // بحث عن المنتج
+  function searchProduct() {
+    var code = document.getElementById("manualProductCode").value;
+    if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
+    currentCode = code;
+    firebase.database().ref("products/" + currentCode).once('value')
+      .then(snapshot => {
+        if (snapshot.exists()) {
+          modalMode = "view";
+          showProductInfo(snapshot.val());
+        } else {
+          document.getElementById("searchResult").innerText = "لم يتم العثور على منتج.";
         }
-        if (err && !(err instanceof ZXing.NotFoundException)) {
-          console.error(err);
+        document.getElementById("productModal").style.display = "block";
+      })
+      .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
+  }
+
+  // وضع إدخال يدوي
+  function manualEntryMode() {
+    var code = document.getElementById("manualProductCode").value;
+    if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
+    currentCode = code;
+    modalMode = "add";
+    showProductForm();
+    document.getElementById("productModal").style.display = "block";
+  }
+
+  // معالجة الكود
+  function processCode() {
+    firebase.database().ref("products/" + currentCode).once('value')
+      .then(snapshot => {
+        if (snapshot.exists()) {
+          modalMode = "view";
+          showProductInfo(snapshot.val());
+        } else {
+          modalMode = "add";
+          showProductForm();
         }
-      });
+        document.getElementById("productModal").style.display = "block";
+      })
+      .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
+  }
+
+  // فحص المخزون
+  function checkInventory(quantity) {
+    if (quantity <= 5) alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
+  }
+
+  // فحص انتهاء الصلاحية
+  function checkExpiry(expiryDate) {
+    if (expiryDate) {
+      var exp = new Date(expiryDate);
+      var today = new Date();
+      var diffDays = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+      if (diffDays > 0 && diffDays <= 30)
+        alert("تنبيه: انتهاء صلاحية المنتج قريب (" + diffDays + " يوم/أيام متبقية)!");
+    }
+  }
+
+  // عرض معلومات المنتج
+  function showProductInfo(data) {
+    document.getElementById("modalHeader").innerText = "معلومات المنتج";
+    document.getElementById("productFormSection").style.display = "none";
+    document.getElementById("productInfoSection").style.display = "block";
+    document.getElementById("infoName").innerText = data.name || "";
+    document.getElementById("infoAddedDate").innerText = data.addedDate || "";
+    document.getElementById("infoQuantity").innerText = data.quantity || "";
+    document.getElementById("infoSellingPrice").innerText = data.sellingPrice || "";
+    document.getElementById("infoBuyingPrice").innerText = data.buyingPrice || "";
+    document.getElementById("infoDiscount").innerText = data.discount || "";
+    document.getElementById("infoExpiryDate").innerText = data.expiryDate || "";
+    document.getElementById("infoImage").innerHTML = data.image ? `<img src="${data.image}" alt="صورة المنتج" style="max-width:100%; max-height:150px;">` : "لا يوجد صورة للمنتج";
+    checkInventory(data.quantity);
+    checkExpiry(data.expiryDate);
+
+    var footer = document.getElementById("modalFooter");
+    footer.innerHTML = "";
+
+    var btnSale = document.createElement("button");
+    btnSale.className = "btn-success";
+    btnSale.innerText = "تم البيع";
+    btnSale.onclick = () => {
+      if (data.quantity > 0) {
+        firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity - 1 })
+          .then(() => alert("تم تسجيل عملية البيع!"))
+          .catch(error => alert("فشل تسجيل البيع: " + error));
+      } else alert("المخزون غير كافٍ!");
+    };
+
+    var btnReturn = document.createElement("button");
+    btnReturn.className = "btn-warning";
+    btnReturn.innerText = "ارجاع المنتج";
+    btnReturn.onclick = () => {
+      if (data.quantity < data.maxQuantity) {
+        firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity + 1 })
+          .then(() => alert("تم تسجيل عملية الإرجاع!"))
+          .catch(error => alert("فشل تسجيل الإرجاع: " + error));
+      } else alert("لا يمكن زيادة الكمية أكثر من الأصلية");
+    };
+
+    var btnDelete = document.createElement("button");
+    btnDelete.className = "btn-danger";
+    btnDelete.innerHTML = '<i class="fas fa-trash-alt"></i> حذف منتج';
+    btnDelete.onclick = deleteProduct;
+
+    var btnEdit = document.createElement("button");
+    btnEdit.className = "btn-warning";
+    btnEdit.innerHTML = '<i class="fas fa-edit"></i> تعديل منتج';
+    btnEdit.onclick = () => {
+      modalMode = "edit";
+      showProductForm(data);
+    };
+
+    footer.appendChild(btnSale);
+    footer.appendChild(btnReturn);
+    footer.appendChild(btnDelete);
+    footer.appendChild(btnEdit);
+  }
+
+  // عرض نموذج الإضافة أو التعديل
+  function showProductForm(data = {}) {
+    document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
+    document.getElementById("productInfoSection").style.display = "none";
+    document.getElementById("productFormSection").style.display = "block";
+
+    document.getElementById("productName").value = data.name || "";
+    document.getElementById("addedDate").value = data.addedDate || "";
+    document.getElementById("quantityInput").value = data.quantity || "";
+    document.getElementById("sellingPriceInput").value = data.sellingPrice || "";
+    document.getElementById("buyingPriceInput").value = data.buyingPrice || "";
+    document.getElementById("discountInput").value = data.discount || "";
+    document.getElementById("expiryDate").value = data.expiryDate || "";
+    document.getElementById("productImage").value = "";
+    
+    var footer = document.getElementById("modalFooter");
+    footer.innerHTML = "";
+
+    var actionButton = document.createElement("button");
+    actionButton.className = "btn-success";
+    actionButton.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
+    actionButton.onclick = modalMode === "add" ? addProduct : updateProduct;
+
+    var btnCancel = document.createElement("button");
+    btnCancel.className = "btn-cancel";
+    btnCancel.innerText = "إلغاء";
+    btnCancel.onclick = closeModal;
+
+    footer.appendChild(actionButton);
+    footer.appendChild(btnCancel);
+  }
+
+  // إغلاق المودال
+  function closeModal() {
+    document.getElementById("productModal").style.display = "none";
+    document.getElementById("productName").value = "";
+    document.getElementById("addedDate").value = "";
+    document.getElementById("quantityInput").value = "";
+    document.getElementById("sellingPriceInput").value = "";
+    document.getElementById("buyingPriceInput").value = "";
+    document.getElementById("discountInput").value = "";
+    document.getElementById("expiryDate").value = "";
+    document.getElementById("productImage").value = "";
+  }
+
+  // رفع الصورة إلى Imgur
+  async function uploadToImgur(file) {
+    const formData = new FormData();
+    formData.append("image", file);
+    const response = await fetch("https://api.imgur.com/3/image  ", {
+      method: "POST",
+      headers: { Authorization: "Client-ID " + IMGUR_CLIENT_ID },
+      body: formData
+    });
+    const data = await response.json();
+    if (data.success) return data.data.link;
+    throw new Error("فشل رفع الصورة إلى Imgur");
+  }
+
+  // إضافة منتج
+  function addProduct() {
+    var name = document.getElementById("productName").value;
+    var addedDate = document.getElementById("addedDate").value;
+    var quantity = document.getElementById("quantityInput").value;
+    var sellingPrice = document.getElementById("sellingPriceInput").value;
+    var buyingPrice = document.getElementById("buyingPriceInput").value;
+    var discount = document.getElementById("discountInput").value;
+    var expiryDate = document.getElementById("expiryDate").value;
+    var imageFile = document.getElementById("productImage").files[0];
+
+    if (!name || !addedDate || !quantity || !sellingPrice || !buyingPrice) {
+      alert("يرجى تعبئة الحقول الأساسية");
+      return;
     }
 
-    // إيقاف الكاميرا
-    function stopScanner() {
-      if (codeReader) codeReader.reset();
-      document.getElementById("scanner-container").style.display = "none";
+    function saveProduct(imageURL) {
+      firebase.database().ref("products/" + currentCode).set({
+        code: currentCode,
+        name: name,
+        addedDate: addedDate,
+        quantity: parseInt(quantity),
+        sellingPrice: parseFloat(sellingPrice),
+        buyingPrice: parseFloat(buyingPrice),
+        discount: discount ? parseFloat(discount) : 0,
+        expiryDate: expiryDate || "",
+        image: imageURL || "",
+        maxQuantity: parseInt(quantity)
+      }).then(() => {
+        alert("تمت إضافة المنتج بنجاح!");
+        closeModal();
+      }).catch(error => alert("فشل إضافة المنتج: " + error));
     }
 
-    // بحث عن المنتج
-    function searchProduct() {
-      var code = document.getElementById("manualProductCode").value;
-      if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
-      currentCode = code;
-      firebase.database().ref("products/" + currentCode).once('value')
-        .then(snapshot => {
-          if (snapshot.exists()) {
-            modalMode = "view";
-            showProductInfo(snapshot.val());
-          } else {
-            document.getElementById("searchResult").innerText = "لم يتم العثور على منتج.";
-          }
-          document.getElementById("productModal").style.display = "block";
-        })
-        .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
+    if (imageFile) {
+      uploadToImgur(imageFile)
+        .then(url => saveProduct(url))
+        .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
+    } else {
+      saveProduct("");
+    }
+  }
+
+  // تعديل منتج
+  function updateProduct() {
+    var name = document.getElementById("productName").value;
+    var addedDate = document.getElementById("addedDate").value;
+    var quantity = document.getElementById("quantityInput").value;
+    var sellingPrice = document.getElementById("sellingPriceInput").value;
+    var buyingPrice = document.getElementById("buyingPriceInput").value;
+    var discount = document.getElementById("discountInput").value;
+    var expiryDate = document.getElementById("expiryDate").value;
+    var imageFile = document.getElementById("productImage").files[0];
+
+    if (!name || !addedDate || !quantity || !sellingPrice || !buyingPrice) {
+      alert("يرجى تعبئة الحقول الأساسية");
+      return;
     }
 
-    // وضع إدخال يدوي
-    function manualEntryMode() {
-      var code = document.getElementById("manualProductCode").value;
-      if (!code.trim()) return alert("يرجى إدخال رقم المنتج.");
-      currentCode = code;
-      modalMode = "add";
-      showProductForm();
-      document.getElementById("productModal").style.display = "block";
+    function updateData(imageURL) {
+      firebase.database().ref("products/" + currentCode).update({
+        name: name,
+        addedDate: addedDate,
+        quantity: parseInt(quantity),
+        sellingPrice: parseFloat(sellingPrice),
+        buyingPrice: parseFloat(buyingPrice),
+        discount: discount ? parseFloat(discount) : 0,
+        expiryDate: expiryDate || "",
+        image: imageURL || ""
+      }).then(() => {
+        alert("تم تعديل المنتج بنجاح!");
+        closeModal();
+      }).catch(error => alert("فشل تعديل المنتج: " + error));
     }
 
-    // معالجة الكود
-    function processCode() {
-      firebase.database().ref("products/" + currentCode).once('value')
-        .then(snapshot => {
-          if (snapshot.exists()) {
-            modalMode = "view";
-            showProductInfo(snapshot.val());
-          } else {
-            modalMode = "add";
-            showProductForm();
-          }
-          document.getElementById("productModal").style.display = "block";
-        })
-        .catch(error => alert("حدث خطأ أثناء الاتصال بقاعدة البيانات"));
+    if (imageFile) {
+      uploadToImgur(imageFile)
+        .then(url => updateData(url))
+        .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
+    } else {
+      updateData("");
     }
+  }
 
-    // فحص المخزون
-    function checkInventory(quantity) {
-      if (quantity <= 5) alert("تنبيه: المخزون ينخفض إلى " + quantity + " قطعة!");
-    }
-
-    // فحص انتهاء الصلاحية
-    function checkExpiry(expiryDate) {
-      if (expiryDate) {
-        var exp = new Date(expiryDate);
-        var today = new Date();
-        var diffDays = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-        if (diffDays > 0 && diffDays <= 30)
-          alert("تنبيه: انتهاء صلاحية المنتج قريب (" + diffDays + " يوم/أيام متبقية)!");
-      }
-    }
-
-    // عرض معلومات المنتج
-    function  {
-      document.getElementById("modalHeader").innerText = "معلومات المنتج";
-      document.getElementById("productFormSection").style.display = "none";
-      document.getElementById("productInfoSection").style.display = "block";
-
-      document.getElementById("infoName").innerText = data.name || "";
-      document.getElementById("infoAddedDate").innerText = data.addedDate || "";
-      document.getElementById("infoQuantity").innerText = data.quantity || "";
-      document.getElementById("infoPrice").innerText = data.price || "";
-      document.getElementById("infoDiscount").innerText = data.discount || "";
-      document.getElementById("infoFinalAmount").innerText = data.finalAmount || "";
-      document.getElementById("infoExpiryDate").innerText = data.expiryDate || "";
-      document.getElementById("infoImage").innerHTML = data.image ? `<img src="${data.image}" alt="صورة المنتج" style="max-width:100%; max-height:150px;">` : "لا يوجد صورة للمنتج";
-
-      checkInventory(data.quantity);
-      checkExpiry(data.expiryDate);
-
-      var footer = document.getElementById("modalFooter");
-      footer.innerHTML = "";
-
-      var btnSale = document.createElement("button");
-      btnSale.className = "btn-success";
-      btnSale.innerText = "تم البيع";
-      btnSale.onclick = () => {
-        if (data.quantity > 0) {
-          firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity - 1 })
-            .then(() => alert("تم تسجيل عملية البيع!"))
-            .catch(error => alert("فشل تسجيل البيع: " + error));
-        } else alert("المخزون غير كافٍ!");
-      };
-
-      var btnReturn = document.createElement("button");
-      btnReturn.className = "btn-warning";
-      btnReturn.innerText = "ارجاع المنتج";
-      btnReturn.onclick = () => {
-        if (data.quantity < data.maxQuantity) {
-          firebase.database().ref("products/" + currentCode).update({ quantity: data.quantity + 1 })
-            .then(() => alert("تم تسجيل عملية الإرجاع!"))
-            .catch(error => alert("فشل تسجيل الإرجاع: " + error));
-        } else alert("لا يمكن زيادة الكمية أكثر من الأصلية");
-      };
-
-      var btnDelete = document.createElement("button");
-      btnDelete.className = "btn-danger";
-      btnDelete.innerHTML = '<i class="fas fa-trash-alt"></i> حذف منتج';
-      btnDelete.onclick = deleteProduct;
-
-      var btnEdit = document.createElement("button");
-      btnEdit.className = "btn-warning";
-      btnEdit.innerHTML = '<i class="fas fa-edit"></i> تعديل منتج';
-      btnEdit.onclick = () => {
-        modalMode = "edit";
-        showProductForm(data);
-      };
-
-      footer.appendChild(btnSale);
-      footer.appendChild(btnReturn);
-      footer.appendChild(btnDelete);
-      footer.appendChild(btnEdit);
-    }
-
-    // عرض نموذج الإضافة أو التعديل
-    function showProductForm(data = {}) {
-      document.getElementById("modalHeader").innerText = modalMode === "add" ? "إضافة منتج جديد" : "تعديل المنتج";
-      document.getElementById("productInfoSection").style.display = "none";
-      document.getElementById("productFormSection").style.display = "block";
-
-      document.getElementById("productName").value = data.name || "";
-      document.getElementById("addedDate").value = data.addedDate || "";
-      document.getElementById("quantityInput").value = data.quantity || "";
-      document.getElementById("priceInput").value = data.price || "";
-      document.getElementById("discountInput").value = data.discount || "";
-      document.getElementById("finalAmountInput").value = data.finalAmount || "";
-      document.getElementById("expiryDate").value = data.expiryDate || "";
-      document.getElementById("productImage").value = "";
-
-      var footer = document.getElementById("modalFooter");
-      footer.innerHTML = "";
-
-      var actionButton = document.createElement("button");
-      actionButton.className = "btn-success";
-      actionButton.innerText = modalMode === "add" ? "إضافة منتج" : "تعديل المنتج";
-      actionButton.onclick = modalMode === "add" ? addProduct : updateProduct;
-
-      var btnCancel = document.createElement("button");
-      btnCancel.className = "btn-cancel";
-      btnCancel.innerText = "إلغاء";
-      btnCancel.onclick = closeModal;
-
-      footer.appendChild(actionButton);
-      footer.appendChild(btnCancel);
-    }
-
-    // إغلاق المودال
-    function closeModal() {
-      document.getElementById("productModal").style.display = "none";
-      document.getElementById("productName").value = "";
-      document.getElementById("addedDate").value = "";
-      document.getElementById("quantityInput").value = "";
-      document.getElementById("priceInput").value = "";
-      document.getElementById("discountInput").value = "";
-      document.getElementById("finalAmountInput").value = "";
-      document.getElementById("expiryDate").value = "";
-      document.getElementById("productImage").value = "";
-    }
-
-    // رفع الصورة إلى Imgur
-    async function uploadToImgur(file) {
-      const formData = new FormData();
-      formData.append("image", file);
-
-      const response = await fetch("https://api.imgur.com/3/image ", {
-        method: "POST",
-        headers: { Authorization: "Client-ID " + IMGUR_CLIENT_ID },
-        body: formData
-      });
-
-      const data = await response.json();
-
-      if (data.success) return data.data.link;
-      throw new Error("فشل رفع الصورة إلى Imgur");
-    }
-
-    // إضافة منتج
-    function addProduct() {
-      var name = document.getElementById("productName").value;
-      var addedDate = document.getElementById("addedDate").value;
-      var quantity = document.getElementById("quantityInput").value;
-      var price = document.getElementById("priceInput").value;
-      var discount = document.getElementById("discountInput").value;
-      var finalAmount = document.getElementById("finalAmountInput").value;
-      var expiryDate = document.getElementById("expiryDate").value;
-      var imageFile = document.getElementById("productImage").files[0];
-
-      if (!name || !addedDate || !quantity || !price || !finalAmount) {
-        alert("يرجى تعبئة الحقول الأساسية");
-        return;
-      }
-
-      function saveProduct(imageURL) {
-       firebase.database().ref("products/" + currentCode).set({
-  code: currentCode,
-  name: name,
-  addedDate: addedDate,
-  quantity: parseInt(quantity),
-  price: parseFloat(price),
-  discount: discount ? parseFloat(discount) : 0,
-  finalAmount: parseFloat(finalAmount),
-  expiryDate: expiryDate || "",
-  image: imageURL || "",
-  maxQuantity: parseInt(quantity),
-  buyingPrice: parseFloat(document.getElementById("buyingPriceInput").value) || 0 // ← تم الإضافة
-}).then(() => {
-  alert("تمت إضافة المنتج بنجاح!");
-  closeModal();
-})
-        }).catch(error => alert("فشل إضافة المنتج: " + error));
-      }
-
-      if (imageFile) {
-        uploadToImgur(imageFile)
-          .then(url => saveProduct(url))
-          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
-      } else {
-        saveProduct("");
-      }
-    }
-
-    // تعديل منتج
-    function updateProduct() {
-      var name = document.getElementById("productName").value;
-      var addedDate = document.getElementById("addedDate").value;
-      var quantity = document.getElementById("quantityInput").value;
-      var price = document.getElementById("priceInput").value;
-      var discount = document.getElementById("discountInput").value;
-      var finalAmount = document.getElementById("finalAmountInput").value;
-      var expiryDate = document.getElementById("expiryDate").value;
-      var imageFile = document.getElementById("productImage").files[0];
-
-      if (!name || !addedDate || !quantity || !price || !finalAmount) {
-        alert("يرجى تعبئة الحقول الأساسية");
-        return;
-      }
-
-      function updateData(imageURL) {
-       firebase.database().ref("products/" + currentCode).update({
-  name: name,
-  addedDate: addedDate,
-  quantity: parseInt(quantity),
-  price: parseFloat(price),
-  discount: discount ? parseFloat(discount) : 0,
-  finalAmount: parseFloat(finalAmount),
-  expiryDate: expiryDate || "",
-  image: imageURL || "",
-  buyingPrice: parseFloat(document.getElementById("buyingPriceInput").value) || 0 // ← تم الإضافة
-})
-          alert("تم تعديل المنتج بنجاح!");
-          closeModal();
-        }).catch(error => alert("فشل تعديل المنتج: " + error));
-      }
-
-      if (imageFile) {
-        uploadToImgur(imageFile)
-          .then(url => updateData(url))
-          .catch(err => alert("فشل رفع الصورة إلى Imgur: " + err.message));
-      } else {
-        updateData("");
-      }
-    }
-
-    // حذف منتج
-    function deleteProduct() {
-      firebase.database().ref("products/" + currentCode).remove()
-        .then(() => {
-          alert("تم حذف المنتج!");
-          closeModal();
-        }).catch(error => alert("فشل حذف المنتج: " + error));
-    }
-  </script>
+  // حذف منتج
+  function deleteProduct() {
+    firebase.database().ref("products/" + currentCode).remove()
+      .then(() => {
+        alert("تم حذف المنتج!");
+        closeModal();
+      }).catch(error => alert("فشل حذف المنتج: " + error));
+  }
+</script>
 </body>
 </html>
