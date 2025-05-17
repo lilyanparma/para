@@ -338,7 +338,7 @@
     }
 
     // عرض معلومات المنتج
-    function showProductInfo(data) {
+    function  {
       document.getElementById("modalHeader").innerText = "معلومات المنتج";
       document.getElementById("productFormSection").style.display = "none";
       document.getElementById("productInfoSection").style.display = "block";
@@ -478,20 +478,22 @@
       }
 
       function saveProduct(imageURL) {
-        firebase.database().ref("products/" + currentCode).set({
-          code: currentCode,
-          name: name,
-          addedDate: addedDate,
-          quantity: parseInt(quantity),
-          price: parseFloat(price),
-          discount: discount ? parseFloat(discount) : 0,
-          finalAmount: parseFloat(finalAmount),
-          expiryDate: expiryDate || "",
-          image: imageURL || "",
-          maxQuantity: parseInt(quantity)
-        }).then(() => {
-          alert("تمت إضافة المنتج بنجاح!");
-          closeModal();
+       firebase.database().ref("products/" + currentCode).set({
+  code: currentCode,
+  name: name,
+  addedDate: addedDate,
+  quantity: parseInt(quantity),
+  price: parseFloat(price),
+  discount: discount ? parseFloat(discount) : 0,
+  finalAmount: parseFloat(finalAmount),
+  expiryDate: expiryDate || "",
+  image: imageURL || "",
+  maxQuantity: parseInt(quantity),
+  buyingPrice: parseFloat(document.getElementById("buyingPriceInput").value) || 0 // ← تم الإضافة
+}).then(() => {
+  alert("تمت إضافة المنتج بنجاح!");
+  closeModal();
+})
         }).catch(error => alert("فشل إضافة المنتج: " + error));
       }
 
@@ -521,16 +523,17 @@
       }
 
       function updateData(imageURL) {
-        firebase.database().ref("products/" + currentCode).update({
-          name: name,
-          addedDate: addedDate,
-          quantity: parseInt(quantity),
-          price: parseFloat(price),
-          discount: discount ? parseFloat(discount) : 0,
-          finalAmount: parseFloat(finalAmount),
-          expiryDate: expiryDate || "",
-          image: imageURL || ""
-        }).then(() => {
+       firebase.database().ref("products/" + currentCode).update({
+  name: name,
+  addedDate: addedDate,
+  quantity: parseInt(quantity),
+  price: parseFloat(price),
+  discount: discount ? parseFloat(discount) : 0,
+  finalAmount: parseFloat(finalAmount),
+  expiryDate: expiryDate || "",
+  image: imageURL || "",
+  buyingPrice: parseFloat(document.getElementById("buyingPriceInput").value) || 0 // ← تم الإضافة
+})
           alert("تم تعديل المنتج بنجاح!");
           closeModal();
         }).catch(error => alert("فشل تعديل المنتج: " + error));
