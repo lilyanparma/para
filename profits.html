@@ -156,7 +156,8 @@
           <th>#</th>
           <th>المنتج</th>
           <th style="width: 100px;">الكمية</th>
-          <th style="width: 100px;">السعر</th>
+          <th style="width: 100px;">سعر البيع</th>
+          <th style="width: 100px;">سعر الشراء</th>
           <th style="width: 100px;">الإجمالي</th>
         </tr>
       </thead>
@@ -166,15 +167,19 @@
     <table style="margin-top: 20px;">
       <tbody>
         <tr class="total-row">
-          <td colspan="3"><strong>إجمالي المبيعات</strong></td>
+          <td colspan="4"><strong>إجمالي المبيعات</strong></td>
           <td colspan="2"><span dir="ltr" id="totalSales"></span> ريال</td>
         </tr>
         <tr class="total-row">
-          <td colspan="3"><strong>إجمالي المصاريف</strong></td>
+          <td colspan="4"><strong>تكلفة البضائع</strong></td>
+          <td colspan="2"><span dir="ltr" id="totalCost"></span> ريال</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="4"><strong>إجمالي المصاريف</strong></td>
           <td colspan="2"><span dir="ltr" id="totalExpenses"></span> ريال</td>
         </tr>
         <tr class="total-row">
-          <td colspan="3"><strong>الأرباح</strong></td>
+          <td colspan="4"><strong>الأرباح</strong></td>
           <td colspan="2"><span dir="ltr" id="profit"></span> ريال</td>
         </tr>
       </tbody>
@@ -211,6 +216,7 @@ const firebaseConfig = {
         // جلب المنتجات
         const productsSnapshot = await database.ref("products").once("value");
         let totalSales = 0;
+        let totalCost = 0;  // تكلفة شراء المنتجات المباعة
         let soldProducts = [];
 
         productsSnapshot.forEach(childSnap => {
@@ -218,13 +224,17 @@ const firebaseConfig = {
           const soldCount = product.maxQuantity - product.quantity;
 
           if (soldCount > 0) {
-            const salesAmount = soldCount * product.price;
+            const salesAmount = soldCount * product.sellingPrice;
+            const costAmount = soldCount * product.buyingPrice;
+
             totalSales += salesAmount;
+            totalCost += costAmount;
 
             soldProducts.push({
               name: product.name,
               quantity: soldCount,
-              price: product.price,
+              sellingPrice: product.sellingPrice,
+              buyingPrice: product.buyingPrice,
               amount: salesAmount
             });
           }
@@ -239,7 +249,9 @@ const firebaseConfig = {
         const expensesSnapshot = await database.ref("expenses/" + month).once("value");
         const expensesData = expensesSnapshot.val() || {};
         const totalExpenses = parseFloat(expensesData.amount) || 0;
-        const profit = totalSales - totalExpenses;
+
+        // حساب الربح
+        const profit = totalSales - totalCost - totalExpenses;
 
         // تحويل التاريخ إلى عربي
         const monthsAr = [
@@ -253,6 +265,7 @@ const firebaseConfig = {
         document.getElementById("arMonth").innerText = arMonth;
         document.getElementById("todayDate").innerText = today;
         document.getElementById("totalSales").innerHTML = `<span dir="ltr">${totalSales.toFixed(2)}</span>`;
+        document.getElementById("totalCost").innerHTML = `<span dir="ltr">${totalCost.toFixed(2)}</span>`;
         document.getElementById("totalExpenses").innerHTML = `<span dir="ltr">${totalExpenses.toFixed(2)}</span>`;
         document.getElementById("profit").innerHTML = `<span dir="ltr">${profit.toFixed(2)}</span>`;
 
@@ -264,7 +277,8 @@ const firebaseConfig = {
             <td>${index + 1}</td>
             <td>${item.name}</td>
             <td><span dir="ltr">${item.quantity}</span></td>
-            <td><span dir="ltr">${item.price.toFixed(2)}</span></td>
+            <td><span dir="ltr">${item.sellingPrice.toFixed(2)}</span></td>
+            <td><span dir="ltr">${item.buyingPrice.toFixed(2)}</span></td>
             <td><span dir="ltr">${item.amount.toFixed(2)}</span></td>
           `;
           tbody.appendChild(row);
