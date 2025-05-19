@@ -1,9 +1,10 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PARAMEDICAL LILYAN ROSE</title>
+
   <style>
     /* إعداد الصفحة العامة */
     body {
@@ -35,7 +36,7 @@
       font-size: 24px;
       cursor: pointer;
       user-select: none;
-      margin-right: 30px; /* لمنع تداخل الزرين */
+      z-index: 1001;
     }
 
     /* زر الترجمة */
@@ -45,7 +46,7 @@
       right: 10px;
       transform: translateY(-50%);
       font-size: 13px;
-      padding: 4px 8px;
+      padding: 6px 10px;
       cursor: pointer;
       user-select: none;
       background-color: white;
@@ -54,7 +55,7 @@
       border-radius: 5px;
       display: inline-block;
       white-space: nowrap;
-      z-index: 999;
+      z-index: 1001;
       box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
@@ -67,31 +68,24 @@
       background-color: #f9f9f9;
     }
 
-    /* تنسيق خاص للهواتف */
     @media (max-width: 600px) {
       .hamburger,
       .translate-btn {
-        font-size: 20px;
-        left: 5px;
-      }
-
-      .translate-btn {
-        font-size: 12px;
-        padding: 3px 6px;
-        right: 8px;
-      }
-
-      .translate-btn svg {
-        width: 14px;
-        height: 10px;
+        font-size: 28px;
+        padding: 8px 12px;
       }
 
       header h1 {
         font-size: 1.2em;
       }
+
+      .sidebar {
+        width: 180px;
+        right: -180px;
+      }
     }
 
-    /* القائمة الجانبية المخفية */
+    /* القائمة الجانبية */
     .sidebar {
       position: fixed;
       top: 0;
@@ -132,6 +126,15 @@
       color: #007BFF;
     }
 
+    /* طبقة شبه شفافة عند فتح القائمة */
+    #overlay {
+      position: fixed;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background: rgba(0,0,0,0.4);
+      z-index: 999;
+      display: none;
+    }
+
     /* تنسيق المحتوى الرئيسي */
     main {
       padding: 20px;
@@ -155,7 +158,7 @@
     .chart-container canvas {
       display: block;
       width: 100% !important;
-      height: 300px !important;
+      height: auto !important;
     }
 
     /* تنسيق التذييل */
@@ -174,156 +177,197 @@
 </head>
 <body>
 
-  <!-- رأس الموقع -->
-  <header>
-    <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
-    <button class="translate-btn" onclick="switchLang()">
-      <svg xmlns="http://www.w3.org/2000/svg" width="18" height="12" viewBox="0 0 60 40" style="margin-bottom: 2px;">
-        <rect width="20" height="40" fill="#0055A4"/>
-        <rect x="20" width="20" height="40" fill="white"/>
-        <rect x="40" width="20" height="40" fill="#EF4135"/>
-      </svg> FR
-    </button>
-    <h1 id="siteTitle">PARAMEDICAL LILYAN ROSE</h1>
-  </header>
+<!-- رأس الموقع -->
+<header>
+  <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+  <button class="translate-btn" onclick="switchLang()">
+    <svg xmlns="http://www.w3.org/2000/svg" width="18" height="12" viewBox="0 0 60 40" style="margin-bottom: 2px;">
+      <rect width="20" height="40" fill="#0055A4"/>
+      <rect x="20" width="20" height="40" fill="white"/>
+      <rect x="40" width="20" height="40" fill="#EF4135"/>
+    </svg> FR
+  </button>
+  <h1 id="siteTitle">PARAMEDICAL LILYAN ROSE</h1>
+</header>
 
-  <!-- القائمة الجانبية -->
-  <nav id="sidebar" class="sidebar">
-    <ul>
-      <li><a href="index.html" id="menuHome">الصفحة الرئيسية</a></li>
-      <li><a href="products.html" id="menuProducts">منتجات</a></li>
-      <li><a href="view-products.html" id="menuViewProducts">عرض المنتجات</a></li>
-      <li><a href="services.html" id="menuServices">خدمات اضافية</a></li>
-      <li><a href="profits.html" id="menuProfits">الارباح و الحسابات</a></li>
-    </ul>
-  </nav>
+<!-- طبقة شبه شفافة لإغلاق القائمة -->
+<div id="overlay" onclick="toggleSidebar()" style="display:none;"></div>
 
-  <!-- المحتوى الرئيسي -->
-  <main>
-    <h2 id="mainTitle">الرئيسية - رسوم بيانية للمبيعات</h2>
+<!-- القائمة الجانبية -->
+<nav id="sidebar" class="sidebar">
+  <ul>
+    <li><a href="index.html" id="menuHome">الصفحة الرئيسية</a></li>
+    <li><a href="products.html" id="menuProducts">منتجات</a></li>
+    <li><a href="view-products.html" id="menuViewProducts">عرض المنتجات</a></li>
+    <li><a href="services.html" id="menuServices">خدمات اضافية</a></li>
+    <li><a href="profits.html" id="menuProfits">الارباح و الحسابات</a></li>
+  </ul>
+</nav>
 
-    <!-- رسم بياني شريطي للمبيعات -->
-    <div class="chart-container">
-      <canvas id="salesChart"></canvas>
-    </div>
+<!-- المحتوى الرئيسي -->
+<main>
+  <h2 id="mainTitle">الرئيسية - رسوم بيانية للمبيعات</h2>
 
-    <!-- رسم بياني دائري (Doughnut Chart) -->
-    <div class="chart-container">
-      <canvas id="doughnutChart"></canvas>
-    </div>
-  </main>
+  <!-- رسم بياني شريطي للمبيعات -->
+  <div class="chart-container">
+    <canvas id="salesChart"></canvas>
+  </div>
 
-  <!-- التذييل -->
-  <footer id="footerText">جميع الحقوق محفوظة 2025 LILYAN ROSE</footer>
+  <!-- رسم بياني دائري (Doughnut Chart) -->
+  <div class="chart-container">
+    <canvas id="doughnutChart"></canvas>
+  </div>
+</main>
 
-  <!-- Chart.js -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js "></script>
+<!-- التذييل -->
+<footer id="footerText">جميع الحقوق محفوظة 2025 LILYAN ROSE</footer>
 
-  <!-- سكربت الترجمة -->
-  <script>
-    // دالة تبديل القائمة الجانبية
-    function toggleSidebar() {
-      document.getElementById('sidebar').classList.toggle('active');
+<!-- Chart.js -->
+<script src="https://cdn.jsdelivr.net/npm/chart.js @4.4.1/dist/chart.min.js"></script>
+
+<!-- سكربت التحكم -->
+<script>
+  // تخزين اللغة الحالية
+  window.currentLang = localStorage.getItem('app-lang') || 'ar';
+
+  // تحديث النصوص ديناميكياً
+  function updateTexts(texts) {
+    document.getElementById('siteTitle').textContent = texts.site_title;
+    document.getElementById('menuHome').textContent = texts.menu_home;
+    document.getElementById('menuProducts').textContent = texts.menu_products;
+    document.getElementById('menuViewProducts').textContent = texts.menu_view_products;
+    document.getElementById('menuServices').textContent = texts.menu_services;
+    document.getElementById('menuProfits').textContent = texts.menu_profits;
+    document.getElementById('mainTitle').textContent = texts.main_title;
+    document.getElementById('footerText').textContent = texts.footer_text;
+  }
+
+  // نصوص اللغة العربية
+  const arabicTexts = {
+    site_title: "PARAMEDICAL LILYAN ROSE",
+    menu_home: "الصفحة الرئيسية",
+    menu_products: "منتجات",
+    menu_view_products: "عرض المنتجات",
+    menu_services: "خدمات اضافية",
+    menu_profits: "الارباح و الحسابات",
+    main_title: "الرئيسية - رسوم بيانية للمبيعات",
+    footer_text: "جميع الحقوق محفوظة 2025 LILYAN ROSE"
+  };
+
+  // إذا كانت اللغة المحفوظة هي العربية، استخدم النصوص مباشرة
+  if (window.currentLang === 'ar') {
+    updateTexts(arabicTexts);
+  }
+
+  // دالة تبديل القائمة الجانبية
+  function toggleSidebar() {
+    const sidebar = document.getElementById('sidebar');
+    const overlay = document.getElementById('overlay');
+
+    sidebar.classList.toggle('active');
+    overlay.style.display = sidebar.classList.contains('active') ? 'block' : 'none';
+  }
+
+  // دالة تبديل اللغة إلى الفرنسية
+  async function switchToFrench() {
+    const btn = document.querySelector('.translate-btn');
+    btn.innerHTML = 'جاري التحميل...';
+
+    try {
+      const response = await fetch('lang/fr.json');
+      const texts = await response.json();
+
+      updateTexts(texts);
+      btn.innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="12" viewBox="0 0 60 40" style="margin-bottom: 2px;">
+                        <rect width="20" height="40" fill="#0055A4"/>
+                        <rect x="20" width="20" height="40" fill="white"/>
+                        <rect x="40" width="20" height="40" fill="#EF4135"/>
+                      </svg> AR`;
+      window.currentLang = 'fr';
+      localStorage.setItem('app-lang', 'fr');
+    } catch (error) {
+      alert("فشل في تحميل الترجمة الفرنسية");
+      console.error(error);
+      btn.innerHTML = `<svg>...</svg> FR`;
     }
+  }
 
-    // دالة تبديل اللغة إلى الفرنسية
-    async function switchToFrench() {
-      try {
-        const response = await fetch('lang/fr.json');
-        const texts = await response.json();
+  // دالة العودة إلى العربية
+  function switchToArabic() {
+    updateTexts(arabicTexts);
+    document.querySelector('.translate-btn').innerHTML = `<svg xmlns="http://www.w3.org/2000/svg" width="18" height="12" viewBox="0 0 60 40" style="margin-bottom: 2px;">
+                                                            <rect width="20" height="40" fill="#0055A4"/>
+                                                            <rect x="20" width="20" height="40" fill="white"/>
+                                                            <rect x="40" width="20" height="40" fill="#EF4135"/>
+                                                          </svg> FR`;
+    window.currentLang = 'ar';
+    localStorage.setItem('app-lang', 'ar');
+  }
 
-        // تحديث النصوص بالفرنسية
-        document.getElementById('siteTitle').textContent = texts.site_title;
-        document.getElementById('menuHome').textContent = texts.menu_home;
-        document.getElementById('menuProducts').textContent = texts.menu_products;
-        document.getElementById('menuViewProducts').textContent = texts.menu_view_products;
-        document.getElementById('menuServices').textContent = texts.menu_services;
-        document.getElementById('menuProfits').textContent = texts.menu_profits;
-        document.getElementById('mainTitle').textContent = texts.main_title;
-        document.getElementById('footerText').textContent = texts.footer_text;
-
-        document.querySelector('.translate-btn').innerHTML = `
-          <svg xmlns="http://www.w3.org/2000/svg" width="18" height="12" viewBox="0 0 60 40" style="margin-bottom: 2px;">
-            <rect width="20" height="40" fill="#0055A4"/>
-            <rect x="20" width="20" height="40" fill="white"/>
-            <rect x="40" width="20" height="40" fill="#EF4135"/>
-          </svg> AR`;
-
-        window.currentLang = 'fr';
-      } catch (error) {
-        alert("فشل في تحميل الترجمة الفرنسية");
-        console.error(error);
-      }
+  // دالة التبديل بين اللغات
+  function switchLang() {
+    if (window.currentLang === 'fr') {
+      switchToArabic();
+    } else {
+      switchToFrench();
     }
+  }
 
-    // دالة العودة إلى العربية
-    function switchToArabic() {
-      location.reload();
-    }
-
-    // دالة التبديل بين اللغات
-    function switchLang() {
-      if (window.currentLang === 'fr') {
-        switchToArabic();
-      } else {
-        switchToFrench();
-      }
-    }
-
-    // رسم بياني شريطي للمبيعات
-    var ctxSales = document.getElementById('salesChart').getContext('2d');
-    new Chart(ctxSales, {
-      type: 'bar',
-      data: {
-        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-        datasets: [{
-          label: 'المبيعات (بالآلاف)',
-          data: [12, 19, 3, 5, 2, 3],
-          backgroundColor: 'rgba(255, 99, 132, 0.2)',
-          borderColor: 'rgba(255, 99, 132, 1)',
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        scales: {
-          y: {
-            beginAtZero: true
-          }
+  // رسم بياني شريطي للمبيعات
+  var ctxSales = document.getElementById('salesChart').getContext('2d');
+  new Chart(ctxSales, {
+    type: 'bar',
+    data: {
+      labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
+      datasets: [{
+        label: 'المبيعات (بالآلاف)',
+        data: [12, 19, 3, 5, 2, 3],
+        backgroundColor: 'rgba(255, 99, 132, 0.2)',
+        borderColor: 'rgba(255, 99, 132, 1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      scales: {
+        y: {
+          beginAtZero: true
         }
       }
-    });
+    }
+  });
 
-    // رسم بياني دائري (Doughnut)
-    var ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
-    new Chart(ctxDoughnut, {
-      type: 'doughnut',
-      data: {
-        labels: ['منتج أ', 'منتج ب', 'منتج ج', 'منتج د'],
-        datasets: [{
-          label: 'توزيع المنتجات',
-          data: [30, 20, 25, 25],
-          backgroundColor: [
-            'rgba(54, 162, 235, 0.6)',
-            'rgba(255, 206, 86, 0.6)',
-            'rgba(75, 192, 192, 0.6)',
-            'rgba(153, 102, 255, 0.6)'
-          ],
-          borderColor: [
-            'rgba(54, 162, 235, 1)',
-            'rgba(255, 206, 86, 1)',
-            'rgba(75, 192, 192, 1)',
-            'rgba(153, 102, 255, 1)'
-          ],
-          borderWidth: 1
-        }]
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false
-      }
-    });
-  </script>
+  // رسم بياني دائري (Doughnut)
+  var ctxDoughnut = document.getElementById('doughnutChart').getContext('2d');
+  new Chart(ctxDoughnut, {
+    type: 'doughnut',
+    data: {
+      labels: ['منتج أ', 'منتج ب', 'منتج ج', 'منتج د'],
+      datasets: [{
+        label: 'توزيع المنتجات',
+        data: [30, 20, 25, 25],
+        backgroundColor: [
+          'rgba(54, 162, 235, 0.6)',
+          'rgba(255, 206, 86, 0.6)',
+          'rgba(75, 192, 192, 0.6)',
+          'rgba(153, 102, 255, 0.6)'
+        ],
+        borderColor: [
+          'rgba(54, 162, 235, 1)',
+          'rgba(255, 206, 86, 1)',
+          'rgba(75, 192, 192, 1)',
+          'rgba(153, 102, 255, 1)'
+        ],
+        borderWidth: 1
+      }]
+    },
+    options: {
+      responsive: true,
+      maintainAspectRatio: false
+    }
+  });
+</script>
+
 </body>
 </html>
