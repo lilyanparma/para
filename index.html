@@ -35,6 +35,7 @@
       font-size: 24px;
       cursor: pointer;
       user-select: none;
+      margin-right: 30px; /* لمنع تداخل الزرين */
     }
 
     /* زر الترجمة */
@@ -54,6 +55,7 @@
       display: inline-block;
       white-space: nowrap;
       z-index: 999;
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
     }
 
     .translate-btn svg {
@@ -134,7 +136,7 @@
     main {
       padding: 20px;
       margin-top: 10px;
-      margin-bottom: 60px; /* ترك مجال للتذييل */
+      margin-bottom: 60px;
     }
 
     main h2 {
@@ -246,6 +248,7 @@
             <rect x="20" width="20" height="40" fill="white"/>
             <rect x="40" width="20" height="40" fill="#EF4135"/>
           </svg> AR`;
+
         window.currentLang = 'fr';
       } catch (error) {
         alert("فشل في تحميل الترجمة الفرنسية");
