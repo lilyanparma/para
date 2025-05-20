@@ -312,9 +312,6 @@
     <button class="btn btn-secondary" onclick="showManualEntry()">
       <i class="fas fa-keyboard"></i> إدخال يدوي
     </button>
-    <button class="btn btn-info" onclick="showAllProducts()">
-      <i class="fas fa-list"></i> عرض جميع المنتجات
-    </button>
   </div>
   
   <div class="input-section" id="manualEntry" style="display: none;">
@@ -381,15 +378,6 @@
       </div>
     </div>
   </div>
-  
-  <!-- مودال جميع المنتجات -->
-  <div class="modal" id="productsModal">
-    <div class="modal-content">
-      <span class="close-btn" onclick="closeProductsModal()">&times;</span>
-      <h2><i class="fas fa-boxes"></i> جميع المنتجات</h2>
-      <div id="productsList"></div>
-    </div>
-  </div>
 
   <!-- منطقة التنبيهات -->
   <div id="alertsContainer"></div>
@@ -416,8 +404,6 @@
     let currentProduct = null;
     let codeReader = null;
     let scannerActive = false;
-    let currentPage = 1;
-    const productsPerPage = 10;
     
     // ================ وظائف المسح الضوئي ================
     function startScanner() {
@@ -941,135 +927,6 @@
       }
     }
     
-    // ================ عرض جميع المنتجات ================
-    async function showAllProducts(page = 1) {
-      currentPage = page;
-      stopScanner();
-      
-      try {
-        const snapshot = await database.ref('products').once('value');
-        const products = snapshot.val();
-        const productsList = document.getElementById('productsList');
-        productsList.innerHTML = '';
-        
-        if (!products) {
-          productsList.innerHTML = '<p>لا توجد منتجات مسجلة بعد</p>';
-          document.getElementById('productsModal').style.display = 'block';
-          return;
-        }
-        
-        let html = '<div style="overflow-x: auto;"><table style="width: 100%; border-collapse: collapse;">';
-        html += `
-          <tr style="background-color: #f5f5f5;">
-            <th style="padding: 10px; text-align: right;">الباركود</th>
-            <th style="padding: 10px; text-align: right;">الاسم</th>
-            <th style="padding: 10px; text-align: center;">الكمية</th>
-            <th style="padding: 10px; text-align: center;">السعر</th>
-            <th style="padding: 10px; text-align: center;">إجراءات</th>
-          </tr>
-        `;
-        
-        Object.keys(products).forEach(code => {
-          const product = products[code];
-          const quantity = parseFloat(product.quantity) || 0;
-          const rowColor = quantity <= 3 ? 'style="background-color: #fff0f0;"' : '';
-          
-          html += `
-            <tr ${rowColor}>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${code}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee;">${product.name || 'غير محدد'}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center; ${quantity <= 3 ? 'color: red; font-weight: bold;' : ''}">
-                ${quantity}
-              </td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">${product.price ? parseFloat(product.price).toFixed(2) + ' ر.س' : 'غير محدد'}</td>
-              <td style="padding: 8px; border-bottom: 1px solid #eee; text-align: center;">
-                <button onclick="viewProduct('${code}')" style="background: none; border: none; cursor: pointer; color: var(--primary);">
-                  <i class="fas fa-eye"></i>
-                </button>
-                <button onclick="quickSell('${code}', ${quantity})" style="background: none; border: none; cursor: pointer; color: var(--success);">
-                  <i class="fas fa-cash-register"></i>
-                </button>
-              </td>
-            </tr>
-          `;
-        });
-        
-        html += '</table></div>';
-        productsList.innerHTML = html;
-        document.getElementById('productsModal').style.display = 'block';
-      } catch (error) {
-        showAlert('حدث خطأ في جلب قائمة المنتجات: ' + error.message, 'danger');
-        console.error('تفاصيل الخطأ:', error);
-      }
-    }
-    
-    async function quickSell(code, currentQuantity) {
-      try {
-        currentQuantity = parseFloat(currentQuantity) || 0;
-        
-        if (currentQuantity <= 0) {
-          showAlert('لا يوجد مخزون كافي لهذا المنتج!', 'danger');
-          return;
-        }
-
-        const quantityInput = prompt('كمية القطع المباعة:', '1');
-        const quantity = parseFloat(quantityInput);
-        
-        if (isNaN(quantity) || quantity <= 0) {
-          showAlert('الرجاء إدخال رقم صحيح موجب للكمية', 'warning');
-          return;
-        }
-
-        if (currentQuantity < quantity) {
-          showAlert(`لا يوجد مخزون كافي! المتوفر: ${currentQuantity}`, 'danger');
-          return;
-        }
-
-        const newQuantity = currentQuantity - quantity;
-        
-        await database.ref('products/' + code).update({ 
-          quantity: newQuantity,
-          lastSold: new Date().toISOString()
-        });
-        
-        showAlert(`تم بيع ${quantity} قطعة بنجاح!`, 'success');
-        
-        // إذا كان المنتج الحالي هو نفسه الذي تم بيعه، نقوم بتحديثه
-        if (currentProduct && currentProduct.code === code) {
-          currentProduct.quantity = newQuantity;
-          document.getElementById('infoQuantity').textContent = newQuantity;
-          checkInventory(newQuantity);
-        }
-        
-        // إعادة تحميل قائمة المنتجات
-        showAllProducts(currentPage);
-        
-      } catch (error) {
-        showAlert('حدث خطأ أثناء تسجيل البيع: ' + error.message, 'danger');
-        console.error('تفاصيل الخطأ:', error);
-      }
-    }
-    
-    async function viewProduct(code) {
-      closeProductsModal();
-      
-      try {
-        const snapshot = await database.ref('products/' + code).once('value');
-        if (snapshot.exists()) {
-          const productData = snapshot.val();
-          // التأكد من وجود كمية صالحة
-          productData.quantity = parseFloat(productData.quantity) || 0;
-          currentProduct = { code, ...productData };
-          showProductInfo(currentProduct);
-        } else {
-          showAlert('المنتج غير موجود!', 'warning');
-        }
-      } catch (error) {
-        showAlert('حدث خطأ في جلب بيانات المنتج: ' + error.message, 'danger');
-        console.error('تفاصيل الخطأ:', error);
-      }
-    }
-    
     // ================ وظائف مساعدة ================
     function showAlert(message, type = 'info') {
       const alert = document.createElement('div');
@@ -1087,10 +944,6 @@
     function closeModal() {
       document.getElementById('productModal').style.display = 'none';
       document.getElementById('resultMessage').textContent = '';
-    }
-    
-    function closeProductsModal() {
-      document.getElementById('productsModal').style.display = 'none';
     }
     
     function deleteProduct() {
