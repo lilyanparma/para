@@ -270,6 +270,17 @@
       background-color: var(--info);
     }
     
+    /* تنسيقات تاريخ الصلاحية */
+    .expired {
+      color: red !important;
+      font-weight: bold !important;
+    }
+    
+    .expiring-soon {
+      color: orange !important;
+      font-weight: bold !important;
+    }
+    
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
@@ -356,6 +367,10 @@
             <td id="infoCost"></td>
           </tr>
           <tr>
+            <td class="info-label">تاريخ انتهاء الصلاحية:</td>
+            <td id="infoExpiry"></td>
+          </tr>
+          <tr>
             <td class="info-label">تاريخ الإضافة:</td>
             <td id="infoDate"></td>
           </tr>
@@ -369,6 +384,7 @@
         <input type="number" id="editQuantity" class="input-field" placeholder="الكمية" min="0" required>
         <input type="number" id="editPrice" class="input-field" placeholder="سعر البيع" min="0" step="0.01" required>
         <input type="number" id="editCost" class="input-field" placeholder="سعر الشراء" min="0" step="0.01" required>
+        <input type="date" id="editExpiry" class="input-field" placeholder="تاريخ انتهاء الصلاحية (اختياري)">
         <input type="date" id="editDate" class="input-field" required>
         <input type="file" id="editImage" class="input-field" accept="image/*">
       </div>
@@ -408,8 +424,14 @@
     // ================ وظائف المسح الضوئي ================
     function startScanner() {
       document.getElementById('manualEntry').style.display = 'none';
-      document.getElementById('scannerContainer').style.display = 'block';
+      const scannerContainer = document.getElementById('scannerContainer');
+      scannerContainer.style.display = 'block';
       document.getElementById('resultMessage').textContent = 'جاري تحضير الماسح...';
+      
+      // إيقاف أي ماسح نشط سابقًا
+      if (codeReader && scannerActive) {
+        codeReader.reset();
+      }
       
       codeReader = new ZXing.BrowserMultiFormatReader();
       
@@ -423,6 +445,7 @@
         if (err && !(err instanceof ZXing.NotFoundException)) {
           console.error(err);
           showAlert('حدث خطأ في الماسح: ' + err.message, 'danger');
+          stopScanner();
         }
       }).then(() => {
         scannerActive = true;
@@ -430,6 +453,7 @@
       }).catch(err => {
         console.error(err);
         showAlert('تعذر تشغيل الكاميرا: ' + err.message, 'danger');
+        scannerContainer.style.display = 'none';
       });
     }
     
@@ -439,6 +463,7 @@
         scannerActive = false;
       }
       document.getElementById('scannerContainer').style.display = 'none';
+      document.getElementById('resultMessage').textContent = '';
     }
     
     // ================ وظائف إدارة المنتجات ================
@@ -450,7 +475,6 @@
         const snapshot = await database.ref('products/' + code).once('value');
         if (snapshot.exists()) {
           const productData = snapshot.val();
-          // التأكد من وجود كمية صالحة
           productData.quantity = parseFloat(productData.quantity) || 0;
           showProductInfo(productData);
           showAlert('تم العثور على المنتج', 'success');
@@ -483,12 +507,8 @@
         
         if (snapshot.exists()) {
           const productData = snapshot.val();
-          // التأكد من وجود كمية صالحة
           productData.quantity = parseFloat(productData.quantity) || 0;
-          currentProduct = {
-            code: code,
-            ...productData
-          };
+          currentProduct = { code: code, ...productData };
           showProductInfo(currentProduct);
           showAlert('تم العثور على المنتج', 'success');
         } else {
@@ -504,9 +524,7 @@
     
     // ================ عرض وتعديل المنتجات ================
     function showProductInfo(product) {
-      // التأكد من وجود كمية صالحة
-      const validQuantity = (product.quantity !== undefined && product.quantity !== null) ? 
-                           parseFloat(product.quantity) : 0;
+      const validQuantity = parseFloat(product.quantity) || 0;
       
       document.getElementById('modalTitle').textContent = product.name || 'معلومات المنتج';
       document.getElementById('infoCode').textContent = product.code;
@@ -514,15 +532,16 @@
       document.getElementById('infoQuantity').textContent = validQuantity;
       document.getElementById('infoPrice').textContent = product.price ? `${parseFloat(product.price).toFixed(2)} ر.س` : 'غير محدد';
       document.getElementById('infoCost').textContent = product.cost ? `${parseFloat(product.cost).toFixed(2)} ر.س` : 'غير محدد';
+      document.getElementById('infoExpiry').textContent = product.expiryDate || 'غير محدد';
       document.getElementById('infoDate').textContent = product.date || 'غير محدد';
       
-      // عرض الصورة إذا كانت موجودة
+      checkProductExpiry(product.expiryDate);
+      
       const imageContainer = document.getElementById('productImageContainer');
       imageContainer.innerHTML = product.image ? 
         `<img src="${product.image}" alt="صورة المنتج" class="product-image">` : 
         '<p>لا توجد صورة للمنتج</p>';
       
-      // إعداد أزرار التحكم
       const actions = document.getElementById('modalActions');
       let buttonsHTML = `
         <button class="btn btn-success" onclick="sellProduct()">
@@ -539,7 +558,6 @@
         </button>
       `;
       
-      // إضافة زر إضافة مخزون فقط إذا كانت الكمية أقل من 5
       if (validQuantity < 5) {
         buttonsHTML += `
           <button class="btn btn-info" onclick="addStock()">
@@ -549,41 +567,49 @@
       }
       
       actions.innerHTML = buttonsHTML;
+      currentProduct = { ...product, quantity: validQuantity };
       
-      // تحديث كائن المنتج الحالي بكمية صالحة
-      currentProduct = {
-        ...product,
-        quantity: validQuantity
-      };
-      
-      // إظهار المعلومات وإخفاء النموذج
       document.getElementById('productInfo').style.display = 'block';
       document.getElementById('productForm').style.display = 'none';
-      
-      // فتح المودال
       document.getElementById('productModal').style.display = 'block';
-      
-      // التحقق من المخزون
       checkInventory(validQuantity);
+    }
+    
+    function checkProductExpiry(expiryDate) {
+      if (!expiryDate) return;
+      
+      const expiryElement = document.getElementById('infoExpiry');
+      const today = new Date();
+      const expiry = new Date(expiryDate);
+      const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+      
+      expiryElement.className = '';
+      
+      if (diffDays < 0) {
+        expiryElement.classList.add('expired');
+        showAlert('تحذير: هذا المنتج منتهي الصلاحية!', 'danger');
+      } 
+      else if (diffDays <= 30) {
+        expiryElement.classList.add('expiring-soon');
+        showAlert(`تنبيه: المنتج سينتهي صلاحيته خلال ${diffDays} يوم`, 'warning');
+      }
     }
     
     function showAddProductForm(code) {
       document.getElementById('modalTitle').textContent = 'إضافة منتج جديد';
       document.getElementById('infoCode').textContent = code;
       
-      // إخفاء المعلومات وإظهار النموذج
       document.getElementById('productInfo').style.display = 'none';
       document.getElementById('productForm').style.display = 'block';
       
-      // مسح الحقول
       document.getElementById('editName').value = '';
       document.getElementById('editQuantity').value = '1';
       document.getElementById('editPrice').value = '';
       document.getElementById('editCost').value = '';
+      document.getElementById('editExpiry').value = '';
       document.getElementById('editDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('editImage').value = '';
       
-      // إعداد أزرار التحكم
       const actions = document.getElementById('modalActions');
       actions.innerHTML = `
         <button class="btn btn-success" onclick="addNewProduct()">
@@ -594,21 +620,19 @@
         </button>
       `;
       
-      // فتح المودال
       document.getElementById('productModal').style.display = 'block';
     }
     
     function showEditForm() {
       document.getElementById('modalTitle').textContent = 'تعديل المنتج';
       
-      // تعبئة الحقول بالقيم الحالية
       document.getElementById('editName').value = currentProduct.name || '';
       document.getElementById('editQuantity').value = currentProduct.quantity || '1';
       document.getElementById('editPrice').value = currentProduct.price || '';
       document.getElementById('editCost').value = currentProduct.cost || '';
+      document.getElementById('editExpiry').value = currentProduct.expiryDate || '';
       document.getElementById('editDate').value = currentProduct.date || new Date().toISOString().split('T')[0];
       
-      // إظهار صورة المنتج الحالية إذا وجدت
       const imageContainer = document.getElementById('productImageContainer');
       if (currentProduct.image) {
         imageContainer.innerHTML = `
@@ -620,11 +644,9 @@
         imageContainer.innerHTML = '<p>لا توجد صورة حالية للمنتج</p>';
       }
       
-      // إخفاء المعلومات وإظهار النموذج
       document.getElementById('productInfo').style.display = 'none';
       document.getElementById('productForm').style.display = 'block';
       
-      // إعداد أزرار التحكم
       const actions = document.getElementById('modalActions');
       actions.innerHTML = `
         <button class="btn btn-success" onclick="updateProduct()">
@@ -639,31 +661,28 @@
     // ================ إدارة البيانات ================
     async function addNewProduct() {
       const name = document.getElementById('editName').value.trim();
-      const quantityInput = document.getElementById('editQuantity').value;
-      const priceInput = document.getElementById('editPrice').value;
-      const costInput = document.getElementById('editCost').value;
+      const quantity = parseFloat(document.getElementById('editQuantity').value) || 0;
+      const price = parseFloat(document.getElementById('editPrice').value) || 0;
+      const cost = parseFloat(document.getElementById('editCost').value) || 0;
+      const expiryDate = document.getElementById('editExpiry').value;
       const date = document.getElementById('editDate').value;
       const imageFile = document.getElementById('editImage').files[0];
       
-      // التحقق من صحة البيانات
       if (!name) {
         showAlert('الرجاء إدخال اسم المنتج', 'warning');
         return;
       }
       
-      const quantity = parseFloat(quantityInput);
       if (isNaN(quantity) || quantity < 0) {
         showAlert('الرجاء إدخال كمية صحيحة', 'warning');
         return;
       }
       
-      const price = parseFloat(priceInput);
       if (isNaN(price) || price < 0) {
         showAlert('الرجاء إدخال سعر بيع صحيح', 'warning');
         return;
       }
       
-      const cost = parseFloat(costInput);
       if (isNaN(cost) || cost < 0) {
         showAlert('الرجاء إدخال سعر شراء صحيح', 'warning');
         return;
@@ -674,18 +693,17 @@
         return;
       }
       
-      // تحديث كائن المنتج الحالي
       currentProduct = {
         ...currentProduct,
         name,
         quantity,
         price,
         cost,
+        expiryDate: expiryDate || null,
         date,
         maxQuantity: quantity
       };
       
-      // رفع الصورة إذا وجدت
       if (imageFile) {
         try {
           showAlert('جاري رفع صورة المنتج...', 'info');
@@ -697,7 +715,6 @@
         }
       }
       
-      // حفظ في قاعدة البيانات
       try {
         await database.ref('products/' + currentProduct.code).set(currentProduct);
         showAlert('تم إضافة المنتج بنجاح!', 'success');
@@ -710,31 +727,28 @@
     
     async function updateProduct() {
       const name = document.getElementById('editName').value.trim();
-      const quantityInput = document.getElementById('editQuantity').value;
-      const priceInput = document.getElementById('editPrice').value;
-      const costInput = document.getElementById('editCost').value;
+      const quantity = parseFloat(document.getElementById('editQuantity').value) || 0;
+      const price = parseFloat(document.getElementById('editPrice').value) || 0;
+      const cost = parseFloat(document.getElementById('editCost').value) || 0;
+      const expiryDate = document.getElementById('editExpiry').value;
       const date = document.getElementById('editDate').value;
       const imageFile = document.getElementById('editImage').files[0];
       
-      // التحقق من صحة البيانات
       if (!name) {
         showAlert('الرجاء إدخال اسم المنتج', 'warning');
         return;
       }
       
-      const quantity = parseFloat(quantityInput);
       if (isNaN(quantity) || quantity < 0) {
         showAlert('الرجاء إدخال كمية صحيحة', 'warning');
         return;
       }
       
-      const price = parseFloat(priceInput);
       if (isNaN(price) || price < 0) {
         showAlert('الرجاء إدخال سعر بيع صحيح', 'warning');
         return;
       }
       
-      const cost = parseFloat(costInput);
       if (isNaN(cost) || cost < 0) {
         showAlert('الرجاء إدخال سعر شراء صحيح', 'warning');
         return;
@@ -745,17 +759,16 @@
         return;
       }
 
-      // تحديث كائن المنتج الحالي
       currentProduct = {
         ...currentProduct,
         name,
         quantity,
         price,
         cost,
+        expiryDate: expiryDate || null,
         date
       };
       
-      // رفع الصورة الجديدة إذا وجدت
       if (imageFile) {
         try {
           showAlert('جاري تحديث صورة المنتج...', 'info');
@@ -767,7 +780,6 @@
         }
       }
       
-      // حفظ التعديلات في قاعدة البيانات
       try {
         await database.ref('products/' + currentProduct.code).update(currentProduct);
         showAlert('تم تحديث المنتج بنجاح!', 'success');
@@ -819,10 +831,7 @@
           lastSold: new Date().toISOString()
         });
         
-        // تحديث كائن المنتج الحالي
         currentProduct.quantity = newQuantity;
-        
-        // تحديث الواجهة
         document.getElementById('infoQuantity').textContent = newQuantity;
         showAlert(`تم بيع ${quantity} قطعة بنجاح!`, 'success');
         checkInventory(newQuantity);
@@ -856,10 +865,7 @@
           lastReturned: new Date().toISOString()
         });
         
-        // تحديث كائن المنتج الحالي
         currentProduct.quantity = newQuantity;
-        
-        // تحديث الواجهة
         document.getElementById('infoQuantity').textContent = newQuantity;
         showAlert(`تمت إرجاع ${amountNum} قطعة للمخزون!`, 'success');
         checkInventory(newQuantity);
@@ -893,10 +899,7 @@
           lastStockAdded: new Date().toISOString()
         });
         
-        // تحديث كائن المنتج الحالي
         currentProduct.quantity = newQuantity;
-        
-        // تحديث الواجهة
         document.getElementById('infoQuantity').textContent = newQuantity;
         showAlert(`تمت إضافة ${amountNum} قطعة للمخزون!`, 'success');
         checkInventory(newQuantity);
@@ -961,6 +964,37 @@
           console.error('تفاصيل الخطأ:', error);
         });
     }
+    
+    // فحص جميع المنتجات عند تحميل الصفحة
+    window.addEventListener('DOMContentLoaded', async () => {
+      try {
+        const snapshot = await database.ref('products').once('value');
+        if (!snapshot.exists()) return;
+        
+        const today = new Date();
+        const monthLater = new Date();
+        monthLater.setMonth(monthLater.getMonth() + 1);
+        
+        const products = snapshot.val();
+        
+        Object.keys(products).forEach(code => {
+          const product = products[code];
+          if (!product.expiryDate) return;
+          
+          const expiry = new Date(product.expiryDate);
+          
+          if (expiry < today) {
+            showAlert(`تحذير: المنتج ${product.name || code} منتهي الصلاحية`, 'danger');
+          } 
+          else if (expiry <= monthLater) {
+            const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+            showAlert(`تنبيه: المنتج ${product.name || code} سينتهي خلال ${diffDays} يوم`, 'warning');
+          }
+        });
+      } catch (error) {
+        console.error('Error checking products expiry:', error);
+      }
+    });
     
     // إيقاف الماسح عند مغادرة الصفحة
     window.addEventListener('beforeunload', stopScanner);
