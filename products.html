@@ -8,7 +8,6 @@
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-storage.js"></script>
   
   <!-- مكتبة ZXing لقراءة الباركود -->
   <script src="https://unpkg.com/@zxing/library@0.19.1/umd/index.min.js"></script>
@@ -414,7 +413,6 @@
     // Initialize Firebase
     firebase.initializeApp(firebaseConfig);
     const database = firebase.database();
-    const storage = firebase.storage();
     
     // متغيرات النظام
     let currentProduct = null;
@@ -544,17 +542,11 @@
       
       const actions = document.getElementById('modalActions');
       let buttonsHTML = `
-        <button class="btn btn-success" onclick="sellProduct()">
-          <i class="fas fa-cash-register"></i> بيع
-        </button>
         <button class="btn btn-warning" onclick="showEditForm()">
           <i class="fas fa-edit"></i> تعديل
         </button>
         <button class="btn btn-danger" onclick="deleteProduct()">
           <i class="fas fa-trash"></i> حذف
-        </button>
-        <button class="btn btn-secondary" onclick="returnProduct()">
-          <i class="fas fa-undo"></i> إرجاع
         </button>
       `;
       
@@ -658,6 +650,32 @@
       `;
     }
     
+    // ================ رفع الصور إلى Imgur ================
+    async function uploadToImgur(file) {
+      const formData = new FormData();
+      formData.append('image', file);
+      
+      try {
+        const response = await fetch('https://api.imgur.com/3/image', {
+          method: 'POST',
+          headers: {
+            'Authorization': 'db60b8c699735bb' // استبدل بمعرف العميل الخاص بك
+          },
+          body: formData
+        });
+        
+        const data = await response.json();
+        if (data.success) {
+          return data.data.link;
+        } else {
+          throw new Error(data.data.error || 'فشل رفع الصورة');
+        }
+      } catch (error) {
+        console.error('Imgur upload error:', error);
+        throw error;
+      }
+    }
+    
     // ================ إدارة البيانات ================
     async function addNewProduct() {
       const name = document.getElementById('editName').value.trim();
@@ -706,12 +724,11 @@
       
       if (imageFile) {
         try {
-          showAlert('جاري رفع صورة المنتج...', 'info');
-          const imageUrl = await uploadImage(imageFile, currentProduct.code);
+          showAlert('جاري رفع صورة المنتج إلى Imgur...', 'info');
+          const imageUrl = await uploadToImgur(imageFile);
           currentProduct.image = imageUrl;
         } catch (error) {
-          showAlert('حدث خطأ أثناء رفع الصورة', 'danger');
-          console.error(error);
+          showAlert('حدث خطأ أثناء رفع الصورة: ' + error.message, 'danger');
         }
       }
       
@@ -771,12 +788,11 @@
       
       if (imageFile) {
         try {
-          showAlert('جاري تحديث صورة المنتج...', 'info');
-          const imageUrl = await uploadImage(imageFile, currentProduct.code);
+          showAlert('جاري تحديث صورة المنتج في Imgur...', 'info');
+          const imageUrl = await uploadToImgur(imageFile);
           currentProduct.image = imageUrl;
         } catch (error) {
-          showAlert('حدث خطأ أثناء تحديث الصورة', 'danger');
-          console.error(error);
+          showAlert('حدث خطأ أثناء تحديث الصورة: ' + error.message, 'danger');
         }
       }
       
@@ -790,92 +806,7 @@
       }
     }
     
-    async function uploadImage(file, code) {
-      const storageRef = storage.ref(`product_images/${code}`);
-      const snapshot = await storageRef.put(file);
-      return await snapshot.ref.getDownloadURL();
-    }
-    
-    // ================ عمليات البيع والإرجاع ================
-    async function sellProduct() {
-      try {
-        if (!currentProduct || currentProduct.quantity === undefined) {
-          showAlert('لا يوجد بيانات منتج متاحة', 'danger');
-          return;
-        }
-
-        const currentQuantity = parseFloat(currentProduct.quantity) || 0;
-        
-        if (currentQuantity <= 0) {
-          showAlert('لا يوجد مخزون كافي لهذا المنتج!', 'danger');
-          return;
-        }
-
-        const quantityInput = prompt('كمية القطع المباعة:', '1');
-        const quantity = parseFloat(quantityInput);
-        
-        if (isNaN(quantity) || quantity <= 0) {
-          showAlert('الرجاء إدخال رقم صحيح موجب للكمية', 'warning');
-          return;
-        }
-
-        if (currentQuantity < quantity) {
-          showAlert(`لا يوجد مخزون كافي! المتوفر: ${currentQuantity}`, 'danger');
-          return;
-        }
-
-        const newQuantity = currentQuantity - quantity;
-        
-        await database.ref('products/' + currentProduct.code).update({ 
-          quantity: newQuantity,
-          lastSold: new Date().toISOString()
-        });
-        
-        currentProduct.quantity = newQuantity;
-        document.getElementById('infoQuantity').textContent = newQuantity;
-        showAlert(`تم بيع ${quantity} قطعة بنجاح!`, 'success');
-        checkInventory(newQuantity);
-        
-      } catch (error) {
-        showAlert('حدث خطأ أثناء تسجيل البيع: ' + error.message, 'danger');
-        console.error('تفاصيل الخطأ:', error);
-      }
-    }
-    
-    async function returnProduct() {
-      try {
-        if (!currentProduct) {
-          showAlert('لا يوجد بيانات منتج متاحة', 'danger');
-          return;
-        }
-
-        const currentQuantity = parseFloat(currentProduct.quantity) || 0;
-        const amount = prompt('أدخل عدد القطع المراد إرجاعها:', '1');
-        const amountNum = parseFloat(amount);
-        
-        if (isNaN(amountNum) || amountNum <= 0) {
-          showAlert('الرجاء إدخال رقم صحيح موجب', 'warning');
-          return;
-        }
-
-        const newQuantity = currentQuantity + amountNum;
-        
-        await database.ref('products/' + currentProduct.code).update({ 
-          quantity: newQuantity,
-          lastReturned: new Date().toISOString()
-        });
-        
-        currentProduct.quantity = newQuantity;
-        document.getElementById('infoQuantity').textContent = newQuantity;
-        showAlert(`تمت إرجاع ${amountNum} قطعة للمخزون!`, 'success');
-        checkInventory(newQuantity);
-        
-      } catch (error) {
-        showAlert('حدث خطأ أثناء إرجاع المنتج: ' + error.message, 'danger');
-        console.error('تفاصيل الخطأ:', error);
-      }
-    }
-    
+    // ================ إضافة مخزون ================
     async function addStock() {
       try {
         if (!currentProduct) {
