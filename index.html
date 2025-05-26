@@ -437,42 +437,59 @@
       }
     });
 
-    // تحديث العلم والنص
-    function updateFlag(lang) {
-      const flagIcon = document.getElementById('flagIcon');
-      const langText = document.getElementById('langText');
-      
-      if (lang === 'fr') {
-        // علم فرنسا
-        flagIcon.innerHTML = `
-          <rect width="20" height="40" fill="#0055A4"/>
-          <rect x="20" width="20" height="40" fill="white"/>
-          <rect x="40" width="20" height="40" fill="#EF4135"/>
-        `;
-        langText.textContent = 'FR';
-      } else {
-        // علم المغرب
-        flagIcon.innerHTML = `
-          <rect width="60" height="40" fill="#C1272D"/>
-          <path d="M30 10 L35 18 L43 18 L37 23 L39 31 L30 26 L21 31 L23 23 L17 18 L25 18 Z" fill="#006233"/>
-        `;
-        langText.textContent = 'AR';
-      }
+  // دالة تحديث العلم واللغة
+  function updateLanguage(lang) {
+    const flagIcon = document.getElementById('flagIcon');
+    const langText = document.getElementById('langText');
+    
+    if (lang === 'fr') {
+      // علم فرنسا
+      flagIcon.innerHTML = `
+        <rect width="20" height="40" fill="#0055A4"/>
+        <rect x="20" width="20" height="40" fill="white"/>
+        <rect x="40" width="20" height="40" fill="#EF4135"/>
+      `;
+      langText.textContent = 'FR';
+    } else {
+      // علم المغرب
+      flagIcon.innerHTML = `
+        <rect width="60" height="40" fill="#C1272D"/>
+        <path d="M30 10 L35 18 L43 18 L37 23 L39 31 L30 26 L21 31 L23 23 L17 18 L25 18 Z" fill="#006233"/>
+      `;
+      langText.textContent = 'AR';
     }
+  }
 
-    // دالة تبديل اللغة
-    async function switchLang() {
-      const currentLang = localStorage.getItem('lang') || 'ar';
-      if (currentLang === 'fr') {
-        localStorage.setItem('lang', 'ar');
-        updateFlag('ar');
-        location.reload();
-      } else {
-        localStorage.setItem('lang', 'fr');
-        updateFlag('fr');
-        await switchToFrench();
-      }
+  // تهيئة الصفحة
+  document.addEventListener('DOMContentLoaded', function() {
+    const savedLang = localStorage.getItem('lang') || 'ar';
+    
+    // تحديث العلم حسب اللغة المحفوظة
+    updateLanguage(savedLang);
+    
+    // إذا كانت اللغة فرنسية، قم بتحميل الترجمات
+    if (savedLang === 'fr') {
+      switchToFrench();
     }
+    
+    // تهيئة الرسوم البيانية
+    initCharts();
+  });
+
+  // دالة تبديل اللغة
+  async function switchLang() {
+    const currentLang = localStorage.getItem('lang') || 'ar';
+    if (currentLang === 'fr') {
+      localStorage.setItem('lang', 'ar');
+      updateLanguage('ar');
+      location.reload();
+    } else {
+      localStorage.setItem('lang', 'fr');
+      updateLanguage('fr');
+      await switchToFrench();
+    }
+  }
+
 
     // الترجمة إلى الفرنسية
     async function switchToFrench() {
