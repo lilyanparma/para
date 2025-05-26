@@ -120,7 +120,7 @@
       position: fixed;
       top: 0;
       bottom: 0;
-      right: -280px;
+      right: -300px;
       width: 280px;
       background-color: white;
       padding: 25px;
@@ -474,6 +474,16 @@
 
   <!-- السكربتات -->
   <script>
+    // تحميل اللغة فورًا قبل تحميل الصفحة
+    (function() {
+      const savedLang = localStorage.getItem('lang');
+      if (savedLang === 'fr') {
+        document.documentElement.lang = 'fr';
+      } else {
+        document.documentElement.lang = 'ar';
+      }
+    })();
+
     // تهيئة تأثيرات التمرير
     document.addEventListener('DOMContentLoaded', function() {
       AOS.init({
@@ -485,6 +495,7 @@
       // تحميل اللغة المحفوظة
       const savedLang = localStorage.getItem('lang');
       if (savedLang === 'fr') {
+        updateFlag('fr');
         switchToFrench();
       } else {
         updateFlag('ar');
@@ -502,6 +513,10 @@
       
       isSidebarOpen = !isSidebarOpen;
       
+      // تحسين الأداء باستخدام will-change
+      sidebar.style.willChange = 'right';
+      overlay.style.willChange = 'opacity';
+      
       if (isSidebarOpen) {
         sidebar.classList.add('active');
         overlay.classList.add('active');
@@ -511,6 +526,12 @@
         overlay.classList.remove('active');
         body.style.overflow = '';
       }
+      
+      // إزالة will-change بعد الانتهاء من التحريك
+      setTimeout(() => {
+        sidebar.style.willChange = 'auto';
+        overlay.style.willChange = 'auto';
+      }, 400);
     }
     
     // إغلاق القائمة عند النقر خارجها
@@ -574,6 +595,7 @@
     async function switchToFrench() {
       try {
         const response = await fetch('lang/fr.json');
+        if (!response.ok) throw new Error('Network response was not ok');
         const texts = await response.json();
         
         // تحديث النصوص
@@ -587,9 +609,16 @@
         document.getElementById('mainTitle').textContent = texts.main_title || "الرئيسية - رسوم بيانية للمبيعات";
         document.getElementById('footerText').innerHTML = `<p>${texts.footer_text || "جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE"}</p>`;
         
+        // تحديث العلم هنا أيضًا للتأكد
+        updateFlag('fr');
+        
       } catch (error) {
         console.error("حدث خطأ في تحميل الترجمة:", error);
         alert("تعذر تحميل الترجمة الفرنسية");
+        // استعادة الحالة السابقة في حالة الخطأ
+        localStorage.setItem('lang', 'ar');
+        updateFlag('ar');
+        location.reload();
       }
     }
 
