@@ -103,14 +103,9 @@
       transform: translateY(-50%) scale(0.95);
     }
 
-    #flagIcon {
+    .translate-btn svg {
       width: 20px;
       height: 14px;
-    }
-
-    #flagIcon path {
-      stroke: #006233;
-      stroke-width: 0.5;
     }
 
     /* القائمة الجانبية */
@@ -397,7 +392,7 @@
       }
       
       .sidebar {
-        width: 85%;
+        width: 220px;
       }
       
       .chart-container {
@@ -421,10 +416,11 @@
   <header>
     <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
     <button class="translate-btn" onclick="switchLang()">
-      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40" id="flagIcon">
-        <!-- علم المغرب (أحمر مع نجمة خماسية) -->
-        <rect width="60" height="40" fill="#C1272D"/>
-        <path d="M30 10 L36 22 L48 24 L38 32 L40 44 L30 38 L20 44 L22 32 L12 24 L24 22 Z" fill="#006233"/>
+      <svg id="flagIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40">
+        <rect width="60" height="40" fill="#c1272d"/>
+        <path fill="none" stroke="#006233" stroke-width="8" d="M0 20h60"/>
+        <path fill="#006233" d="M25 20a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/>
+        <path fill="#ffc400" d="M27 20a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
       </svg>
       <span id="langText">FR</span>
     </button>
@@ -438,9 +434,9 @@
       <li><a href="index.html" data-aos="fade-left" data-aos-delay="100"><i class="fas fa-home"></i><span id="menuHome">الصفحة الرئيسية</span></a></li>
       <li><a href="products.html" data-aos="fade-left" data-aos-delay="150"><i class="fas fa-box-open"></i><span id="menuProducts">منتجات</span></a></li>
       <li><a href="view-products.html" data-aos="fade-left" data-aos-delay="200"><i class="fas fa-list-ul"></i><span id="menuViewProducts">عرض المنتجات</span></a></li>
-      <li><a href="sell-products.html" data-aos="fade-left" data-aos-delay="250"><i class="fas fa-cash-register"></i><span id="menuSellProducts">بيع المنتجات</span></a></li>
-      <li><a href="services.html" data-aos="fade-left" data-aos-delay="300"><i class="fas fa-concierge-bell"></i><span id="menuServices">خدمات اضافية</span></a></li>
-      <li><a href="profits.html" data-aos="fade-left" data-aos-delay="350"><i class="fas fa-chart-line"></i><span id="menuProfits">الارباح و الحسابات</span></a></li>
+      <li><a href="sell-products.html" data-aos="fade-left" data-aos-delay="225"><i class="fas fa-cash-register"></i><span id="menuSellProducts">بيع المنتجات</span></a></li>
+      <li><a href="services.html" data-aos="fade-left" data-aos-delay="250"><i class="fas fa-concierge-bell"></i><span id="menuServices">خدمات اضافية</span></a></li>
+      <li><a href="profits.html" data-aos="fade-left" data-aos-delay="300"><i class="fas fa-chart-line"></i><span id="menuProfits">الارباح و الحسابات</span></a></li>
     </ul>
   </nav>
   <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
@@ -468,7 +464,7 @@
   <!-- مكتبة الرسوم البيانية -->
   <script src="https://cdn.jsdelivr.net/npm/chart.js@3.7.1/dist/chart.min.js" defer></script>
   <!-- مكتبة تأثيرات التمرير -->
-  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js" defer></script>
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 
   <!-- السكربتات -->
   <script>
@@ -479,14 +475,9 @@
         once: true,
         easing: 'ease-out-quart'
       });
-
+      
       // تحميل اللغة المحفوظة
-      const savedLang = localStorage.getItem('lang');
-      if (savedLang === 'fr') {
-        switchToFrench();
-      } else {
-        updateFlag('ar');
-      }
+      loadSavedLanguage();
     });
 
     // حالة القائمة الجانبية
@@ -531,39 +522,22 @@
       }
     });
 
-    // تحديث العلم والنص
-    function updateFlag(lang) {
-      const flagIcon = document.getElementById('flagIcon');
-      const langText = document.getElementById('langText');
-      
-      if (lang === 'fr') {
-        // علم فرنسا
-        flagIcon.innerHTML = `
-          <rect width="20" height="40" fill="#0055A4"/>
-          <rect x="20" width="20" height="40" fill="white"/>
-          <rect x="40" width="20" height="40" fill="#EF4135"/>
-        `;
-        langText.textContent = 'FR';
+    // تحميل اللغة المحفوظة
+    function loadSavedLanguage() {
+      const savedLang = localStorage.getItem('selectedLanguage');
+      if (savedLang === 'fr') {
+        switchToFrench();
       } else {
-        // علم المغرب
-        flagIcon.innerHTML = `
-          <rect width="60" height="40" fill="#C1272D"/>
-          <path d="M30 10 L36 22 L48 24 L38 32 L40 44 L30 38 L20 44 L22 32 L12 24 L24 22 Z" fill="#006233"/>
-        `;
-        langText.textContent = 'AR';
+        setMoroccoFlag();
       }
     }
 
     // دالة تبديل اللغة
     async function switchLang() {
-      const currentLang = localStorage.getItem('lang') || 'ar';
+      const currentLang = localStorage.getItem('selectedLanguage');
       if (currentLang === 'fr') {
-        localStorage.setItem('lang', 'ar');
-        updateFlag('ar');
-        location.reload();
+        switchToArabic();
       } else {
-        localStorage.setItem('lang', 'fr');
-        updateFlag('fr');
         await switchToFrench();
       }
     }
@@ -585,10 +559,44 @@
         document.getElementById('mainTitle').textContent = texts.main_title || "الرئيسية - رسوم بيانية للمبيعات";
         document.getElementById('footerText').innerHTML = `<p>${texts.footer_text || "جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE"}</p>`;
         
+        // تحديث زر اللغة
+        document.getElementById('langText').textContent = 'FR';
+        setFranceFlag();
+        
+        // حفظ اللغة
+        localStorage.setItem('selectedLanguage', 'fr');
       } catch (error) {
         console.error("حدث خطأ في تحميل الترجمة:", error);
         alert("تعذر تحميل الترجمة الفرنسية");
       }
+    }
+
+    // العودة إلى العربية
+    function switchToArabic() {
+      localStorage.setItem('selectedLanguage', 'ar');
+      location.reload();
+    }
+
+    // تعيين علم المغرب
+    function setMoroccoFlag() {
+      const flagIcon = document.getElementById('flagIcon');
+      flagIcon.innerHTML = `
+        <rect width="60" height="40" fill="#c1272d"/>
+        <path fill="none" stroke="#006233" stroke-width="8" d="M0 20h60"/>
+        <path fill="#006233" d="M25 20a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/>
+        <path fill="#ffc400" d="M27 20a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
+      `;
+      document.getElementById('langText').textContent = 'AR';
+    }
+
+    // تعيين علم فرنسا
+    function setFranceFlag() {
+      const flagIcon = document.getElementById('flagIcon');
+      flagIcon.innerHTML = `
+        <rect width="20" height="40" fill="#0055A4"/>
+        <rect x="20" width="20" height="40" fill="white"/>
+        <rect x="40" width="20" height="40" fill="#EF4135"/>
+      `;
     }
 
     // تهيئة الرسوم البيانية
