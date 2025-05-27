@@ -635,7 +635,13 @@
         };
         
         // 4. التحكم في شريط البحث
-        elements.searchToggle.addEventListener('click', toggleSearch);
+        elements.searchToggle.addEventListener('click', function() {
+            toggleSearch();
+            // إذا كان هناك نص في مربع البحث، قم بالبحث مباشرة
+            if (elements.barcodeInput.value.trim()) {
+                searchProduct();
+            }
+        });
         
         function toggleSearch() {
             elements.searchWrapper.style.display = elements.searchWrapper.style.display === 'flex' ? 'none' : 'flex';
@@ -802,7 +808,7 @@
                 });
             }
             
-            showToast('تمت عملية البيع بنجاح', 'success');
+            showToast('تمت عملية البيع بنجاح', 'success', 5000); // 5 ثواني بدلاً من 3
             resetSystem();
         });
         
@@ -815,7 +821,7 @@
         }
         
         // 11. عرض التنبيهات
-        function showToast(message, type = 'info') {
+        function showToast(message, type = 'info', duration = 3000) {
             const toast = elements.toast;
             toast.textContent = message;
             toast.className = 'toast'; // إعادة تعيين الكلاسات
@@ -831,14 +837,14 @@
             toast.style.background = colors[type] || colors.info;
             toast.style.display = 'block';
             
-            // إخفاء التنبيه بعد 3 ثواني
+            // إخفاء التنبيه بعد المدة المحددة
             setTimeout(() => {
                 toast.classList.add('hide');
                 setTimeout(() => {
                     toast.style.display = 'none';
                     toast.classList.remove('hide');
                 }, 500);
-            }, 3000);
+            }, duration);
         }
         
         // 12. إيقاف الكاميرا عند مغادرة الصفحة
