@@ -329,6 +329,38 @@
             animation: fadeIn 0.4s ease-out;
         }
         
+        .discount-type {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid #e9ecef;
+            padding-bottom: 15px;
+        }
+        
+        .discount-type-btn {
+            flex: 1;
+            padding: 12px;
+            border: 2px solid #e9ecef;
+            border-radius: 10px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .discount-type-btn.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .discount-type-btn i {
+            margin-left: 8px;
+        }
+        
         .form-group {
             margin-bottom: 20px;
         }
@@ -360,6 +392,42 @@
             outline: none;
             box-shadow: 0 0 0 4px rgba(67, 97, 238, 0.2),
                         inset 3px 3px 6px rgba(0,0,0,0.05);
+        }
+        
+        /* طرق الدفع */
+        .payment-methods {
+            display: flex;
+            gap: 15px;
+            margin: 25px 0;
+            flex-wrap: wrap;
+        }
+        
+        .payment-method {
+            flex: 1;
+            min-width: 120px;
+            padding: 15px;
+            border: 2px solid #e9ecef;
+            border-radius: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            font-weight: 600;
+            color: var(--gray);
+        }
+        
+        .payment-method.active {
+            border-color: var(--primary);
+            background: rgba(67, 97, 238, 0.1);
+            color: var(--primary);
+            box-shadow: 0 0 0 3px rgba(67, 97, 238, 0.2);
+        }
+        
+        .payment-method i {
+            font-size: 1.5rem;
+            margin-bottom: 10px;
+            display: block;
+            color: inherit;
         }
         
         /* السعر النهائي */
@@ -466,6 +534,18 @@
                 justify-content: center;
             }
             
+            .discount-type {
+                flex-direction: column;
+            }
+            
+            .payment-methods {
+                flex-direction: column;
+            }
+            
+            .payment-method {
+                min-width: 100%;
+            }
+            
             .action-buttons {
                 flex-direction: column;
                 gap: 15px;
@@ -546,12 +626,29 @@
             </button>
             
             <div id="discountSection" class="discount-section">
-                <div class="form-group">
+                <div class="discount-type">
+                    <div id="percentDiscountBtn" class="discount-type-btn active">
+                        <i class="fas fa-percent"></i> نسبة مئوية
+                    </div>
+                    <div id="fixedDiscountBtn" class="discount-type-btn">
+                        <i class="fas fa-money-bill-wave"></i> خصم بالدرهم
+                    </div>
+                </div>
+                
+                <div id="percentDiscountGroup" class="form-group">
                     <label for="discountPercent" class="form-label">
                         <i class="fas fa-percent"></i> نسبة الخصم
                     </label>
                     <input type="number" id="discountPercent" class="form-control" min="0" max="100" placeholder="10">
                 </div>
+                
+                <div id="fixedDiscountGroup" class="form-group" style="display: none;">
+                    <label for="discountAmount" class="form-label">
+                        <i class="fas fa-money-bill-wave"></i> مبلغ الخصم (ر.س)
+                    </label>
+                    <input type="number" id="discountAmount" class="form-control" min="0" placeholder="5.00">
+                </div>
+                
                 <div class="form-group">
                     <label for="reasonInput" class="form-label">
                         <i class="fas fa-comment-alt"></i> سبب الخصم (اختياري)
@@ -561,6 +658,22 @@
                 <button id="confirmDiscount" class="btn btn-primary">
                     <i class="fas fa-check-circle"></i> تطبيق الخصم
                 </button>
+            </div>
+            
+            <!-- طرق الدفع -->
+            <div class="payment-methods">
+                <div id="cashPayment" class="payment-method active">
+                    <i class="fas fa-money-bill-wave"></i>
+                    نقداً
+                </div>
+                <div id="cardPayment" class="payment-method">
+                    <i class="fas fa-credit-card"></i>
+                    بطاقة بنكية
+                </div>
+                <div id="transferPayment" class="payment-method">
+                    <i class="fas fa-exchange-alt"></i>
+                    تحويل
+                </div>
             </div>
             
             <div class="final-price">
@@ -588,6 +701,7 @@
         const codeReader = new ZXing.BrowserMultiFormatReader();
         let cameraActive = false;
         let currentProduct = null;
+        let paymentMethod = 'cash'; // طريقة الدفع الافتراضية
         
         // 2. عناصر واجهة المستخدم
         const elements = {
@@ -603,9 +717,17 @@
             productQuantity: document.getElementById('productQuantity'),
             applyDiscount: document.getElementById('applyDiscount'),
             discountSection: document.getElementById('discountSection'),
+            percentDiscountBtn: document.getElementById('percentDiscountBtn'),
+            fixedDiscountBtn: document.getElementById('fixedDiscountBtn'),
+            percentDiscountGroup: document.getElementById('percentDiscountGroup'),
+            fixedDiscountGroup: document.getElementById('fixedDiscountGroup'),
             discountPercent: document.getElementById('discountPercent'),
+            discountAmount: document.getElementById('discountAmount'),
             reasonInput: document.getElementById('reasonInput'),
             confirmDiscount: document.getElementById('confirmDiscount'),
+            cashPayment: document.getElementById('cashPayment'),
+            cardPayment: document.getElementById('cardPayment'),
+            transferPayment: document.getElementById('transferPayment'),
             finalPriceValue: document.getElementById('finalPriceValue'),
             sellBtn: document.getElementById('sellBtn'),
             returnBtn: document.getElementById('returnBtn'),
@@ -745,8 +867,15 @@
             
             // إعادة تعيين الخصم
             elements.discountPercent.value = '';
+            elements.discountAmount.value = '';
             elements.reasonInput.value = '';
             elements.discountSection.style.display = 'none';
+            
+            // إعادة تعيين طريقة الدفع للنقد
+            paymentMethod = 'cash';
+            elements.cashPayment.classList.add('active');
+            elements.cardPayment.classList.remove('active');
+            elements.transferPayment.classList.remove('active');
         }
         
         // 8. نظام الخصم
@@ -755,32 +884,105 @@
                 elements.discountSection.style.display === 'block' ? 'none' : 'block';
         });
         
+        // تبديل بين نوعي الخصم
+        elements.percentDiscountBtn.addEventListener('click', function() {
+            elements.percentDiscountBtn.classList.add('active');
+            elements.fixedDiscountBtn.classList.remove('active');
+            elements.percentDiscountGroup.style.display = 'block';
+            elements.fixedDiscountGroup.style.display = 'none';
+        });
+        
+        elements.fixedDiscountBtn.addEventListener('click', function() {
+            elements.fixedDiscountBtn.classList.add('active');
+            elements.percentDiscountBtn.classList.remove('active');
+            elements.fixedDiscountGroup.style.display = 'block';
+            elements.percentDiscountGroup.style.display = 'none';
+        });
+        
         elements.confirmDiscount.addEventListener('click', applyDiscount);
         
         function applyDiscount() {
-            const discountPercent = parseFloat(elements.discountPercent.value) || 0;
+            const basePrice = currentProduct.price;
+            let finalPrice = basePrice;
+            let discountApplied = false;
             
-            if (discountPercent < 0 || discountPercent > 100) {
-                showToast('نسبة الخصم يجب أن تكون بين 0 و 100', 'warning');
-                return;
-            }
-            
-            if (discountPercent > 20) {
-                const reason = elements.reasonInput.value.trim();
-                if (!reason) {
-                    showToast('الخصم أكثر من 20% يطلب إدخال السبب', 'warning');
+            if (elements.percentDiscountBtn.classList.contains('active')) {
+                // خصم بنسبة مئوية
+                const discountPercent = parseFloat(elements.discountPercent.value) || 0;
+                
+                if (discountPercent < 0 || discountPercent > 100) {
+                    showToast('نسبة الخصم يجب أن تكون بين 0 و 100', 'warning');
+                    return;
+                }
+                
+                if (discountPercent > 20) {
+                    const reason = elements.reasonInput.value.trim();
+                    if (!reason) {
+                        showToast('الخصم أكثر من 20% يطلب إدخال السبب', 'warning');
+                        return;
+                    }
+                }
+                
+                finalPrice = basePrice - (basePrice * (discountPercent / 100));
+                discountApplied = discountPercent > 0;
+            } else {
+                // خصم بقيمة ثابتة
+                const discountAmount = parseFloat(elements.discountAmount.value) || 0;
+                
+                if (discountAmount < 0) {
+                    showToast('قيمة الخصم يجب أن تكون موجبة', 'warning');
+                    return;
+                }
+                
+                if (discountAmount > basePrice * 0.2) {
+                    const reason = elements.reasonInput.value.trim();
+                    if (!reason) {
+                        showToast('الخصم أكثر من 20% من السعر يطلب إدخال السبب', 'warning');
+                        return;
+                    }
+                }
+                
+                finalPrice = basePrice - discountAmount;
+                discountApplied = discountAmount > 0;
+                
+                if (finalPrice < 0) {
+                    showToast('لا يمكن أن يكون السعر النهائي أقل من الصفر', 'error');
                     return;
                 }
             }
             
-            const basePrice = currentProduct.price;
-            const finalPrice = basePrice - (basePrice * (discountPercent / 100));
             elements.finalPriceValue.textContent = finalPrice.toFixed(2) + ' ر.س';
             
-            showToast('تم تطبيق الخصم بنجاح', 'success');
+            if (discountApplied) {
+                showToast('تم تطبيق الخصم بنجاح', 'success');
+            } else {
+                showToast('تم إلغاء الخصم', 'info');
+            }
         }
         
-        // 9. عملية البيع
+        // 9. اختيار طريقة الدفع
+        elements.cashPayment.addEventListener('click', function() {
+            paymentMethod = 'cash';
+            elements.cashPayment.classList.add('active');
+            elements.cardPayment.classList.remove('active');
+            elements.transferPayment.classList.remove('active');
+        });
+        
+        elements.cardPayment.addEventListener('click', function() {
+            paymentMethod = 'card';
+            elements.cardPayment.classList.add('active');
+            elements.cashPayment.classList.remove('active');
+            elements.transferPayment.classList.remove('active');
+        });
+        
+        elements.transferPayment.addEventListener('click', function() {
+            paymentMethod = 'transfer';
+            elements.transferPayment.classList.add('active');
+            elements.cashPayment.classList.remove('active');
+            elements.cardPayment.classList.remove('active');
+        });
+        
+        // 10. عملية البيع
         elements.sellBtn.addEventListener('click', function() {
             if (!currentProduct) return;
             
@@ -789,10 +991,11 @@
             const discountApplied = finalPrice < basePrice;
             
             if (discountApplied) {
-                const discountPercent = ((basePrice - finalPrice) / basePrice * 100).toFixed(2);
+                const discountValue = (basePrice - finalPrice).toFixed(2);
+                const discountType = elements.percentDiscountBtn.classList.contains('active') ? 'نسبة مئوية' : 'مبلغ ثابت';
                 const reason = elements.reasonInput.value.trim() || 'لا يوجد سبب مذكور';
                 
-                console.log('تم البيع بخصم:', {
+                 console.log('تم البيع بخصم:', {
                     product: currentProduct.name,
                     originalPrice: basePrice,
                     finalPrice: finalPrice,
