@@ -10,6 +10,9 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <!-- خط Tajawal -->
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
     <style>
         :root {
             --primary: #4361ee;
@@ -43,28 +46,65 @@
             padding: 20px;
         }
         
-        .header {
-            text-align: center;
+        /* تصميم جديد للرأس بتأثير ثلاثي الأبعاد */
+        .header-container {
+            background: linear-gradient(145deg, #4361ee, #3a0ca3);
+            padding: 25px;
+            border-radius: 20px;
+            box-shadow: 0 15px 30px rgba(67, 97, 238, 0.3);
             margin-bottom: 30px;
-            padding-bottom: 15px;
             position: relative;
+            overflow: hidden;
+            text-align: center;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .header-container::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            transform: rotate(30deg);
+            z-index: 1;
+        }
+        
+        .header {
+            position: relative;
+            z-index: 2;
         }
         
         .header h1 {
-            color: var(--primary);
-            font-size: 2.2rem;
-            text-shadow: 1px 1px 3px rgba(0,0,0,0.1);
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: white;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 10px rgba(0,0,0,0.3);
+            margin: 0;
+            padding: 10px 0;
+            letter-spacing: 1px;
+            position: relative;
             display: inline-block;
         }
         
-        /* تصميم متطور لشريط البحث */
+        .header h1::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 25%;
+            width: 50%;
+            height: 3px;
+            background: rgba(255,255,255,0.5);
+            border-radius: 3px;
+        }
+        
         .search-container {
             display: flex;
             justify-content: center;
-            margin-bottom: 30px;
+            margin: 20px 0 30px;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
         }
         
         .search-toggle {
@@ -82,6 +122,7 @@
             align-items: center;
             gap: 10px;
             font-size: 1.1rem;
+            margin-top: 10px;
         }
         
         .search-toggle:hover {
@@ -106,6 +147,7 @@
             overflow: hidden;
             animation: fadeIn 0.4s cubic-bezier(0.22, 1, 0.36, 1);
             border: 1px solid rgba(0,0,0,0.05);
+            flex-direction: row;
         }
         
         @keyframes fadeIn {
@@ -129,7 +171,6 @@
             display: flex;
         }
         
-        /* أزرار ثلاثية الأبعاد */
         .btn {
             padding: 14px 28px;
             border: none;
@@ -205,7 +246,6 @@
             transform: translateY(-3px);
         }
         
-        /* منطقة الكاميرا */
         #cameraScanner {
             width: 100%;
             max-height: 450px;
@@ -255,7 +295,6 @@
             margin-top: 10px;
         }
         
-        /* تفاصيل المنتج */
         .product-details {
             background: white;
             padding: 35px;
@@ -317,7 +356,6 @@
             gap: 8px;
         }
         
-        /* قسم الخصم */
         .discount-section {
             background: linear-gradient(135deg, #fff8e1, #fff3bf);
             padding: 25px;
@@ -394,7 +432,6 @@
                         inset 3px 3px 6px rgba(0,0,0,0.05);
         }
         
-        /* طرق الدفع */
         .payment-methods {
             display: flex;
             gap: 15px;
@@ -430,7 +467,6 @@
             color: inherit;
         }
         
-        /* السعر النهائي */
         .final-price {
             background: linear-gradient(135deg, #e6f7ff, #b3e0ff);
             padding: 25px;
@@ -454,14 +490,12 @@
             font-weight: 700;
         }
         
-        /* أزرار الإجراءات */
         .action-buttons {
             display: flex;
             gap: 20px;
             margin-top: 30px;
         }
         
-        /* التنبيهات */
         .toast {
             position: fixed;
             top: 40px;
@@ -495,10 +529,118 @@
             to { transform: translateX(100%); opacity: 0; }
         }
         
+        /* أنماط جديدة لوظيفة الإرجاع */
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0,0,0,0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+            display: none;
+        }
+        
+        .confirmation-modal {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            width: 90%;
+            max-width: 400px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+        
+        .confirmation-modal h3 {
+            margin-top: 0;
+            color: var(--primary);
+        }
+        
+        .confirmation-modal p {
+            margin-bottom: 20px;
+        }
+        
+        .modal-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+        }
+        
+        .modal-actions button {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        
+        .modal-actions .confirm-btn {
+            background: var(--success);
+            color: white;
+        }
+        
+        .modal-actions .cancel-btn {
+            background: var(--danger);
+            color: white;
+        }
+        
+        .reason-input {
+            width: 100%;
+            padding: 10px;
+            margin: 15px 0;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .return-success-notice {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: var(--success);
+            color: white;
+            padding: 20px 30px;
+            border-radius: 10px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+            z-index: 1001;
+            display: none;
+            text-align: center;
+            animation: fadeIn 0.3s;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        .return-success-notice i {
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        /* مكان لعرض الفاتورة */
+        #invoicePlaceholder {
+            display: none;
+            width: 100%;
+            padding: 20px;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
+            margin-top: 30px;
+        }
+        
         /* التكيف مع الشاشات الصغيرة */
         @media (max-width: 768px) {
             .container {
                 padding: 15px;
+            }
+            
+            .header-container {
+                padding: 20px 15px;
+                border-radius: 15px;
             }
             
             .header h1 {
@@ -510,9 +652,23 @@
                 font-size: 1rem;
             }
             
+            .search-wrapper {
+                flex-direction: column;
+                border-radius: 15px;
+            }
+            
             .search-input {
                 padding: 14px 20px;
                 font-size: 1rem;
+            }
+            
+            .search-actions {
+                width: 100%;
+            }
+            
+            #cameraBtn {
+                border-radius: 0 0 15px 15px !important;
+                width: 100%;
             }
             
             .product-header {
@@ -561,16 +717,22 @@
                 left: 20px;
                 max-width: none;
             }
+            
+            .confirmation-modal {
+                padding: 20px 15px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <div class="header">
-            <h1><i class="fas fa-cash-register"></i> نظام البيع الذكي</h1>
+        <!-- حاوية جديدة للرأس بتأثير ثلاثي الأبعاد -->
+        <div class="header-container">
+            <div class="header">
+                <h1><i class="fas fa-cash-register"></i> نظام البيع الذكي</h1>
+            </div>
         </div>
         
-        <!-- شريط البحث المتطور -->
         <div class="search-container">
             <button id="searchToggle" class="search-toggle">
                 <i class="fas fa-search"></i> بحث عن منتج
@@ -592,7 +754,6 @@
             </div>
         </div>
         
-        <!-- منطقة مسح الباركود -->
         <div id="cameraScanner">
             <video muted playsinline></video>
             <div class="scanner-overlay">
@@ -604,7 +765,6 @@
             </div>
         </div>
         
-        <!-- تفاصيل المنتج -->
         <div id="productDetails" class="product-details">
             <div class="product-header">
                 <img id="productImage" class="product-image" src="https://via.placeholder.com/150?text=صورة+المنتج" alt="صورة المنتج">
@@ -660,7 +820,6 @@
                 </button>
             </div>
             
-            <!-- طرق الدفع -->
             <div class="payment-methods">
                 <div id="cashPayment" class="payment-method active">
                     <i class="fas fa-money-bill-wave"></i>
@@ -692,18 +851,59 @@
                 </button>
             </div>
         </div>
+        
+        <!-- مكان لعرض الفاتورة -->
+        <div id="invoicePlaceholder"></div>
     </div>
     
+    <!-- نافذة تأكيد الإرجاع -->
+    <div id="returnConfirmModal" class="modal-overlay">
+        <div class="confirmation-modal">
+            <h3><i class="fas fa-undo-alt"></i> تأكيد إرجاع المنتج</h3>
+            <p id="returnConfirmText">هل أنت متأكد من إرجاع هذا المنتج؟</p>
+            <input type="text" id="returnReasonInput" class="reason-input" placeholder="سبب الإرجاع (اختياري)">
+            <div class="modal-actions">
+                <button id="confirmReturnBtn" class="confirm-btn"><i class="fas fa-check"></i> تأكيد</button>
+                <button id="cancelReturnBtn" class="cancel-btn"><i class="fas fa-times"></i> إلغاء</button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- إشعار الإرجاع الناجح -->
+    <div id="returnSuccessNotice" class="return-success-notice">
+        <i class="fas fa-check-circle"></i>
+        <h3>تم الإرجاع بنجاح</h3>
+        <p id="returnSuccessText"></p>
+    </div>
+
+    <!-- تنبيهات النظام -->
     <div id="toast" class="toast"></div>
     
     <script>
-        // 1. تهيئة النظام
+        // 1. تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+            authDomain: "pharmacy-system-9def6.firebaseapp.com",
+            databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+            projectId: "pharmacy-system-9def6",
+            storageBucket: "pharmacy-system-9def6.appspot.com",
+            messagingSenderId: "630855008414",
+            appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+            measurementId: "G-LC5NDKP6QZ"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
+        
+        // 2. تهيئة النظام
         const codeReader = new ZXing.BrowserMultiFormatReader();
         let cameraActive = false;
         let currentProduct = null;
-        let paymentMethod = 'cash'; // طريقة الدفع الافتراضية
+        let paymentMethod = 'cash';
+        let invoiceCounter = 1;
+        const pharmacyName = "صيدلية النخبة";
         
-        // 2. عناصر واجهة المستخدم
+        // 3. عناصر واجهة المستخدم
         const elements = {
             searchToggle: document.getElementById('searchToggle'),
             searchWrapper: document.getElementById('searchWrapper'),
@@ -731,35 +931,20 @@
             finalPriceValue: document.getElementById('finalPriceValue'),
             sellBtn: document.getElementById('sellBtn'),
             returnBtn: document.getElementById('returnBtn'),
-            toast: document.getElementById('toast')
-        };
-        
-        // 3. بيانات وهمية للمنتجات (استبدل بقاعدة بيانات حقيقية)
-        const mockProducts = {
-            "123456789012": {
-                name: "شوكولاتة داكنة 100جم",
-                price: 25.99,
-                quantity: 15,
-                image: "https://images.unsplash.com/photo-1571115177098-24ec42ed204d?w=150"
-            },
-            "987654321098": {
-                name: "مشروب غازي 330مل",
-                price: 10.50,
-                quantity: 30,
-                image: "https://images.unsplash.com/photo-1554866585-cd94860890b7?w=150"
-            },
-            "456789123456": {
-                name: "أرز بسمتي 5 كجم",
-                price: 45.75,
-                quantity: 8,
-                image: "https://images.unsplash.com/photo-1601050690597-df0568f70950?w=150"
-            }
+            toast: document.getElementById('toast'),
+            returnConfirmModal: document.getElementById('returnConfirmModal'),
+            returnConfirmText: document.getElementById('returnConfirmText'),
+            returnReasonInput: document.getElementById('returnReasonInput'),
+            confirmReturnBtn: document.getElementById('confirmReturnBtn'),
+            cancelReturnBtn: document.getElementById('cancelReturnBtn'),
+            returnSuccessNotice: document.getElementById('returnSuccessNotice'),
+            returnSuccessText: document.getElementById('returnSuccessText'),
+            invoicePlaceholder: document.getElementById('invoicePlaceholder')
         };
         
         // 4. التحكم في شريط البحث
         elements.searchToggle.addEventListener('click', function() {
             toggleSearch();
-            // إذا كان هناك نص في مربع البحث، قم بالبحث مباشرة
             if (elements.barcodeInput.value.trim()) {
                 searchProduct();
             }
@@ -785,11 +970,9 @@
         
         async function startCamera() {
             try {
-                // إظهار منطقة الكاميرا
                 elements.cameraScanner.style.display = 'block';
                 elements.cameraBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> جارٍ التشغيل...';
                 
-                // بدء مسح الباركود
                 await codeReader.decodeFromVideoDevice(
                     undefined, 
                     elements.cameraScanner.querySelector('video'), 
@@ -829,7 +1012,7 @@
             searchProduct();
         }
         
-        // 7. البحث عن المنتج
+        // 7. البحث عن المنتج في قاعدة البيانات
         elements.barcodeInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') searchProduct();
         });
@@ -842,19 +1025,32 @@
                 return;
             }
             
-            // محاكاة البحث (استبدل باتصال AJAX حقيقي)
             showToast('جارٍ البحث عن المنتج...', 'info');
             
-            setTimeout(() => {
-                if (mockProducts[barcode]) {
-                    currentProduct = mockProducts[barcode];
-                    displayProduct(currentProduct);
-                    showToast('تم العثور على المنتج', 'success');
-                } else {
-                    showToast('المنتج غير موجود في النظام', 'error');
-                    elements.productDetails.style.display = 'none';
-                }
-            }, 800);
+            database.ref('products/' + barcode).once('value')
+                .then((snapshot) => {
+                    const productData = snapshot.val();
+                    
+                    if (productData) {
+                        currentProduct = {
+                            barcode: barcode,
+                            name: productData.name,
+                            price: parseFloat(productData.price),
+                            quantity: parseInt(productData.quantity),
+                            image: productData.image || 'https://via.placeholder.com/150?text=صورة+المنتج'
+                        };
+                        
+                        displayProduct(currentProduct);
+                        showToast('تم العثور على المنتج', 'success');
+                    } else {
+                        showToast('المنتج غير موجود في النظام', 'error');
+                        elements.productDetails.style.display = 'none';
+                    }
+                })
+                .catch((error) => {
+                    console.error('خطأ في جلب البيانات:', error);
+                    showToast('حدث خطأ أثناء البحث عن المنتج', 'error');
+                });
         }
         
         function displayProduct(product) {
@@ -865,13 +1061,11 @@
             elements.finalPriceValue.textContent = product.price.toFixed(2) + ' ر.س';
             elements.productDetails.style.display = 'block';
             
-            // إعادة تعيين الخصم
             elements.discountPercent.value = '';
             elements.discountAmount.value = '';
             elements.reasonInput.value = '';
             elements.discountSection.style.display = 'none';
             
-            // إعادة تعيين طريقة الدفع للنقد
             paymentMethod = 'cash';
             elements.cashPayment.classList.add('active');
             elements.cardPayment.classList.remove('active');
@@ -884,7 +1078,6 @@
                 elements.discountSection.style.display === 'block' ? 'none' : 'block';
         });
         
-        // تبديل بين نوعي الخصم
         elements.percentDiscountBtn.addEventListener('click', function() {
             elements.percentDiscountBtn.classList.add('active');
             elements.fixedDiscountBtn.classList.remove('active');
@@ -907,7 +1100,6 @@
             let discountApplied = false;
             
             if (elements.percentDiscountBtn.classList.contains('active')) {
-                // خصم بنسبة مئوية
                 const discountPercent = parseFloat(elements.discountPercent.value) || 0;
                 
                 if (discountPercent < 0 || discountPercent > 100) {
@@ -926,7 +1118,6 @@
                 finalPrice = basePrice - (basePrice * (discountPercent / 100));
                 discountApplied = discountPercent > 0;
             } else {
-                // خصم بقيمة ثابتة
                 const discountAmount = parseFloat(elements.discountAmount.value) || 0;
                 
                 if (discountAmount < 0) {
@@ -982,40 +1173,180 @@
             elements.cardPayment.classList.remove('active');
         });
         
-        // 10. عملية البيع
+        // 10. عملية البيع مع تحديث المخزون في Firebase
         elements.sellBtn.addEventListener('click', function() {
             if (!currentProduct) return;
             
             const finalPrice = parseFloat(elements.finalPriceValue.textContent);
             const basePrice = currentProduct.price;
             const discountApplied = finalPrice < basePrice;
+            let discountInfo = null;
             
             if (discountApplied) {
                 const discountValue = (basePrice - finalPrice).toFixed(2);
-                const discountType = elements.percentDiscountBtn.classList.contains('active') ? 'نسبة مئوية' : 'مبلغ ثابت';
+                const discountType = elements.percentDiscountBtn.classList.contains('active') ? 'percent' : 'fixed';
                 const reason = elements.reasonInput.value.trim() || 'لا يوجد سبب مذكور';
                 
-                 console.log('تم البيع بخصم:', {
-                    product: currentProduct.name,
-                    originalPrice: basePrice,
-                    finalPrice: finalPrice,
-                    discountPercent: discountPercent + '%',
-                    discountReason: reason,
-                    timestamp: new Date().toISOString()
-                });
-            } else {
-                console.log('تم البيع بالسعر العادي:', {
-                    product: currentProduct.name,
-                    price: finalPrice,
-                    timestamp: new Date().toISOString()
-                });
+                discountInfo = {
+                    type: discountType,
+                    value: discountType === 'percent' ? elements.discountPercent.value : elements.discountAmount.value,
+                    reason: reason
+                };
             }
             
-            showToast('تمت عملية البيع بنجاح', 'success', 5000); // 5 ثواني بدلاً من 3
-            resetSystem();
+            // تحديث المخزون في قاعدة البيانات
+            const newQuantity = currentProduct.quantity - 1;
+            
+            database.ref('products/' + currentProduct.barcode).update({
+                quantity: newQuantity
+            })
+            .then(() => {
+                // إنشاء الفاتورة
+                const invoice = createInvoice(currentProduct, finalPrice, paymentMethod, discountInfo);
+                
+                // حفظ الفاتورة في قاعدة البيانات
+                saveInvoiceToDatabase(invoice);
+                
+                // عرض الفاتورة في صفحة منفصلة
+                showInvoice(invoice);
+                
+                // إعادة تعيين النظام
+                resetSystem();
+            })
+            .catch((error) => {
+                console.error('خطأ في تحديث المخزون:', error);
+                showToast('حدث خطأ أثناء تحديث المخزون', 'error');
+            });
         });
         
-        // 10. إعادة تعيين النظام
+        // 11. وظيفة إنشاء الفاتورة
+        function createInvoice(product, finalPrice, paymentMethod, discountInfo = null) {
+            const now = new Date();
+            const invoiceId = 'INV-' + now.getFullYear() + (now.getMonth()+1).toString().padStart(2, '0') + 
+                              now.getDate().toString().padStart(2, '0') + '-' + invoiceCounter.toString().padStart(4, '0');
+            
+            const invoice = {
+                id: invoiceId,
+                date: now.toISOString(),
+                pharmacy: pharmacyName,
+                product: product.name,
+                originalPrice: product.price,
+                finalPrice: finalPrice,
+                paymentMethod: paymentMethod,
+                discount: discountInfo
+            };
+            
+            invoiceCounter++;
+            
+            return invoice;
+        }
+        
+        function showInvoice(invoice) {
+            // إنشاء iframe لعرض الفاتورة
+            const iframe = document.createElement('iframe');
+            iframe.id = 'invoiceFrame';
+            iframe.style.width = '100%';
+            iframe.style.height = '600px';
+            iframe.style.border = 'none';
+            iframe.style.marginTop = '20px';
+            iframe.style.borderRadius = '15px';
+            iframe.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
+            
+            // إضافة الـ iframe إلى الصفحة
+            elements.invoicePlaceholder.innerHTML = '';
+            elements.invoicePlaceholder.appendChild(iframe);
+            elements.invoicePlaceholder.style.display = 'block';
+            
+            // إخفاء الأقسام الأخرى
+            elements.productDetails.style.display = 'none';
+            elements.searchWrapper.style.display = 'none';
+            
+            // تحميل الفاتورة في الـ iframe
+            const invoiceData = encodeURIComponent(JSON.stringify(invoice));
+            iframe.src = `invoice.html?data=${invoiceData}`;
+        }
+        
+        // 13. حفظ الفاتورة في قاعدة البيانات
+        function saveInvoiceToDatabase(invoice) {
+            const invoiceRef = database.ref('invoices').push();
+            invoiceRef.set(invoice)
+                .then(() => {
+                    console.log('تم حفظ الفاتورة بنجاح');
+                })
+                .catch((error) => {
+                    console.error('خطأ في حفظ الفاتورة:', error);
+                });
+        }
+        
+        // 14. وظيفة إرجاع المنتج
+        elements.returnBtn.addEventListener('click', function() {
+            if (!currentProduct) {
+                showToast('لا يوجد منتج مختار للإرجاع', 'warning');
+                return;
+            }
+            
+            // عرض نافذة التأكيد
+            elements.returnConfirmText.textContent = `هل أنت متأكد من إرجاع المنتج: ${currentProduct.name}؟`;
+            elements.returnReasonInput.value = '';
+            elements.returnConfirmModal.style.display = 'flex';
+            elements.returnReasonInput.focus();
+        });
+        
+        // تأكيد الإرجاع
+        elements.confirmReturnBtn.addEventListener('click', processProductReturn);
+        
+        // إلغاء الإرجاع
+        elements.cancelReturnBtn.addEventListener('click', function() {
+            elements.returnConfirmModal.style.display = 'none';
+        });
+        
+        async function processProductReturn() {
+            elements.returnConfirmModal.style.display = 'none';
+            const returnReason = elements.returnReasonInput.value.trim() || 'غير محدد';
+            
+            try {
+                showToast('جارٍ معالجة طلب الإرجاع...', 'info');
+                
+                // 1. تحديث المخزون
+                const newQuantity = currentProduct.quantity + 1;
+                await database.ref('products/' + currentProduct.barcode).update({
+                    quantity: newQuantity
+                });
+                
+                // 2. تسجيل عملية الإرجاع
+                const returnData = {
+                    barcode: currentProduct.barcode,
+                    productName: currentProduct.name,
+                    returnedAt: firebase.database.ServerValue.TIMESTAMP,
+                    price: currentProduct.price,
+                    reason: returnReason,
+                    processedBy: "User"
+                };
+                
+                await database.ref('returns/').push(returnData);
+                
+                // 3. عرض إشعار النجاح
+                showReturnSuccess(currentProduct.name, currentProduct.price);
+                
+                // 4. إعادة تعيين النظام
+                resetSystem();
+                
+            } catch (error) {
+                console.error('حدث خطأ أثناء الإرجاع:', error);
+                showToast('حدث خطأ أثناء معالجة الإرجاع: ' + error.message, 'error');
+            }
+        }
+        
+        function showReturnSuccess(productName, productPrice) {
+            elements.returnSuccessText.textContent = `تم إرجاع ${productName} بقيمة ${productPrice.toFixed(2)} ر.س`;
+            elements.returnSuccessNotice.style.display = 'block';
+            
+            setTimeout(() => {
+                elements.returnSuccessNotice.style.display = 'none';
+            }, 3000);
+        }
+        
+        // 15. إعادة تعيين النظام
         function resetSystem() {
             elements.barcodeInput.value = '';
             elements.productDetails.style.display = 'none';
@@ -1023,13 +1354,12 @@
             currentProduct = null;
         }
         
-        // 11. عرض التنبيهات
+        // 16. عرض التنبيهات
         function showToast(message, type = 'info', duration = 3000) {
             const toast = elements.toast;
             toast.textContent = message;
-            toast.className = 'toast'; // إعادة تعيين الكلاسات
+            toast.className = 'toast';
             
-            // ألوان حسب النوع
             const colors = {
                 success: 'linear-gradient(135deg, #38b000, #2b9348)',
                 error: 'linear-gradient(135deg, #f72585, #b5179e)',
@@ -1040,7 +1370,6 @@
             toast.style.background = colors[type] || colors.info;
             toast.style.display = 'block';
             
-            // إخفاء التنبيه بعد المدة المحددة
             setTimeout(() => {
                 toast.classList.add('hide');
                 setTimeout(() => {
@@ -1050,7 +1379,15 @@
             }, duration);
         }
         
-        // 12. إيقاف الكاميرا عند مغادرة الصفحة
+        // 17. استقبال رسالة من الفاتورة للإغلاق
+        window.addEventListener('message', function(e) {
+            if (e.data === 'closeInvoice') {
+                elements.invoicePlaceholder.style.display = 'none';
+                resetSystem();
+            }
+        });
+        
+        // 18. إيقاف الكاميرا عند مغادرة الصفحة
         window.addEventListener('beforeunload', stopCamera);
     </script>
 </body>
