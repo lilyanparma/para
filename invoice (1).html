@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>فاتورة البيع</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        /* أنماط الفاتورة (نفس الأنماط التي كانت في الملف الأصلي) */
+        :root {
+            --primary: #4361ee;
+            --primary-dark: #3a56d4;
+            --secondary: #3f37c9;
+            --light: #f8f9fa;
+            --dark: #212529;
+            --gray: #6c757d;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+            padding: 20px;
+        }
+        
+        .invoice-content {
+            background: white;
+            width: 100%;
+            max-width: 500px;
+            margin: 0 auto;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+        }
+        
+        .invoice-header {
+            background: linear-gradient(135deg, var(--primary), var(--secondary));
+            color: white;
+            padding: 20px;
+            text-align: center;
+            position: relative;
+        }
+        
+        .invoice-header h2 {
+            margin: 0;
+            font-size: 1.5rem;
+        }
+        
+        .invoice-body {
+            padding: 20px;
+        }
+        
+        .invoice-pharmacy {
+            text-align: center;
+            margin-bottom: 20px;
+            font-weight: bold;
+            font-size: 1.2rem;
+            color: var(--primary);
+        }
+        
+        .invoice-details {
+            margin-bottom: 20px;
+        }
+        
+        .invoice-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .invoice-row.total {
+            font-weight: bold;
+            font-size: 1.1rem;
+            color: var(--primary);
+            border-bottom: none;
+            margin-top: 10px;
+        }
+        
+        .invoice-footer {
+            text-align: center;
+            padding: 15px;
+            background: #f9f9f9;
+            font-size: 0.9rem;
+            color: var(--gray);
+        }
+        
+        .invoice-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+        
+        .btn-success {
+            background: #4cc9f0;
+            color: white;
+        }
+        
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            
+            .invoice-actions {
+                display: none;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="invoice-content">
+        <div class="invoice-header">
+            <h2><i class="fas fa-receipt"></i> فاتورة بيع</h2>
+        </div>
+        <div class="invoice-body">
+            <div id="invoicePharmacy" class="invoice-pharmacy">صيدلية النخبة</div>
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span>رقم الفاتورة:</span>
+                    <span id="invoiceNumber">#0001</span>
+                </div>
+                <div class="invoice-row">
+                    <span>التاريخ والوقت:</span>
+                    <span id="invoiceDate">01/01/2023 10:00 ص</span>
+                </div>
+                <div class="invoice-row">
+                    <span>المنتج:</span>
+                    <span id="invoiceProduct">اسم المنتج</span>
+                </div>
+                <div class="invoice-row">
+                    <span>السعر الأصلي:</span>
+                    <span id="invoiceOriginalPrice">50.00 ر.س</span>
+                </div>
+                <div id="invoiceDiscountRow" class="invoice-row" style="display: none;">
+                    <span>الخصم:</span>
+                    <span id="invoiceDiscount">0.00 ر.س (0%)</span>
+                </div>
+                <div id="invoiceReasonRow" class="invoice-row" style="display: none;">
+                    <span>سبب الخصم:</span>
+                    <span id="invoiceReason">لا يوجد</span>
+                </div>
+                <div class="invoice-row total">
+                    <span>المجموع:</span>
+                    <span id="invoiceTotal">50.00 ر.س</span>
+                </div>
+                <div class="invoice-row">
+                    <span>طريقة الدفع:</span>
+                    <span id="invoicePaymentMethod">نقداً</span>
+                </div>
+            </div>
+            <div class="invoice-actions">
+                <button id="printInvoice" class="btn btn-primary">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+                <button id="closeInvoice" class="btn btn-success">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+            </div>
+        </div>
+        <div class="invoice-footer">
+            شكراً لثقتكم بنا - للاستفسار: 0551234567
+        </div>
+    </div>
+
+<script>
+    // دالة لتحميل بيانات الفاتورة من URL
+    function loadInvoiceData() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const invoiceData = urlParams.get('data');
+        
+        if (invoiceData) {
+            try {
+                const invoice = JSON.parse(decodeURIComponent(invoiceData));
+                displayInvoice(invoice);
+            } catch (e) {
+                console.error('خطأ في تحليل بيانات الفاتورة:', e);
+                alert('حدث خطأ في تحميل الفاتورة');
+            }
+        }
+    }
+
+    // دالة لعرض بيانات الفاتورة
+    function displayInvoice(invoice) {
+        const date = new Date(invoice.date);
+        const dateStr = date.toLocaleDateString('ar-SA') + ' ' + 
+                        date.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+        
+        document.getElementById('invoiceNumber').textContent = invoice.id;
+        document.getElementById('invoiceDate').textContent = dateStr;
+        document.getElementById('invoiceProduct').textContent = invoice.product;
+        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' ر.س';
+        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
+        
+        let paymentMethodText = 'نقداً';
+        if (invoice.paymentMethod === 'card') paymentMethodText = 'بطاقة بنكية';
+        else if (invoice.paymentMethod === 'transfer') paymentMethodText = 'تحويل بنكي';
+        document.getElementById('invoicePaymentMethod').textContent = paymentMethodText;
+        
+        if (invoice.discount) {
+            document.getElementById('invoiceDiscountRow').style.display = 'flex';
+            document.getElementById('invoiceReasonRow').style.display = 'flex';
+            
+            const discountValue = (invoice.originalPrice - invoice.finalPrice).toFixed(2);
+            if (invoice.discount.type === 'percent') {
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س (${invoice.discount.value}%)`;
+            } else {
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س`;
+            }
+            
+            document.getElementById('invoiceReason').textContent = invoice.discount.reason || 'لا يوجد سبب مذكور';
+        }
+    }
+
+    // دالة للتحقق إذا كانت الصفحة معروضة داخل iframe
+    function isInIframe() {
+        try {
+            return window.self !== window.top;
+        } catch (e) {
+            return true;
+        }
+    }
+
+    // دالة للتعامل مع زر الإغلاق
+    function handleClose() {
+        if (isInIframe()) {
+            // إذا كانت معروضة داخل iframe، نرسل رسالة للصفحة الأم
+            parent.postMessage('closeInvoice', '*');
+        } else {
+            // إذا كانت في نافذة منفصلة، نغلق النافذة
+            window.close();
+        }
+    }
+
+    // أحداث الأزرار
+    document.getElementById('printInvoice').addEventListener('click', function() {
+        window.print();
+    });
+    
+    document.getElementById('closeInvoice').addEventListener('click', handleClose);
+
+    // تحميل بيانات الفاتورة عند فتح الصفحة
+    window.addEventListener('DOMContentLoaded', loadInvoiceData);
+</script>
+</body>
+</html>
