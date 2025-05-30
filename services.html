@@ -3,18 +3,19 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>نظام إدارة الخدمات الإضافية</title>
+  <title>الخدمات الإضافية</title>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <style>
     :root {
-      --primary-gradient: linear-gradient(135deg, #ff9a9e 0%, #fad0c4 100%);
+      --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
       --secondary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
-      --button-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --button-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
       --delete-gradient: linear-gradient(135deg, #ff758c 0%, #ff7eb3 100%);
       --card-gradient: linear-gradient(135deg, #ffffff 0%, #f8f9fa 100%);
-      --shadow: 0 10px 20px rgba(0,0,0,0.1), 0 6px 6px rgba(0,0,0,0.1);
-      --shadow-hover: 0 15px 30px rgba(0,0,0,0.2), 0 10px 10px rgba(0,0,0,0.1);
+      --shadow: 0 4px 20px rgba(0,0,0,0.08);
+      --shadow-hover: 0 15px 30px rgba(0,0,0,0.15);
       --transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      --transition-slow: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
     }
 
     * {
@@ -30,45 +31,53 @@
       min-height: 100vh;
     }
 
-    /* Header with modern pink gradient */
+    /* Header with modern gradient */
     .header {
       background: var(--primary-gradient);
       color: white;
-      padding: 2rem 1.5rem;
+      padding: 1.5rem;
       text-align: center;
-      box-shadow: var(--shadow);
       position: relative;
       overflow: hidden;
-      margin-bottom: 2rem;
+      margin: 1rem auto 2rem;
+      max-width: 1200px;
+      width: calc(100% - 2rem);
+      border-radius: 12px;
+      box-shadow: var(--shadow);
+      transition: var(--transition);
+    }
+
+    .header:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 10px 25px rgba(0,0,0,0.15);
     }
 
     .header::before {
       content: '';
       position: absolute;
-      top: -50%;
-      left: -50%;
-      width: 200%;
-      height: 200%;
-      background: radial-gradient(circle, rgba(255,255,255,0.2) 0%, rgba(255,255,255,0) 70%);
-      transform: rotate(30deg);
-      animation: shine 6s infinite linear;
-    }
-
-    @keyframes shine {
-      0% { transform: rotate(30deg) translate(-10%, -10%); }
-      100% { transform: rotate(30deg) translate(10%, 10%); }
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: radial-gradient(circle at 20% 50%, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 50%);
     }
 
     .header h1 {
-      font-size: 2.5rem;
+      font-size: 1.8rem;
       margin-bottom: 0.5rem;
       position: relative;
       text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
 
+    .header p {
+      font-size: 1rem;
+      opacity: 0.9;
+      position: relative;
+    }
+
     .header i {
-      margin-left: 15px;
-      font-size: 2rem;
+      margin-left: 10px;
+      font-size: 1.5rem;
       vertical-align: middle;
     }
 
@@ -79,9 +88,26 @@
       padding: 0 1.5rem;
     }
 
-    /* Search bar with modern design */
+    /* Action buttons container */
+    .action-buttons {
+      display: flex;
+      justify-content: center;
+      gap: 1.5rem;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    /* New Search bar design */
     .search-container {
       margin: 2rem 0;
+      position: relative;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+      display: none; /* Initially hidden */
+    }
+
+    .search-wrapper {
       position: relative;
     }
 
@@ -95,6 +121,12 @@
       font-size: 1rem;
       transition: var(--transition);
       background: white;
+      cursor: pointer;
+    }
+
+    .search-input.expanded {
+      border-radius: 15px 15px 0 0;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
     }
 
     .search-input:focus {
@@ -110,6 +142,58 @@
       transform: translateY(-50%);
       color: #888;
       font-size: 1.2rem;
+      pointer-events: none;
+      transition: var(--transition);
+    }
+
+    .search-input.expanded + .search-icon {
+      color: #667eea;
+      transform: translateY(-50%) rotate(90deg);
+    }
+
+    .search-results {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      background: white;
+      border-radius: 0 0 15px 15px;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.1);
+      max-height: 0;
+      overflow: hidden;
+      transition: var(--transition-slow);
+      z-index: 10;
+    }
+
+    .search-input.expanded ~ .search-results {
+      max-height: 400px;
+      overflow-y: auto;
+      padding: 1rem;
+      border-top: 1px solid #eee;
+    }
+
+    .search-result-item {
+      padding: 0.75rem 1rem;
+      border-bottom: 1px solid #f0f0f0;
+      cursor: pointer;
+      transition: var(--transition);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .search-result-item:last-child {
+      border-bottom: none;
+    }
+
+    .search-result-item:hover {
+      background: #f8f9fa;
+      transform: translateX(-5px);
+    }
+
+    .search-result-item .price {
+      color: #764ba2;
+      font-weight: 600;
     }
 
     /* Form styling */
@@ -119,14 +203,25 @@
       padding: 2rem;
       margin-bottom: 2rem;
       box-shadow: var(--shadow);
-      transition: var(--transition);
+      transition: var(--transition-slow);
       position: relative;
       overflow: hidden;
+      max-height: 0;
+      opacity: 0;
+      padding-top: 0;
+      padding-bottom: 0;
+      margin-bottom: 0;
+    }
+
+    .form-container.active {
+      max-height: 1000px;
+      opacity: 1;
+      padding: 2rem;
+      margin-bottom: 2rem;
     }
 
     .form-container:hover {
       box-shadow: var(--shadow-hover);
-      transform: translateY(-5px);
     }
 
     .form-container::after {
@@ -155,7 +250,7 @@
 
     .form-title i {
       margin-left: 10px;
-      color: #ff758c;
+      color: #667eea;
     }
 
     .form-group {
@@ -186,7 +281,7 @@
       box-shadow: 0 0 0 3px rgba(161, 140, 209, 0.2);
     }
 
-    /* 3D buttons */
+    /* 3D buttons with enhanced effects */
     .btn {
       border: none;
       padding: 1rem 2rem;
@@ -195,7 +290,7 @@
       font-weight: 600;
       cursor: pointer;
       transition: var(--transition);
-      box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.2);
       position: relative;
       overflow: hidden;
       color: white;
@@ -204,6 +299,8 @@
       justify-content: center;
       text-transform: uppercase;
       letter-spacing: 1px;
+      transform-style: preserve-3d;
+      perspective: 1000px;
     }
 
     .btn::before {
@@ -213,7 +310,7 @@
       left: 0;
       width: 100%;
       height: 100%;
-      background: rgba(255,255,255,0.1);
+      background: linear-gradient(135deg, rgba(255,255,255,0.3) 0%, rgba(255,255,255,0) 100%);
       transform: translateX(-100%) skewX(-15deg);
       transition: all 0.6s ease;
     }
@@ -223,12 +320,12 @@
     }
 
     .btn:hover {
-      transform: translateY(-3px);
-      box-shadow: 0 10px 20px rgba(0,0,0,0.2);
+      transform: translateY(-5px) scale(1.02);
+      box-shadow: 0 15px 30px rgba(0,0,0,0.3);
     }
 
     .btn:active {
-      transform: translateY(-1px);
+      transform: translateY(-2px) scale(0.98);
     }
 
     .btn-add {
@@ -243,6 +340,10 @@
       background: var(--delete-gradient);
     }
 
+    .btn-search {
+      background: linear-gradient(135deg, #5ee7df 0%, #b490ca 100%);
+    }
+
     .btn i {
       margin-left: 8px;
       font-size: 1.2rem;
@@ -255,12 +356,13 @@
       flex-wrap: wrap;
     }
 
-    /* Service cards with 3D effect */
+     /* Service cards with enhanced 3D effect - تم التعديل هنا */
     .services-container {
       display: grid;
-      grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-      gap: 1.5rem;
+      grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+      gap: 2rem;
       margin-bottom: 3rem;
+      perspective: 1000px;
     }
 
     .service-card {
@@ -268,14 +370,15 @@
       border-radius: 15px;
       overflow: hidden;
       box-shadow: var(--shadow);
-      transition: var(--transition);
       position: relative;
       transform-style: preserve-3d;
-      transform: perspective(1000px);
+      border: 1px solid rgba(0,0,0,0.05);
+      margin: 0.5rem;
+      transition: var(--transition);
     }
 
     .service-card:hover {
-      transform: translateY(-10px) perspective(1000px) rotateX(5deg);
+      transform: translateY(-10px) scale(1.02);
       box-shadow: var(--shadow-hover);
     }
 
@@ -296,8 +399,8 @@
     }
 
     .service-header h3 {
-      font-size: 1.3rem;
-      color: #555;
+      font-size: 1.4rem;
+      color: #444;
       margin-bottom: 0.5rem;
       display: flex;
       align-items: center;
@@ -305,18 +408,19 @@
 
     .service-header h3 i {
       margin-left: 10px;
-      color: #fad0c4;
+      color: #667eea;
     }
 
     .service-date {
-      color: #888;
-      font-size: 0.9rem;
+      color: #666;
+      font-size: 0.95rem;
       display: flex;
       align-items: center;
     }
 
     .service-date i {
       margin-left: 5px;
+      color: #888;
     }
 
     .service-body {
@@ -325,7 +429,7 @@
     }
 
     .service-price {
-      font-size: 1.8rem;
+      font-size: 1.5rem;
       font-weight: 700;
       color: #764ba2;
       margin: 1rem 0;
@@ -335,10 +439,38 @@
 
     .service-price i {
       margin-left: 10px;
-      font-size: 1.4rem;
+      font-size: 1.5rem;
+    }
+    
+    .service-details {
+      background: rgba(118, 75, 162, 0.05);
+      padding: 1rem;
+      border-radius: 10px;
+      margin-top: 1.5rem;
+      border-right: 3px solid #a18cd1;
+    }
+    
+    .service-details-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: #555;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+    }
+    
+    .service-details-title i {
+      margin-left: 8px;
+      color: #764ba2;
+      font-size: 1rem;
+    }
+    
+    .service-details-content {
+      color: #666;
+      line-height: 1.6;
     }
 
-    /* Modal styles */
+    /* Modal styles with 3D effect */
     .modal {
       display: none;
       position: fixed;
@@ -350,6 +482,7 @@
       z-index: 1000;
       backdrop-filter: blur(5px);
       animation: fadeIn 0.3s ease;
+      perspective: 1000px;
     }
 
     @keyframes fadeIn {
@@ -357,53 +490,50 @@
       to { opacity: 1; }
     }
 
-   /* تعديلات على الـ Modal لتصبح قابلة للتمرير */
-.modal-content {
-  background: white;
-  border-radius: 15px;
-  width: 90%;
-  max-width: 500px;
-  max-height: 80vh; /* تحديد أقصى ارتفاع */
-  margin: 5% auto;
-  padding: 2rem;
-  box-shadow: 0 15px 30px rgba(0,0,0,0.3);
-  position: relative;
-  transform-style: preserve-3d;
-  transform: perspective(1000px) rotateY(0deg);
-  transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  animation: modalOpen 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-  overflow-y: auto; /* إضافة التمرير العمودي عند الحاجة */
-}
+    .modal-content {
+      background: white;
+      border-radius: 15px;
+      width: 90%;
+      max-width: 500px;
+      max-height: 80vh;
+      margin: 5% auto;
+      padding: 2rem;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.4);
+      position: relative;
+      transform-style: preserve-3d;
+      transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+      transition: all 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      animation: modalOpen 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+      overflow-y: auto;
+    }
 
-/* تعديلات لجعل المحتوى الداخلي يتناسب مع المساحة */
-.modal-body {
-  max-height: calc(80vh - 150px); /* حساب الارتفاع مع مراعاة الهيدر والفوتر */
-  overflow-y: auto; /* التمرير فقط للمحتوى الداخلي */
-  padding-right: 10px; /* منع التداخل مع شريط التمرير */
-}
+    .modal-body {
+      max-height: calc(80vh - 150px);
+      overflow-y: auto;
+      padding-right: 10px;
+    }
 
-/* تخصيص شريط التمرير ليكون أنيقاً */
-.modal-content::-webkit-scrollbar {
-  width: 8px;
-}
+    .modal-content::-webkit-scrollbar {
+      width: 8px;
+    }
 
-.modal-content::-webkit-scrollbar-track {
-  background: #f1f1f1;
-  border-radius: 10px;
-}
+    .modal-content::-webkit-scrollbar-track {
+      background: #f1f1f1;
+      border-radius: 10px;
+    }
 
-.modal-content::-webkit-scrollbar-thumb {
-  background: #a18cd1;
-  border-radius: 10px;
-}
+    .modal-content::-webkit-scrollbar-thumb {
+      background: #a18cd1;
+      border-radius: 10px;
+    }
 
-.modal-content::-webkit-scrollbar-thumb:hover {
-  background: #764ba2;
-}
+    .modal-content::-webkit-scrollbar-thumb:hover {
+      background: #764ba2;
+    }
 
     @keyframes modalOpen {
-      from { transform: perspective(1000px) rotateY(90deg); opacity: 0; }
-      to { transform: perspective(1000px) rotateY(0deg); opacity: 1; }
+      from { transform: perspective(1000px) rotateY(90deg) rotateX(10deg); opacity: 0; }
+      to { transform: perspective(1000px) rotateY(0deg) rotateX(0deg); opacity: 1; }
     }
 
     .modal-header {
@@ -498,7 +628,7 @@
     /* Responsive design */
     @media (max-width: 768px) {
       .header h1 {
-        font-size: 2rem;
+        font-size: 1.5rem;
       }
       
       .services-container {
@@ -517,31 +647,62 @@
         width: 95%;
         margin: 10% auto;
       }
+      
+      .action-buttons {
+        flex-direction: column;
+        align-items: stretch;
+      }
+    }
+
+    @media (min-width: 1200px) {
+      .header {
+        padding: 1.5rem;
+      }
+      
+      .header h1 {
+        font-size: 2rem;
+      }
     }
   </style>
 </head>
 <body>
-  <!-- Header with modern pink gradient -->
-  <header class="header">
-    <h1>
-      <i class="fas fa-star"></i> نظام إدارة الخدمات الإضافية
-    </h1>
-    <p>إدارة كاملة للخدمات المقدمة</p>
-  </header>
+ <!-- Header with modern gradient -->
+<header class="header">
+  <h1>
+    <i class="fas fa-concierge-bell"></i> الخدمات الإضافية
+  </h1>
+  <p>إدارة الخدمات الإضافية المقدمة للعملاء</p>
+</header>
 
   <div class="container">
-    <!-- Search bar -->
-    <div class="search-container">
-      <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن خدمة...">
-      <i class="fas fa-search search-icon"></i>
+    <!-- Action Buttons -->
+    <div class="action-buttons">
+      <button class="btn btn-add" id="toggleAddFormBtn">
+        <i class="fas fa-plus-circle"></i> إضافة خدمة جديدة
+      </button>
+      <button class="btn btn-edit" id="openEditModalBtn">
+        <i class="fas fa-edit"></i> تعديل خدمة
+      </button>
+      <button class="btn btn-search" id="toggleSearchBtn">
+        <i class="fas fa-search"></i> بحث
+      </button>
+    </div>
+
+    <!-- New Search bar with dropdown results -->
+    <div class="search-container" id="searchContainer">
+      <div class="search-wrapper">
+        <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن خدمة...">
+        <i class="fas fa-search search-icon"></i>
+        <div class="search-results" id="searchResults"></div>
+      </div>
     </div>
 
     <!-- Alerts -->
     <div id="successAlert" class="alert alert-success"></div>
     <div id="errorAlert" class="alert alert-error"></div>
 
-    <!-- Add Service Form -->
-    <div class="form-container">
+    <!-- Add Service Form (hidden by default) -->
+    <div class="form-container" id="addServiceForm">
       <div class="form-header">
         <h2 class="form-title">
           <i class="fas fa-plus-circle"></i> إضافة خدمة جديدة
@@ -563,421 +724,500 @@
         <input type="number" id="servicePrice" class="form-control" placeholder="أدخل السعر">
       </div>
       
+      <div class="form-group">
+        <label for="serviceDetails">تفاصيل الخدمة</label>
+        <textarea id="serviceDetails" class="form-control" rows="3" placeholder="أدخل تفاصيل الخدمة"></textarea>
+      </div>
+      
       <div class="button-group">
         <button class="btn btn-add" id="addServiceBtn">
           <i class="fas fa-save"></i> حفظ الخدمة
         </button>
-        <button class="btn btn-edit" id="openEditModalBtn">
-          <i class="fas fa-edit"></i> تعديل خدمة
+        <button class="btn btn-delete" id="cancelAddBtn">
+          <i class="fas fa-times"></i> إلغاء
         </button>
       </div>
     </div>
-<div id="servicesContainer"></div>
-<div id="loading" class="loading">
-  <div class="spinner"></div>
-  <p>جاري تحميل البيانات...</p>
-</div>
-<div id="errorAlert" class="alert alert-error"></div>
 
-<!-- Edit Service Modal -->
-<div class="modal" id="editModal">
-  <div class="modal-content">
-    <div class="modal-header">
-      <h2 class="modal-title">
-        <i class="fas fa-edit"></i> تعديل الخدمة
-      </h2>
-      <span class="close">&times;</span>
-    </div>
+    <!-- Services Container -->
+    <div class="services-container" id="servicesContainer"></div>
     
-    <div class="modal-body"> <!-- إضافة div للمحتوى القابل للتمرير -->
-      <div class="form-group">
-        <label for="searchServiceName">ابحث عن الخدمة</label>
-        <input type="text" id="searchServiceName" class="form-control" placeholder="أدخل اسم الخدمة">
+    <!-- Loading Spinner -->
+    <div id="loading" class="loading">
+      <div class="spinner"></div>
+      <p>جاري تحميل البيانات...</p>
+    </div>
+  </div>
+
+  <!-- Edit Service Modal -->
+  <div class="modal" id="editModal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h2 class="modal-title">
+          <i class="fas fa-edit"></i> تعديل الخدمة
+        </h2>
+        <span class="close">&times;</span>
       </div>
       
-      <button class="btn btn-edit" id="searchServiceBtn" style="width: 100%;">
-        <i class="fas fa-search"></i> بحث
-      </button>
-      
-      <!-- Edit Form (hidden by default) -->
-      <div id="editForm" style="display: none; margin-top: 1.5rem;">
+      <div class="modal-body">
         <div class="form-group">
-          <label for="editName">اسم الخدمة</label>
-          <input type="text" id="editName" class="form-control">
+          <label for="searchServiceName">ابحث عن الخدمة</label>
+          <input type="text" id="searchServiceName" class="form-control" placeholder="أدخل اسم الخدمة">
         </div>
         
-        <div class="form-group">
-          <label for="editDate">تاريخ الخدمة</label>
-          <input type="date" id="editDate" class="form-control">
-        </div>
+        <button class="btn btn-edit" id="searchServiceBtn" style="width: 100%;">
+          <i class="fas fa-search"></i> بحث
+        </button>
         
-        <div class="form-group">
-          <label for="editPrice">سعر الخدمة (ر.س)</label>
-          <input type="number" id="editPrice" class="form-control">
-        </div>
-        
-        <div class="button-group">
-          <button class="btn btn-add" id="saveEditBtn">
-            <i class="fas fa-save"></i> حفظ التعديلات
-          </button>
-          <button class="btn btn-delete" id="deleteServiceBtn">
-            <i class="fas fa-trash"></i> حذف الخدمة
-          </button>
+        <!-- Edit Form (hidden by default) -->
+        <div id="editForm" style="display: none; margin-top: 1.5rem;">
+          <div class="form-group">
+            <label for="editName">اسم الخدمة</label>
+            <input type="text" id="editName" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="editDate">تاريخ الخدمة</label>
+            <input type="date" id="editDate" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="editPrice">سعر الخدمة (ر.س)</label>
+            <input type="number" id="editPrice" class="form-control">
+          </div>
+          
+          <div class="form-group">
+            <label for="editDetails">تفاصيل الخدمة</label>
+            <textarea id="editDetails" class="form-control" rows="3"></textarea>
+          </div>
+          
+          <div class="button-group">
+            <button class="btn btn-add" id="saveEditBtn">
+              <i class="fas fa-save"></i> حفظ التعديلات
+            </button>
+            <button class="btn btn-delete" id="deleteServiceBtn">
+              <i class="fas fa-trash"></i> حذف الخدمة
+            </button>
+            <button class="btn" id="cancelEditBtn" style="background: #6c757d;">
+              <i class="fas fa-times"></i> إلغاء
+            </button>
+          </div>
         </div>
       </div>
     </div>
   </div>
-</div>
 
   <!-- Firebase & App Script -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
   
-  <script>
-    // إعدادات Firebase الخاصة بمشروع Pharmacy System
-const firebaseConfig = {
-  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-  authDomain: "pharmacy-system-9def6.firebaseapp.com",
-  projectId: "pharmacy-system-9def6",
-  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-  messagingSenderId: "630855008414",
-  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-  measurementId: "G-LC5NDKP6QZ"
-};
+<script>
+  // إعدادات Firebase الخاصة بمشروع Pharmacy System
+  const firebaseConfig = {
+    apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+    authDomain: "pharmacy-system-9def6.firebaseapp.com",
+    projectId: "pharmacy-system-9def6",
+    storageBucket: "pharmacy-system-9def6.appspot.com",
+    messagingSenderId: "630855008414",
+    appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+    measurementId: "G-LC5NDKP6QZ"
+  };
 
-    // Initialize Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
+  // Initialize Firebase
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
 
-    // App variables
-    let currentServiceKey = null;
-    let allServices = {};
+  // App variables
+  let currentServiceKey = null;
+  let allServices = {};
+  let isSearchExpanded = false;
 
-    // DOM Elements
-    const elements = {
-      searchInput: document.getElementById('searchInput'),
-      serviceName: document.getElementById('serviceName'),
-      serviceDate: document.getElementById('serviceDate'),
-      servicePrice: document.getElementById('servicePrice'),
-      addServiceBtn: document.getElementById('addServiceBtn'),
-      openEditModalBtn: document.getElementById('openEditModalBtn'),
-      editModal: document.getElementById('editModal'),
-      closeModal: document.querySelector('.close'),
-      searchServiceName: document.getElementById('searchServiceName'),
-      searchServiceBtn: document.getElementById('searchServiceBtn'),
-      editForm: document.getElementById('editForm'),
-      editName: document.getElementById('editName'),
-      editDate: document.getElementById('editDate'),
-      editPrice: document.getElementById('editPrice'),
-      saveEditBtn: document.getElementById('saveEditBtn'),
-      deleteServiceBtn: document.getElementById('deleteServiceBtn'),
-      servicesContainer: document.getElementById('servicesContainer'),
-      loading: document.getElementById('loading'),
-      successAlert: document.getElementById('successAlert'),
-      errorAlert: document.getElementById('errorAlert')
-    };
+  // DOM Elements
+  const elements = {
+    toggleAddFormBtn: document.getElementById('toggleAddFormBtn'),
+    toggleSearchBtn: document.getElementById('toggleSearchBtn'),
+    searchContainer: document.getElementById('searchContainer'),
+    searchInput: document.getElementById('searchInput'),
+    searchResults: document.getElementById('searchResults'),
+    serviceName: document.getElementById('serviceName'),
+    serviceDate: document.getElementById('serviceDate'),
+    servicePrice: document.getElementById('servicePrice'),
+    serviceDetails: document.getElementById('serviceDetails'),
+    addServiceBtn: document.getElementById('addServiceBtn'),
+    cancelAddBtn: document.getElementById('cancelAddBtn'),
+    addServiceForm: document.getElementById('addServiceForm'),
+    openEditModalBtn: document.getElementById('openEditModalBtn'),
+    editModal: document.getElementById('editModal'),
+    closeModal: document.querySelector('.close'),
+    searchServiceName: document.getElementById('searchServiceName'),
+    searchServiceBtn: document.getElementById('searchServiceBtn'),
+    editForm: document.getElementById('editForm'),
+    editName: document.getElementById('editName'),
+    editDate: document.getElementById('editDate'),
+    editPrice: document.getElementById('editPrice'),
+    editDetails: document.getElementById('editDetails'),
+    saveEditBtn: document.getElementById('saveEditBtn'),
+    deleteServiceBtn: document.getElementById('deleteServiceBtn'),
+    cancelEditBtn: document.getElementById('cancelEditBtn'),
+    servicesContainer: document.getElementById('servicesContainer'),
+    loading: document.getElementById('loading'),
+    successAlert: document.getElementById('successAlert'),
+    errorAlert: document.getElementById('errorAlert')
+  };
 
-    // Initialize the app
-    document.addEventListener('DOMContentLoaded', function() {
-      showLoading(true);
-      loadServices();
-      setupEventListeners();
+  // Initialize the app
+  document.addEventListener('DOMContentLoaded', function() {
+    showLoading(true);
+    loadServices();
+    setupEventListeners();
+  });
+
+  // Event Listeners
+  function setupEventListeners() {
+    // Toggle add service form
+    elements.toggleAddFormBtn.addEventListener('click', toggleAddForm);
+    elements.cancelAddBtn.addEventListener('click', toggleAddForm);
+    
+    // Toggle search container
+    elements.toggleSearchBtn.addEventListener('click', toggleSearch);
+    
+    // Search functionality
+    elements.searchInput.addEventListener('input', (e) => {
+      filterServices(e.target.value.toLowerCase());
     });
 
-    // Event Listeners
-    function setupEventListeners() {
-      // Search functionality
-      elements.searchInput.addEventListener('input', (e) => {
-        filterServices(e.target.value.toLowerCase());
-      });
+    // Add service
+    elements.addServiceBtn.addEventListener('click', addService);
+    elements.serviceName.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') addService();
+    });
 
-      // Add service
-      elements.addServiceBtn.addEventListener('click', addService);
-      elements.serviceName.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') addService();
-      });
+    // Edit modal
+    elements.openEditModalBtn.addEventListener('click', openEditModal);
+    elements.closeModal.addEventListener('click', closeEditModal);
+    elements.searchServiceBtn.addEventListener('click', searchService);
+    elements.searchServiceName.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') searchService();
+    });
 
-      // Edit modal
-      elements.openEditModalBtn.addEventListener('click', openEditModal);
-      elements.closeModal.addEventListener('click', closeEditModal);
-      elements.searchServiceBtn.addEventListener('click', searchService);
-      elements.searchServiceName.addEventListener('keypress', (e) => {
-        if (e.key === 'Enter') searchService();
-      });
-
-      // Edit and delete
-      elements.saveEditBtn.addEventListener('click', saveEdit);
-      elements.deleteServiceBtn.addEventListener('click', () => {
-        if (confirm('هل أنت متأكد من حذف هذه الخدمة؟')) {
-          deleteService();
-        }
-      });
-
-      // Close modal when clicking outside
-      window.addEventListener('click', (e) => {
-        if (e.target === elements.editModal) {
-          closeEditModal();
-        }
-      });
-    }
-
-    // Load services from Firebase
-    function loadServices() {
-      database.ref('services').on('value', (snapshot) => {
-        allServices = snapshot.val() || {};
-        displayServices(allServices);
-        showLoading(false);
-      }, (error) => {
-        showError('حدث خطأ أثناء تحميل البيانات: ' + error.message);
-        showLoading(false);
-      });
-    }
-
-    // Display services in the UI
-    function displayServices(services) {
-      elements.servicesContainer.innerHTML = '';
-
-      if (!services || Object.keys(services).length === 0) {
-        elements.servicesContainer.innerHTML = `
-          <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #888;">
-            <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
-            <p>لا توجد خدمات متاحة حالياً</p>
-          </div>
-        `;
-        return;
+    // Edit and delete
+    elements.saveEditBtn.addEventListener('click', saveEdit);
+    elements.deleteServiceBtn.addEventListener('click', () => {
+      if (confirm('هل أنت متأكد من حذف هذه الخدمة؟')) {
+        deleteService();
       }
+    });
+    elements.cancelEditBtn.addEventListener('click', closeEditModal);
 
-      // Convert to array and sort by date (newest first)
-      const servicesArray = Object.entries(services).map(([key, value]) => ({ key, ...value }));
-      servicesArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+    // Close modal when clicking outside
+    window.addEventListener('click', (e) => {
+      if (e.target === elements.editModal) {
+        closeEditModal();
+      }
+    });
+  }
 
-      servicesArray.forEach(service => {
-        const serviceCard = document.createElement('div');
-        serviceCard.className = 'service-card';
-        serviceCard.setAttribute('data-key', service.key);
-        
-        serviceCard.innerHTML = `
-          <div class="service-header">
-            <h3><i class="fas fa-concierge-bell"></i> ${service.name}</h3>
-            <p class="service-date"><i class="far fa-calendar-alt"></i> ${formatDate(service.date)}</p>
+  // Toggle search container
+  function toggleSearch() {
+    elements.searchContainer.style.display = elements.searchContainer.style.display === 'none' ? 'block' : 'none';
+    
+    if (elements.searchContainer.style.display === 'block') {
+      elements.searchInput.focus();
+    } else {
+      // Reset search when hiding
+      elements.searchInput.value = '';
+      filterServices('');
+    }
+  }
+
+  // Toggle add service form
+  function toggleAddForm() {
+    elements.addServiceForm.classList.toggle('active');
+    
+    if (elements.addServiceForm.classList.contains('active')) {
+      // Reset form when showing
+      elements.serviceName.value = '';
+      elements.serviceDate.value = '';
+      elements.servicePrice.value = '';
+      elements.serviceDetails.value = '';
+    }
+  }
+
+  // Load services from Firebase
+  function loadServices() {
+    database.ref('services').on('value', (snapshot) => {
+      allServices = snapshot.val() || {};
+      displayServices(allServices);
+      showLoading(false);
+    }, (error) => {
+      showError('حدث خطأ أثناء تحميل البيانات: ' + error.message);
+      showLoading(false);
+    });
+  }
+
+  // Display services in the UI
+  function displayServices(services) {
+    elements.servicesContainer.innerHTML = '';
+
+    if (!services || Object.keys(services).length === 0) {
+      elements.servicesContainer.innerHTML = `
+        <div style="grid-column: 1/-1; text-align: center; padding: 2rem; color: #888;">
+          <i class="fas fa-box-open" style="font-size: 3rem; margin-bottom: 1rem;"></i>
+          <p>لا توجد خدمات متاحة حالياً</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Convert to array and sort by date (newest first)
+    const servicesArray = Object.entries(services).map(([key, value]) => ({ key, ...value }));
+    servicesArray.sort((a, b) => new Date(b.date) - new Date(a.date));
+
+    servicesArray.forEach(service => {
+      const serviceCard = document.createElement('div');
+      serviceCard.className = 'service-card';
+      serviceCard.setAttribute('data-key', service.key);
+      
+      serviceCard.innerHTML = `
+        <div class="service-header">
+          <h3><i class="fas fa-concierge-bell"></i> ${service.name}</h3>
+          <p class="service-date"><i class="far fa-calendar-alt"></i> ${formatDate(service.date)}</p>
+        </div>
+        <div class="service-body">
+          <div class="service-price">
+            <i class="fas fa-money-bill-wave"></i> ${service.price} ر.س
           </div>
-          <div class="service-body">
-            <div class="service-price">
-              <i class="fas fa-money-bill-wave"></i> ${service.price} ر.س
+          ${service.details ? `
+          <div class="service-details">
+            <div class="service-details-title">
+              <i class="fas fa-info-circle"></i> تفاصيل الخدمة
+            </div>
+            <div class="service-details-content">
+              ${service.details}
             </div>
           </div>
-        `;
-        
-        elements.servicesContainer.appendChild(serviceCard);
-      });
+          ` : ''}
+        </div>
+      `;
+      
+      elements.servicesContainer.appendChild(serviceCard);
+    });
+  }
+
+  // Filter services based on search input
+  function filterServices(searchText) {
+    if (!searchText) {
+      displayServices(allServices);
+      return;
     }
 
-    // Filter services based on search input
-    function filterServices(searchText) {
-      if (!searchText) {
-        displayServices(allServices);
-        return;
+    const filteredServices = {};
+    Object.keys(allServices).forEach(key => {
+      const service = allServices[key];
+      if (service.name.toLowerCase().includes(searchText)) {
+        filteredServices[key] = service;
       }
+    });
 
-      const filteredServices = {};
-      Object.keys(allServices).forEach(key => {
-        const service = allServices[key];
-        if (service.name.toLowerCase().includes(searchText)) {
-          filteredServices[key] = service;
-        }
-      });
+    displayServices(filteredServices);
+  }
 
-      displayServices(filteredServices);
+  // Add a new service
+  function addService() {
+    const name = elements.serviceName.value.trim();
+    const date = elements.serviceDate.value;
+    const price = elements.servicePrice.value.trim();
+    const details = elements.serviceDetails.value.trim();
+
+    // Validation
+    if (!name || !date || !price) {
+      showError('الرجاء ملء جميع الحقول المطلوبة');
+      return;
     }
 
-    // Add a new service
-    function addService() {
-      const name = elements.serviceName.value.trim();
-      const date = elements.serviceDate.value;
-      const price = elements.servicePrice.value.trim();
-
-      // Validation
-      if (!name || !date || !price) {
-        showError('الرجاء ملء جميع الحقول المطلوبة');
-        return;
-      }
-
-      if (isNaN(price)) {
-        showError('يجب أن يكون السعر رقماً');
-        return;
-      }
-
-      showLoading(true);
-
-      database.ref('services').push({
-        name,
-        date,
-        price: parseFloat(price)
-      })
-      .then(() => {
-        showSuccess('تم إضافة الخدمة بنجاح');
-        // Clear form
-        elements.serviceName.value = '';
-        elements.serviceDate.value = '';
-        elements.servicePrice.value = '';
-      })
-      .catch(error => {
-        showError('حدث خطأ أثناء إضافة الخدمة: ' + error.message);
-      })
-      .finally(() => {
-        showLoading(false);
-      });
+    if (isNaN(price)) {
+      showError('يجب أن يكون السعر رقماً');
+      return;
     }
 
-    // Open edit modal
-    function openEditModal() {
-      elements.editModal.style.display = 'block';
-      elements.searchServiceName.value = '';
+    showLoading(true);
+
+    database.ref('services').push({
+      name,
+      date,
+      price: parseFloat(price),
+      details
+    })
+    .then(() => {
+      showSuccess('تم إضافة الخدمة بنجاح');
+      // Hide form after successful addition
+      elements.addServiceForm.classList.remove('active');
+      // Clear form
+      elements.serviceName.value = '';
+      elements.serviceDate.value = '';
+      elements.servicePrice.value = '';
+      elements.serviceDetails.value = '';
+    })
+    .catch(error => {
+      showError('حدث خطأ أثناء إضافة الخدمة: ' + error.message);
+    })
+    .finally(() => {
+      showLoading(false);
+    });
+  }
+
+  // Open edit modal
+  function openEditModal() {
+    elements.editModal.style.display = 'block';
+    elements.searchServiceName.value = '';
+    elements.editForm.style.display = 'none';
+    currentServiceKey = null;
+  }
+
+  // Close edit modal
+  function closeEditModal() {
+    elements.editModal.style.display = 'none';
+  }
+
+  // Search for a service to edit
+  function searchService() {
+    const searchName = elements.searchServiceName.value.trim().toLowerCase();
+
+    if (!searchName) {
+      showError('الرجاء إدخال اسم الخدمة للبحث');
+      return;
+    }
+
+    // Search in services
+    let foundService = null;
+    let foundKey = null;
+
+    for (const [key, service] of Object.entries(allServices)) {
+      if (service.name.toLowerCase() === searchName) {
+        foundService = service;
+        foundKey = key;
+        break;
+      }
+    }
+
+    if (foundService) {
+      elements.editName.value = foundService.name;
+      elements.editDate.value = foundService.date;
+      elements.editPrice.value = foundService.price;
+      elements.editDetails.value = foundService.details || '';
+      
+      currentServiceKey = foundKey;
+      elements.editForm.style.display = 'block';
+    } else {
+      showError('الخدمة غير موجودة');
       elements.editForm.style.display = 'none';
-      currentServiceKey = null;
+    }
+  }
+
+  // Save edited service
+  function saveEdit() {
+    if (!currentServiceKey) {
+      showError('لم يتم تحديد خدمة للتعديل');
+      return;
     }
 
-    // Close edit modal
-    function closeEditModal() {
-      elements.editModal.style.display = 'none';
+    const newName = elements.editName.value.trim();
+    const newDate = elements.editDate.value;
+    const newPrice = elements.editPrice.value.trim();
+    const newDetails = elements.editDetails.value.trim();
+
+    if (!newName || !newDate || !newPrice) {
+      showError('الرجاء ملء جميع الحقول المطلوبة');
+      return;
     }
 
-    // Search for a service to edit
-    function searchService() {
-      const searchName = elements.searchServiceName.value.trim().toLowerCase();
-
-      if (!searchName) {
-        showError('الرجاء إدخال اسم الخدمة للبحث');
-        return;
-      }
-
-      // Search in services
-      let foundService = null;
-      let foundKey = null;
-
-      for (const [key, service] of Object.entries(allServices)) {
-        if (service.name.toLowerCase() === searchName) {
-          foundService = service;
-          foundKey = key;
-          break;
-        }
-      }
-
-      if (foundService) {
-        elements.editName.value = foundService.name;
-        elements.editDate.value = foundService.date;
-        elements.editPrice.value = foundService.price;
-        
-        currentServiceKey = foundKey;
-        elements.editForm.style.display = 'block';
-      } else {
-        showError('الخدمة غير موجودة');
-        elements.editForm.style.display = 'none';
-      }
+    if (isNaN(newPrice)) {
+      showError('يجب أن يكون السعر رقماً');
+      return;
     }
 
-    // Save edited service
-    function saveEdit() {
-      if (!currentServiceKey) {
-        showError('لم يتم تحديد خدمة للتعديل');
-        return;
-      }
+    showLoading(true);
 
-      const newName = elements.editName.value.trim();
-      const newDate = elements.editDate.value;
-      const newPrice = elements.editPrice.value.trim();
+    database.ref(`services/${currentServiceKey}`).update({
+      name: newName,
+      date: newDate,
+      price: parseFloat(newPrice),
+      details: newDetails
+    })
+    .then(() => {
+      showSuccess('تم تحديث الخدمة بنجاح');
+      closeEditModal();
+    })
+    .catch(error => {
+      showError('حدث خطأ أثناء تحديث الخدمة: ' + error.message);
+    })
+    .finally(() => {
+      showLoading(false);
+    });
+  }
 
-      if (!newName || !newDate || !newPrice) {
-        showError('الرجاء ملء جميع الحقول المطلوبة');
-        return;
-      }
-
-      if (isNaN(newPrice)) {
-        showError('يجب أن يكون السعر رقماً');
-        return;
-      }
-
-      showLoading(true);
-
-      database.ref(`services/${currentServiceKey}`).update({
-        name: newName,
-        date: newDate,
-        price: parseFloat(newPrice)
-      })
-      .then(() => {
-        showSuccess('تم تحديث الخدمة بنجاح');
-        closeEditModal();
-      })
-      .catch(error => {
-        showError('حدث خطأ أثناء تحديث الخدمة: ' + error.message);
-      })
-      .finally(() => {
-        showLoading(false);
-      });
+  // Delete service
+  function deleteService() {
+    if (!currentServiceKey) {
+      showError('لم يتم تحديد خدمة للحذف');
+      return;
     }
 
-    // Delete service
-    function deleteService() {
-      if (!currentServiceKey) {
-        showError('لم يتم تحديد خدمة للحذف');
-        return;
-      }
+    showLoading(true);
 
-      showLoading(true);
+    database.ref(`services/${currentServiceKey}`).remove()
+    .then(() => {
+      showSuccess('تم حذف الخدمة بنجاح');
+      closeEditModal();
+    })
+    .catch(error => {
+      showError('حدث خطأ أثناء حذف الخدمة: ' + error.message);
+    })
+    .finally(() => {
+      showLoading(false);
+    });
+  }
 
-      database.ref(`services/${currentServiceKey}`).remove()
-      .then(() => {
-        showSuccess('تم حذف الخدمة بنجاح');
-        closeEditModal();
-      })
-      .catch(error => {
-        showError('حدث خطأ أثناء حذف الخدمة: ' + error.message);
-      })
-      .finally(() => {
-        showLoading(false);
-      });
-    }
+  // Show loading spinner
+  function showLoading(show) {
+    elements.loading.style.display = show ? 'block' : 'none';
+  }
 
-    // Show loading spinner
-    function showLoading(show) {
-      elements.loading.style.display = show ? 'block' : 'none';
-    }
-
-    // Show success message
-    function showSuccess(message) {
-      elements.successAlert.textContent = message;
-      elements.successAlert.style.display = 'block';
-      elements.errorAlert.style.display = 'none';
-      
-      setTimeout(() => {
-        elements.successAlert.style.display = 'none';
-      }, 5000);
-    }
-
-    // Show error message
-    function showError(message) {
-      elements.errorAlert.textContent = message;
-      elements.errorAlert.style.display = 'block';
+  // Show success message
+  function showSuccess(message) {
+    elements.successAlert.textContent = message;
+    elements.successAlert.style.display = 'block';
+    elements.errorAlert.style.display = 'none';
+    
+    setTimeout(() => {
       elements.successAlert.style.display = 'none';
-      
-      setTimeout(() => {
-        elements.errorAlert.style.display = 'none';
-      }, 5000);
-    }
+    }, 5000);
+  }
 
-    // Format date for display
-    function formatDate(dateString) {
-      if (!dateString) return 'غير محدد';
-      
-      const options = { year: 'numeric', month: 'long', day: 'numeric' };
-      const date = new Date(dateString);
-      
-      if (isNaN(date.getTime())) {
-        return dateString;
-      }
-      
-      return date.toLocaleDateString('ar-EG', options);
+  // Show error message
+  function showError(message) {
+    elements.errorAlert.textContent = message;
+    elements.errorAlert.style.display = 'block';
+    elements.successAlert.style.display = 'none';
+    
+    setTimeout(() => {
+      elements.errorAlert.style.display = 'none';
+    }, 5000);
+  }
+
+  // Format date for display
+  function formatDate(dateString) {
+    if (!dateString) return 'غير محدد';
+    
+    const options = { year: 'numeric', month: 'long', day: 'numeric' };
+    const date = new Date(dateString);
+    
+    if (isNaN(date.getTime())) {
+      return dateString;
     }
-  </script>
+    
+    return date.toLocaleDateString('ar-EG', options);
+  }
+</script>
 </body>
 </html>
