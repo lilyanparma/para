@@ -348,12 +348,74 @@
             gap: 10px;
         }
         
+        /* أنماط المخزون وتاريخ الصلاحية لجميع الشاشات */
         .product-stock {
             color: var(--gray);
             font-size: 1.1rem;
             display: flex;
             align-items: center;
             gap: 8px;
+            transition: all 0.3s ease;
+            padding: 3px 8px;
+            border-radius: 5px;
+            margin-bottom: 10px;
+        }
+        
+        .product-stock.low-stock {
+            color: var(--danger);
+            font-weight: bold;
+            animation: blink 1.5s infinite;
+            background-color: rgba(248, 150, 30, 0.1);
+        }
+        
+        .product-stock.out-of-stock {
+            color: var(--danger);
+            font-weight: bold;
+            animation: blink 1s infinite;
+        }
+        
+        .product-stock.stock-warning {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        
+        .product-expiry {
+            color: var(--gray);
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+        
+        .product-expiry.expiry-soon {
+            color: var(--warning);
+            font-weight: bold;
+        }
+        
+        .product-expiry.expiry-passed {
+            color: var(--danger);
+            font-weight: bold;
+            animation: pulse 1.5s infinite;
+        }
+        
+        @keyframes blink {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+            box-shadow: none !important;
         }
         
         .discount-section {
@@ -510,7 +572,6 @@
             animation: slideInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1);
             border-left: 6px solid white;
             max-width: 400px;
-            backdrop-filter: blur(5px);
         }
         
         @keyframes slideInRight {
@@ -611,11 +672,6 @@
             animation: fadeIn 0.3s;
         }
         
-        @keyframes fadeIn {
-            from { opacity: 0; }
-            to { opacity: 1; }
-        }
-        
         .return-success-notice i {
             font-size: 2rem;
             margin-bottom: 10px;
@@ -624,12 +680,6 @@
         /* مكان لعرض الفاتورة */
         #invoicePlaceholder {
             display: none;
-            width: 100%;
-            padding: 20px;
-            background: white;
-            border-radius: 20px;
-            box-shadow: 0 15px 40px rgba(0,0,0,0.1);
-            margin-top: 30px;
         }
         
         /* التكيف مع الشاشات الصغيرة */
@@ -767,7 +817,7 @@
         
         <div id="productDetails" class="product-details">
             <div class="product-header">
-                <img id="productImage" class="product-image" src="https://via.placeholder.com/150?text=صورة+المنتج" alt="صورة المنتج">
+                <img id="productImage" class="product-image" src="" alt="صورة المنتج">
                 <div class="product-info">
                     <h2 id="productName" class="product-title">
                         <i class="fas fa-tag"></i> اسم المنتج
@@ -777,6 +827,9 @@
                     </div>
                     <div id="productQuantity" class="product-stock">
                         <i class="fas fa-boxes"></i> المخزون: 10 قطع
+                    </div>
+                    <div id="productExpiry" class="product-expiry">
+                        <i class="fas fa-calendar-alt"></i> تاريخ الصلاحية: غير محدد
                     </div>
                 </div>
             </div>
@@ -915,6 +968,7 @@
             productName: document.getElementById('productName'),
             basePrice: document.getElementById('basePrice'),
             productQuantity: document.getElementById('productQuantity'),
+            productExpiry: document.getElementById('productExpiry'),
             applyDiscount: document.getElementById('applyDiscount'),
             discountSection: document.getElementById('discountSection'),
             percentDiscountBtn: document.getElementById('percentDiscountBtn'),
@@ -1037,7 +1091,8 @@
                             name: productData.name,
                             price: parseFloat(productData.price),
                             quantity: parseInt(productData.quantity),
-                            image: productData.image || 'https://via.placeholder.com/150?text=صورة+المنتج'
+                            expiryDate: productData.expiryDate,
+                            image: productData.image || 'https://via.placeholder.com/150'
                         };
                         
                         displayProduct(currentProduct);
@@ -1055,11 +1110,59 @@
         
         function displayProduct(product) {
             elements.productName.textContent = product.name;
-            elements.basePrice.textContent = product.price.toFixed(2) + ' ر.س';
-            elements.productQuantity.textContent = 'المخزون: ' + product.quantity + ' قطع';
+            elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${product.price.toFixed(2)} ر.س`;
+            
+            // تحديث عرض كمية المخزون مع التأثيرات
+            const stockElement = elements.productQuantity;
+            const stockQuantity = product.quantity || 0;
+            
+            if (stockQuantity <= 0) {
+                stockElement.innerHTML = '<i class="fas fa-boxes"></i> <span class="out-of-stock">انتهى المخزون</span>';
+                stockElement.className = 'product-stock out-of-stock';
+            } 
+            else if (stockQuantity <= 5) {
+                stockElement.innerHTML = `<i class="fas fa-boxes"></i> <span class="low-stock stock-warning">المخزون: ${stockQuantity} قطع</span>`;
+                stockElement.className = 'product-stock low-stock';
+            }
+            else {
+                stockElement.innerHTML = `<i class="fas fa-boxes"></i> المخزون: ${stockQuantity} قطع`;
+                stockElement.className = 'product-stock';
+            }
+            
+            // تحديث عرض تاريخ الصلاحية
+            const expiryElement = elements.productExpiry;
+            const expiryDate = product.expiryDate || null;
+            
+            if (!expiryDate) {
+                expiryElement.innerHTML = '<i class="fas fa-calendar-alt"></i> تاريخ الصلاحية: غير محدد';
+                expiryElement.className = 'product-expiry';
+            } else {
+                const today = new Date();
+                const expiry = new Date(expiryDate);
+                const diffTime = expiry - today;
+                const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+                
+                expiryElement.innerHTML = `<i class="fas fa-calendar-alt"></i> تاريخ الصلاحية: ${formatDate(expiryDate)}`;
+                
+                if (diffDays < 0) {
+                    expiryElement.className = 'product-expiry expiry-passed';
+                    expiryElement.innerHTML += ' <span>(منتهي الصلاحية)</span>';
+                } else if (diffDays <= 30) {
+                    expiryElement.className = 'product-expiry expiry-soon';
+                    expiryElement.innerHTML += ` <span>(متبقي ${diffDays} يوم)</span>`;
+                } else {
+                    expiryElement.className = 'product-expiry';
+                }
+            }
+            
             elements.productImage.src = product.image;
             elements.finalPriceValue.textContent = product.price.toFixed(2) + ' ر.س';
             elements.productDetails.style.display = 'block';
+            
+            // تعطيل زر البيع إذا لم يكن هناك مخزون
+            elements.sellBtn.disabled = product.quantity <= 0;
+            elements.sellBtn.style.opacity = product.quantity <= 0 ? 0.6 : 1;
+            elements.sellBtn.style.cursor = product.quantity <= 0 ? 'not-allowed' : 'pointer';
             
             elements.discountPercent.value = '';
             elements.discountAmount.value = '';
@@ -1070,6 +1173,12 @@
             elements.cashPayment.classList.add('active');
             elements.cardPayment.classList.remove('active');
             elements.transferPayment.classList.remove('active');
+        }
+        
+        // دالة مساعدة لتهيئة التاريخ
+        function formatDate(dateString) {
+            const options = { year: 'numeric', month: 'long', day: 'numeric' };
+            return new Date(dateString).toLocaleDateString('ar-SA', options);
         }
         
         // 8. نظام الخصم
@@ -1173,9 +1282,25 @@
             elements.cardPayment.classList.remove('active');
         });
         
-        // 10. عملية البيع مع تحديث المخزون في Firebase
         elements.sellBtn.addEventListener('click', function() {
             if (!currentProduct) return;
+            
+            // التحقق من وجود مخزون
+            if (currentProduct.quantity <= 0) {
+                showToast('⚠️ لا يمكن إتمام البيع - انتهى المخزون!', 'error');
+                return;
+            }
+            
+            // التحقق من تاريخ الصلاحية إذا كان موجوداً
+            if (currentProduct.expiryDate) {
+                const today = new Date();
+                const expiryDate = new Date(currentProduct.expiryDate);
+                
+                if (expiryDate < today) {
+                    showToast('⚠️ لا يمكن بيع منتج منتهي الصلاحية!', 'error');
+                    return;
+                }
+            }
             
             const finalPrice = parseFloat(elements.finalPriceValue.textContent);
             const basePrice = currentProduct.price;
@@ -1249,8 +1374,6 @@
             iframe.style.height = '600px';
             iframe.style.border = 'none';
             iframe.style.marginTop = '20px';
-            iframe.style.borderRadius = '15px';
-            iframe.style.boxShadow = '0 5px 15px rgba(0,0,0,0.1)';
             
             // إضافة الـ iframe إلى الصفحة
             elements.invoicePlaceholder.innerHTML = '';
