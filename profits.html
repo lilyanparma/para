@@ -1,314 +1,801 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>فاتورة شهرية</title>
-
-  <!-- Firebase -->
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-app.js "></script>
-  <script src="https://www.gstatic.com/firebasejs/7.20.0/firebase-database.js "></script>
-
-  <!-- html2pdf.js -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js "></script>
-
-  <style>
-    /* إعدادات عامة */
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
-    html, body {
-      width: 100%;
-      height: 100%;
-      overflow-x: hidden;
-      font-family: 'Tahoma', 'DejaVu Sans', 'Arial', sans-serif;
-      background-color: #f4f4f4;
-      direction: rtl;
-    }
-
-    body {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: flex-start;
-      padding: 30px 10px;
-    }
-
-    .container {
-      width: 100%;
-      max-width: 600px;
-      background: white;
-      padding: 30px;
-      border-radius: 10px;
-      box-shadow: 0 0 15px rgba(0,0,0,0.1);
-      text-align: center;
-    }
-
-    h1 {
-      font-size: 24px;
-      color: #333;
-      margin-bottom: 10px;
-    }
-
-    p {
-      font-size: 16px;
-      color: #555;
-      margin-bottom: 20px;
-    }
-
-    button {
-      padding: 12px 24px;
-      font-size: 16px;
-      border: none;
-      border-radius: 5px;
-      cursor: pointer;
-      background-color: #007BFF;
-      color: white;
-      transition: background-color 0.3s ease;
-    }
-
-    button:hover {
-      background-color: #0056b3;
-    }
-
-    /* تصميم الفاتورة - غير مرئية حتى التوليد */
-    #invoiceContent {
-      visibility: hidden;
-      position: absolute;
-      left: -9999px;
-      width: 100%;
-      max-width: 800px;
-      margin: auto;
-      padding: 30px;
-      background: white;
-      box-shadow: 0 0 10px rgba(0,0,0,0.1);
-      font-size: 14px;
-      line-height: 1.6;
-    }
-
-    .header {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    .company-name {
-      font-size: 24px;
-      font-weight: bold;
-      color: #007BFF;
-    }
-
-    table {
-      width: 100%;
-      border-collapse: collapse;
-      margin: 20px 0;
-    }
-
-    th, td {
-      border: 1px solid #ccc;
-      padding: 10px;
-      vertical-align: top;
-    }
-
-    th {
-      background-color: #007BFF;
-      color: white;
-    }
-
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
-    }
-
-    .total-row td {
-      font-weight: bold;
-      background-color: #e9ecef;
-    }
-
-    .footer {
-      margin-top: 30px;
-      font-style: italic;
-      color: #555;
-    }
-  </style>
-</head>
-<body>
-
-  <div class="container">
-    <h1>إنشاء فاتورة شهرية</h1>
-    <p>انقر على الزر أدناه لإنشاء فاتورة شهرية تلقائية بصيغة PDF.</p>
-    <button onclick="generateInvoice()">إنشاء فاتورة (PDF)</button>
-  </div>
-
-  <!-- نموذج الفاتورة -->
-  <div id="invoiceContent">
-    <div class="header">
-      <div class="company-name">صيدلية المستقبل</div>
-      <h2>فاتورة شهرية</h2>
-      <p><strong>الشهر:</strong> <span id="arMonth"></span></p>
-      <p><strong>تاريخ الإصدار:</strong> <span id="todayDate"></span></p>
-    </div>
-
-    <table>
-      <thead>
-        <tr>
-          <th>#</th>
-          <th>المنتج</th>
-          <th style="width: 100px;">الكمية</th>
-          <th style="width: 100px;">سعر البيع</th>
-          <th style="width: 100px;">سعر الشراء</th>
-          <th style="width: 100px;">الإجمالي</th>
-        </tr>
-      </thead>
-      <tbody id="productsTableBody"></tbody>
-    </table>
-
-    <table style="margin-top: 20px;">
-      <tbody>
-        <tr class="total-row">
-          <td colspan="4"><strong>إجمالي المبيعات</strong></td>
-          <td colspan="2"><span dir="ltr" id="totalSales"></span> درهم</td>
-        </tr>
-        <tr class="total-row">
-          <td colspan="4"><strong>تكلفة البضائع</strong></td>
-          <td colspan="2"><span dir="ltr" id="totalCost"></span> درهم</td>
-        </tr>
-        <tr class="total-row">
-          <td colspan="4"><strong>إجمالي المصاريف</strong></td>
-          <td colspan="2"><span dir="ltr" id="totalExpenses"></span> درهم</td>
-        </tr>
-        <tr class="total-row">
-          <td colspan="4"><strong>الأرباح</strong></td>
-          <td colspan="2"><span dir="ltr" id="profit"></span> درهم</td>
-        </tr>
-      </tbody>
-    </table>
-
-    <div class="footer">
-      شكرًا لتعاملكم مع صيدلية المستقبل. إذا كانت لديك أي استفسارات، يرجى التواصل معنا.
-    </div>
-  </div>
-
-  <script>
-    // إعداد Firebase - استبدل هذه القيم ببيانات مشروعك
-   // For Firebase JS SDK v7.20.0 and later, measurementId is optional
-const firebaseConfig = {
-  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-  authDomain: "pharmacy-system-9def6.firebaseapp.com",
-  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
-  projectId: "pharmacy-system-9def6",
-  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-  messagingSenderId: "630855008414",
-  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-  measurementId: "G-LC5NDKP6QZ"
-};
-
-    // تهيئة Firebase
-    firebase.initializeApp(firebaseConfig);
-    const database = firebase.database();
-
-    async function generateInvoice() {
-      const now = new Date();
-      const month = now.toISOString().slice(0, 7); // مثل: "2025-04"
-
-      try {
-        // جلب المنتجات
-        const productsSnapshot = await database.ref("products").once("value");
-        let totalSales = 0;
-        let totalCost = 0;  // تكلفة شراء المنتجات المباعة
-        let soldProducts = [];
-
-        productsSnapshot.forEach(childSnap => {
-          const product = childSnap.val();
-          const soldCount = product.maxQuantity - product.quantity;
-
-          if (soldCount > 0) {
-            const salesAmount = soldCount * product.sellingPrice;
-            const costAmount = soldCount * product.buyingPrice;
-
-            totalSales += salesAmount;
-            totalCost += costAmount;
-
-            soldProducts.push({
-              name: product.name,
-              quantity: soldCount,
-              sellingPrice: product.sellingPrice,
-              buyingPrice: product.buyingPrice,
-              amount: salesAmount
-            });
-          }
-        });
-
-        if (soldProducts.length === 0) {
-          alert("لم يتم بيع أي منتجات خلال هذا الشهر.");
-          return;
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>نظام الفواتير - صيدليتي</title>
+    <style>
+        :root {
+            --primary-color: #4361ee;
+            --secondary-color: #3a0ca3;
+            --accent-color: #4895ef;
+            --current-month-color: #f72585;
+            --dark-color: #2b2d42;
+            --light-color: #f8f9fa;
+            --success-color: #4cc9f0;
+            --warning-color: #f8961e;
+            --danger-color: #f72585;
+            --border-radius: 10px;
+            --box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            --mobile-box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            --transition: all 0.3s ease;
+        }
+        
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', 'Tahoma', sans-serif;
+        }
+        
+        body {
+            background-color: #f5f7ff;
+            color: var(--dark-color);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 15px;
+            width: 100%;
+        }
+        
+        /* تصميم الهيدر */
+        .header {
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            color: white;
+            padding: 25px 0;
+            border-radius: var(--border-radius);
+            margin-bottom: 20px;
+            box-shadow: var(--box-shadow);
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(255,255,255,0.15) 0%, rgba(255,255,255,0) 70%);
+            transform: rotate(30deg);
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            position: relative;
+        }
+        
+        .header p {
+            font-size: 1rem;
+            opacity: 0.9;
+            position: relative;
+        }
+        
+        .header i {
+            margin-left: 8px;
+        }
+        
+        /* تصميم أزرار التقارير الجديدة */
+        .report-buttons {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+        
+        .report-btn {
+            min-width: 220px;
+            background: white;
+            border: none;
+            border-radius: var(--border-radius);
+            padding: 18px 25px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+            z-index: 1;
+        }
+        
+        .report-btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+            z-index: -1;
+            transition: var(--transition);
+        }
+        
+        .report-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.15);
+        }
+        
+        .report-btn:hover::before {
+            transform: scale(1.05);
+        }
+        
+        .report-btn i {
+            margin-left: 10px;
+            font-size: 1.3rem;
+        }
+        
+        /* ألوان الأزرار المختلفة */
+        .sales-btn {
+            background: linear-gradient(135deg, #4361ee, #3a0ca3);
+        }
+        
+        .services-btn {
+            background: linear-gradient(135deg, #8a2be2, #6a0dad);
+        }
+        
+        /* محتوى التقارير المخفي */
+        .report-content {
+            display: none;
+            background: white;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            padding: 0;
+            margin-bottom: 20px;
+            overflow: hidden;
+            animation: slideDown 0.4s ease-out;
+            transform-origin: top;
+            opacity: 0;
+            height: 0;
+            transition: all 0.4s ease-out;
+        }
+        
+        @keyframes slideDown {
+            from { 
+                opacity: 0;
+                transform: translateY(-20px);
+            }
+            to { 
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .report-content.active {
+            display: block;
+            opacity: 1;
+            height: auto;
+            padding: 25px;
+            transform: translateY(0);
+        }
+        
+        /* تصميم الأقسام */
+        .report-section {
+            margin-bottom: 25px;
+        }
+        
+        .report-section h2 {
+            color: var(--primary-color);
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid #eee;
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+        }
+        
+        .report-section h2 i {
+            margin-left: 10px;
+            color: var(--accent-color);
+        }
+        
+        /* تصميم عناصر التحكم */
+        .control-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: var(--dark-color);
+            font-size: 1rem;
+        }
+        
+        .select-group {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        
+        select {
+            padding: 12px 15px;
+            border: 1px solid #e9ecef;
+            border-radius: var(--border-radius);
+            font-size: 1rem;
+            transition: var(--transition);
+            background: white;
+            cursor: pointer;
+            min-width: 150px;
+            flex: 1;
+        }
+        
+        select:focus {
+            border-color: var(--accent-color);
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(72, 149, 239, 0.2);
+        }
+        
+        /* تأثير النص الزهري النابض للشهر الحالي */
+        @keyframes textPulse {
+            0% { color: var(--current-month-color); }
+            50% { color: #ff4785; }
+            100% { color: var(--current-month-color); }
+        }
+        
+        .month-selector option.current-month {
+            animation: textPulse 2s infinite;
+            font-weight: bold;
+        }
+        
+        /* تصميم أزرار التقرير */
+        .report-action-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 25px;
+            border: none;
+            border-radius: var(--border-radius);
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: var(--box-shadow);
+            background: linear-gradient(135deg, var(--accent-color), var(--primary-color));
+            color: white;
+            margin-top: 10px;
+        }
+        
+        .report-action-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(67, 97, 238, 0.25);
+        }
+        
+        .report-action-btn i {
+            margin-left: 10px;
+        }
+        
+        /* تصميم الإشعارات */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 15px;
+            max-width: 300px;
+            width: calc(100% - 30px);
+            padding: 15px;
+            border-radius: var(--border-radius);
+            box-shadow: var(--box-shadow);
+            background: white;
+            display: flex;
+            align-items: center;
+            z-index: 1000;
+            transform: translateX(150%);
+            transition: transform 0.4s ease;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .notification i {
+            margin-left: 10px;
+            font-size: 1.3rem;
+        }
+        
+        .notification.success {
+            border-right: 4px solid var(--success-color);
+        }
+        
+        .notification.warning {
+            border-right: 4px solid var(--warning-color);
+        }
+        
+        .notification.error {
+            border-right: 4px solid var(--danger-color);
+        }
+        
+        .notification.info {
+            border-right: 4px solid var(--accent-color);
+        }
+        
+        .notification-content {
+            flex: 1;
+        }
+        
+        .notification-title {
+            font-weight: bold;
+            margin-bottom: 3px;
+            font-size: 0.95rem;
+        }
+        
+        .notification-message {
+            font-size: 0.85rem;
+            color: #495057;
+        }
+        
+        .close-notification {
+            background: none;
+            border: none;
+            cursor: pointer;
+            color: #adb5bd;
+            font-size: 1rem;
+            margin-right: -5px;
+            padding: 5px;
+        }
+        
+        /* تصميم متجاوب */
+        @media (max-width: 768px) {
+            .header {
+                padding: 20px 0;
+            }
+            
+            .header h1 {
+                font-size: 1.5rem;
+            }
+            
+            .header p {
+                font-size: 0.9rem;
+            }
+            
+            .report-buttons {
+                flex-direction: column;
+                gap: 12px;
+                align-items: stretch;
+            }
+            
+            .report-btn {
+                width: 100%;
+                padding: 16px;
+                font-size: 1rem;
+            }
+            
+            .report-content {
+                padding: 20px;
+            }
+            
+            .report-section h2 {
+                font-size: 1.2rem;
+            }
+            
+            .select-group {
+                flex-direction: column;
+                gap: 12px;
+            }
+            
+            select {
+                width: 100%;
+            }
+            
+            .report-action-btn {
+                width: 100%;
+                padding: 14px;
+            }
+        }
+        
+        @media (min-width: 769px) {
+            .header {
+                padding: 30px 0;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .header p {
+                font-size: 1.1rem;
+            }
+            
+            .report-btn {
+                padding: 20px 30px;
+                font-size: 1.2rem;
+            }
+            
+            .report-btn i {
+                font-size: 1.4rem;
+            }
+            
+            .report-content {
+                padding: 30px;
+            }
+            
+            .notification {
+                max-width: 350px;
+                right: 20px;
+            }
         }
 
-        // جلب المصاريف
-        const expensesSnapshot = await database.ref("expenses/" + month).once("value");
-        const expensesData = expensesSnapshot.val() || {};
-        const totalExpenses = parseFloat(expensesData.amount) || 0;
+        /* تحسينات لشاشات الكمبيوتر */
+        @media (min-width: 769px) {
+            .container {
+                padding: 30px;
+            }
+            
+            .header {
+                padding: 40px 0;
+            }
+            
+            .header h1 {
+                font-size: 2.5rem;
+            }
+            
+            .header p {
+                font-size: 1.2rem;
+            }
+            
+            .report-btn {
+                min-width: 250px;
+                padding: 22px 35px;
+                font-size: 1.3rem;
+            }
+            
+            .report-btn i {
+                font-size: 1.5rem;
+            }
+            
+            .report-content {
+                padding: 35px 40px;
+            }
+            
+            .report-section {
+                margin-bottom: 30px;
+            }
+            
+            .report-section h2 {
+                font-size: 1.6rem;
+                margin-bottom: 25px;
+            }
+            
+            .select-group {
+                gap: 20px;
+                margin-bottom: 25px;
+            }
+            
+            select {
+                padding: 14px 18px;
+                font-size: 1.1rem;
+                min-width: 200px;
+            }
+            
+            label {
+                font-size: 1.1rem;
+                margin-bottom: 12px;
+            }
+            
+            .report-action-btn {
+                padding: 15px 30px;
+                font-size: 1.2rem;
+            }
+            
+            .notification {
+                max-width: 400px;
+                right: 30px;
+                padding: 20px;
+            }
+            
+            .notification-title {
+                font-size: 1.1rem;
+            }
+            
+            .notification-message {
+                font-size: 0.95rem;
+            }
+        }
 
-        // حساب الربح
-        const profit = totalSales - totalCost - totalExpenses;
+        /* تحسينات إضافية للشاشات الكبيرة جداً */
+        @media (min-width: 1200px) {
+            .report-content {
+                padding: 40px 50px;
+            }
+            
+            .select-group {
+                gap: 25px;
+            }
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- رأس الصفحة المطور -->
+        <header class="header">
+            <h1><i class="fas fa-file-invoice-dollar"></i> نظام إدارة الفواتير</h1>
+            <p>نظام متكامل لإدارة فواتير المبيعات والخدمات الشهرية</p>
+        </header>
+        
+        <!-- أزرار التقارير الجديدة -->
+        <div class="report-buttons">
+            <button class="report-btn sales-btn" onclick="toggleReport('sales-report')">
+                <i class="fas fa-cash-register"></i> تقارير المبيعات
+            </button>
+            <button class="report-btn services-btn" onclick="toggleReport('services-report')">
+                <i class="fas fa-concierge-bell"></i> تقارير الخدمات
+            </button>
+        </div>
+        
+        <!-- محتوى تقارير المبيعات -->
+        <div id="sales-report" class="report-content">
+            <div class="report-section">
+                <h2><i class="fas fa-chart-line"></i> كشوفات المبيعات الشهرية</h2>
+                
+                <div class="select-group">
+                    <div class="control-group">
+                        <label for="sales-year">اختر السنة</label>
+                        <select id="sales-year" class="year-selector" onchange="updateMonths(this, 'sales-month')"></select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="sales-month">اختر الشهر</label>
+                        <select id="sales-month" class="month-selector"></select>
+                    </div>
+                </div>
+                
+                <button class="report-action-btn" onclick="downloadSalesReport()">
+                    <i class="fas fa-file-pdf"></i> إنشاء تقرير PDF
+                </button>
+            </div>
+        </div>
+        
+        <!-- محتوى تقارير الخدمات -->
+        <div id="services-report" class="report-content">
+            <div class="report-section">
+                <h2><i class="fas fa-chart-pie"></i> كشوفات الخدمات الشهرية</h2>
+                
+                <div class="select-group">
+                    <div class="control-group">
+                        <label for="services-year">اختر السنة</label>
+                        <select id="services-year" class="year-selector" onchange="updateMonths(this, 'services-month')"></select>
+                    </div>
+                    
+                    <div class="control-group">
+                        <label for="services-month">اختر الشهر</label>
+                        <select id="services-month" class="month-selector"></select>
+                    </div>
+                </div>
+                
+                <button class="report-action-btn" onclick="downloadServicesReport()">
+                    <i class="fas fa-file-pdf"></i> إنشاء تقرير PDF
+                </button>
+            </div>
+        </div>
+    </div>
+    
+    <!-- عنصر الإشعارات -->
+    <div id="notification" class="notification">
+        <i class="fas fa-bell"></i>
+        <div class="notification-content">
+            <div class="notification-title" id="notification-title">عنوان الإشعار</div>
+            <div class="notification-message" id="notification-message">محتوى الإشعار هنا</div>
+        </div>
+        <button class="close-notification" onclick="hideNotification()">
+            <i class="fas fa-times"></i>
+        </button>
+    </div>
 
-        // تحويل التاريخ إلى عربي
-        const monthsAr = [
-          "يناير", "فبراير", "مارس", "أبريل", "مايو", "يونيو",
-          "يوليو", "أغسطس", "سبتمبر", "أكتوبر", "نوفمبر", "ديسمبر"
-        ];
-        const arMonth = `${monthsAr[now.getMonth()]} ${now.getFullYear()}`;
-        const today = new Date().toLocaleDateString("ar-EG");
+    <script>
+        // استدعاء بيانات الفواتير من ملف خارجي
+        async function loadInvoicesData() {
+            try {
+                const response = await fetch('invoices.json');
+                if (!response.ok) {
+                    throw new Error('خطأ في تحميل بيانات الفواتير');
+                }
+                return await response.json();
+            } catch (error) {
+                console.error('Error loading invoices:', error);
+                showNotification('error', 'خطأ', 'تعذر تحميل بيانات الفواتير');
+                return { sales: [], services: [] };
+            }
+        }
 
-        // تحديث محتوى الفاتورة
-        document.getElementById("arMonth").innerText = arMonth;
-        document.getElementById("todayDate").innerText = today;
-        document.getElementById("totalSales").innerHTML = `<span dir="ltr">${totalSales.toFixed(2)}</span>`;
-        document.getElementById("totalCost").innerHTML = `<span dir="ltr">${totalCost.toFixed(2)}</span>`;
-        document.getElementById("totalExpenses").innerHTML = `<span dir="ltr">${totalExpenses.toFixed(2)}</span>`;
-        document.getElementById("profit").innerHTML = `<span dir="ltr">${profit.toFixed(2)}</span>`;
+        // تهيئة السنوات والأشهر
+        function initDateSelectors() {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            const startYear = 2023; // سنة بداية العمل
+            
+            // تهيئة قوائم السنوات
+            const yearSelectors = document.querySelectorAll('.year-selector');
+            yearSelectors.forEach(select => {
+                select.innerHTML = '';
+                for (let year = startYear; year <= currentYear; year++) {
+                    const option = document.createElement('option');
+                    option.value = year;
+                    option.textContent = year;
+                    select.appendChild(option);
+                }
+                select.value = currentYear;
+                
+                // تحديث الأشهر عند تحميل الصفحة
+                const monthId = select.id === 'sales-year' ? 'sales-month' : 'services-month';
+                updateMonths(select, monthId);
+            });
+        }
 
-        const tbody = document.getElementById("productsTableBody");
-        tbody.innerHTML = "";
-        soldProducts.forEach((item, index) => {
-          const row = document.createElement("tr");
-          row.innerHTML = `
-            <td>${index + 1}</td>
-            <td>${item.name}</td>
-            <td><span dir="ltr">${item.quantity}</span></td>
-            <td><span dir="ltr">${item.sellingPrice.toFixed(2)}</span></td>
-            <td><span dir="ltr">${item.buyingPrice.toFixed(2)}</span></td>
-            <td><span dir="ltr">${item.amount.toFixed(2)}</span></td>
-          `;
-          tbody.appendChild(row);
+        // تحديث قائمة الأشهر عند تغيير السنة
+        function updateMonths(yearSelect, monthId) {
+            const now = new Date();
+            const currentYear = now.getFullYear();
+            const currentMonth = now.getMonth() + 1;
+            const selectedYear = parseInt(yearSelect.value);
+            
+            const monthSelector = document.getElementById(monthId);
+            const arabicMonths = [
+                'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
+                'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'
+            ];
+            
+            monthSelector.innerHTML = '';
+            
+            for (let i = 0; i < 12; i++) {
+                const monthValue = i + 1;
+                const option = document.createElement('option');
+                option.value = monthValue;
+                option.textContent = arabicMonths[i];
+                
+                // إخفاء الأشهر المستقبلية للسنة الحالية
+                if (selectedYear === currentYear && monthValue > currentMonth) {
+                    option.disabled = true;
+                    option.style.display = 'none';
+                }
+                
+                // تمييز الشهر الحالي
+                if (selectedYear === currentYear && monthValue === currentMonth) {
+                    option.classList.add('current-month');
+                    option.style.color = 'var(--current-month-color)';
+                    option.style.fontWeight = 'bold';
+                }
+                
+                monthSelector.appendChild(option);
+            }
+            
+            // تحديد الشهر الحالي إذا كانت السنة المختارة هي السنة الحالية
+            if (selectedYear === currentYear) {
+                monthSelector.value = currentMonth;
+            } else {
+                monthSelector.value = 1; // يناير كقيمة افتراضية للسنوات الأخرى
+            }
+        }
+
+               // تبديل بين التقارير مع إمكانية الإغلاق
+        function toggleReport(reportId) {
+            const clickedBtn = event.currentTarget;
+            const targetContent = document.getElementById(reportId);
+            
+            // إذا كان الزر نشطًا بالفعل (القائمة مفتوحة)
+            if (clickedBtn.classList.contains('active')) {
+                // إغلاق القائمة
+                clickedBtn.classList.remove('active');
+                targetContent.classList.remove('active');
+            } else {
+                // إغلاق جميع القوائم الأخرى أولاً
+                document.querySelectorAll('.report-content').forEach(content => {
+                    content.classList.remove('active');
+                });
+                
+                // إزالة التنشيط من جميع الأزرار
+                document.querySelectorAll('.report-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                });
+                
+                // فتح القائمة المطلوبة
+                clickedBtn.classList.add('active');
+                targetContent.classList.add('active');
+            }
+        }
+        
+        // تحميل تقرير المبيعات
+        async function downloadSalesReport() {
+            const year = document.getElementById('sales-year').value;
+            const month = document.getElementById('sales-month').value;
+            const monthName = document.querySelector('#sales-month option:checked').textContent;
+            
+            showNotification('info', 'جاري المعالجة', `جارٍ تحضير تقرير مبيعات شهر ${monthName} ${year}`);
+            
+            try {
+                const data = await loadInvoicesData();
+                const filteredInvoices = data.sales.filter(invoice => {
+                    const invoiceDate = new Date(invoice.date);
+                    return invoiceDate.getFullYear() == year && 
+                           (invoiceDate.getMonth() + 1) == month;
+                });
+                
+                if (filteredInvoices.length === 0) {
+                    showNotification('warning', 'لا توجد بيانات', `لا توجد فواتير مبيعات لشهر ${monthName} ${year}`);
+                    return;
+                }
+                
+                setTimeout(() => {
+                    showNotification('success', 'تم بنجاح', `تم إنشاء تقرير مبيعات ${monthName} ${year} (${filteredInvoices.length} فاتورة)`);
+                }, 1500);
+                
+            } catch (error) {
+                showNotification('error', 'خطأ', 'حدث خطأ أثناء إنشاء التقرير');
+            }
+        }
+        
+        // تحميل تقرير الخدمات
+        async function downloadServicesReport() {
+            const year = document.getElementById('services-year').value;
+            const month = document.getElementById('services-month').value;
+            const monthName = document.querySelector('#services-month option:checked').textContent;
+            
+            showNotification('info', 'جاري المعالجة', `جارٍ تحضير تقرير خدمات شهر ${monthName} ${year}`);
+            
+            try {
+                const data = await loadInvoicesData();
+                const filteredInvoices = data.services.filter(invoice => {
+                    const invoiceDate = new Date(invoice.date);
+                    return invoiceDate.getFullYear() == year && 
+                           (invoiceDate.getMonth() + 1) == month;
+                });
+                
+                if (filteredInvoices.length === 0) {
+                    showNotification('warning', 'لا توجد بيانات', `لا توجد فواتير خدمات لشهر ${monthName} ${year}`);
+                    return;
+                }
+                
+                setTimeout(() => {
+                    showNotification('success', 'تم بنجاح', `تم إنشاء تقرير خدمات ${monthName} ${year} (${filteredInvoices.length} فاتورة)`);
+                }, 1500);
+                
+            } catch (error) {
+                showNotification('error', 'خطأ', 'حدث خطأ أثناء إنشاء التقرير');
+            }
+        }
+        
+        // عرض الإشعارات
+        function showNotification(type, title, message) {
+            const notification = document.getElementById('notification');
+            const notificationTitle = document.getElementById('notification-title');
+            const notificationMessage = document.getElementById('notification-message');
+            
+            notification.classList.remove('success', 'warning', 'error', 'info');
+            notification.classList.add(type);
+            
+            notificationTitle.textContent = title;
+            notificationMessage.textContent = message;
+            
+            notification.classList.add('show');
+            
+            setTimeout(() => {
+                notification.classList.remove('show');
+            }, 5000);
+        }
+        
+        // إخفاء الإشعار يدوياً
+        function hideNotification() {
+            document.getElementById('notification').classList.remove('show');
+        }
+        
+        // تهيئة الصفحة عند التحميل
+        document.addEventListener('DOMContentLoaded', function() {
+            initDateSelectors();
         });
-
-        // إظهار الفاتورة مؤقتًا لإنشاء PDF
-        const element = document.getElementById("invoiceContent");
-        element.style.visibility = 'visible';
-        element.style.position = 'static';
-
-        // تحويل HTML إلى PDF
-        const opt = {
-          margin:       1,
-          filename:     `فاتورة_${arMonth}.pdf`,
-          image:        { type: 'jpeg', quality: 0.98 },
-          html2canvas:  { scale: 2 },
-          jsPDF:        { unit: 'in', format: 'letter', orientation: 'portrait' }
-        };
-
-        await html2pdf().set(opt).from(element).save();
-
-        // إعادة إخفاء الفاتورة بعد الانتهاء
-        element.style.visibility = 'hidden';
-        element.style.position = 'absolute';
-        element.style.left = '-9999px';
-
-      } catch (error) {
-        alert("حدث خطأ أثناء جلب البيانات: " + error.message);
-      }
-    }
-  </script>
+    </script>
 </body>
 </html>
