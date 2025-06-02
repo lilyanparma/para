@@ -154,11 +154,11 @@
                 </div>
                 <div class="invoice-row">
                     <span>السعر الأصلي:</span>
-                    <span id="invoiceOriginalPrice">50.00 ر.س</span>
+                    <span id="invoiceOriginalPrice">50.00 AMD</span>
                 </div>
                 <div id="invoiceDiscountRow" class="invoice-row" style="display: none;">
                     <span>الخصم:</span>
-                    <span id="invoiceDiscount">0.00 ر.س (0%)</span>
+                    <span id="invoiceDiscount">0.00 AMD (0%)</span>
                 </div>
                 <div id="invoiceReasonRow" class="invoice-row" style="display: none;">
                     <span>سبب الخصم:</span>
@@ -166,7 +166,7 @@
                 </div>
                 <div class="invoice-row total">
                     <span>المجموع:</span>
-                    <span id="invoiceTotal">50.00 ر.س</span>
+                    <span id="invoiceTotal">50.00 AMD</span>
                 </div>
                 <div class="invoice-row">
                     <span>طريقة الدفع:</span>
@@ -207,14 +207,14 @@
     // دالة لعرض بيانات الفاتورة
     function displayInvoice(invoice) {
         const date = new Date(invoice.date);
-        const dateStr = date.toLocaleDateString('ar-SA') + ' ' + 
-                        date.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+        const dateStr = date.toLocaleDateString('en-GB') + ' ' + 
+                        date.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
         
         document.getElementById('invoiceNumber').textContent = invoice.id;
         document.getElementById('invoiceDate').textContent = dateStr;
         document.getElementById('invoiceProduct').textContent = invoice.product;
-        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' ر.س';
-        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
+        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' AMD';
+        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' AMD';
         
         let paymentMethodText = 'نقداً';
         if (invoice.paymentMethod === 'card') paymentMethodText = 'بطاقة بنكية';
@@ -227,9 +227,9 @@
             
             const discountValue = (invoice.originalPrice - invoice.finalPrice).toFixed(2);
             if (invoice.discount.type === 'percent') {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س (${invoice.discount.value}%)`;
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} AMD (${invoice.discount.value}%)`;
             } else {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س`;
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} AMD`;
             }
             
             document.getElementById('invoiceReason').textContent = invoice.discount.reason || 'لا يوجد سبب مذكور';
