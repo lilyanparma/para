@@ -1,18 +1,20 @@
-
 <!DOCTYPE html>
 <html lang="ar">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PARAMEDICAL LILYAN ROSE</title>
-  <!-- خطوط Google Fonts -->
+  <!-- عنوان الصفحة سيتم تحديثه من ملف الترجمة -->
+  <title data-translate="site_title">PARAMEDICAL LILYAN ROSE</title>
+  
+  <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome للأيقونات -->
+  <!-- Font Awesome -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- مكتبة تأثيرات التمرير -->
+  <!-- مكتبة AOS -->
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  
   <style>
-    /* إعدادات عامة */
+    /* إعادة تعيين الإعدادات العامة */
     * {
       box-sizing: border-box;
       margin: 0;
@@ -31,7 +33,7 @@
       color: #333;
       line-height: 1.6;
     }
-
+    
     /* الهيدر */
     header {
       background: linear-gradient(135deg, #ff66b2, #ff8fab);
@@ -39,10 +41,10 @@
       padding: 18px 0;
       text-align: center;
       position: relative;
-      box-shadow: 0 4px 12px rgba(255, 102, 178, 0.2);
+      box-shadow: 0 4px 12px rgba(255,102,178,0.2);
       z-index: 100;
     }
-
+    
     header h1 {
       margin: 0;
       font-size: 1.6em;
@@ -50,8 +52,8 @@
       font-weight: 700;
       text-shadow: 0 2px 4px rgba(0,0,0,0.1);
     }
-
-    /* زر القائمة */
+    
+    /* زر القائمة (الهامبرغر) */
     .hamburger {
       position: absolute;
       top: 50%;
@@ -60,19 +62,19 @@
       font-size: 26px;
       cursor: pointer;
       user-select: none;
-      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      transition: all 0.3s cubic-bezier(0.25,0.8,0.25,1);
       color: white;
     }
-
+    
     .hamburger:hover {
       transform: translateY(-50%) scale(1.1);
     }
-
+    
     .hamburger:active {
       transform: translateY(-50%) rotate(90deg);
     }
-
-    /* زر الترجمة */
+    
+    /* زر تبديل اللغة */
     .translate-btn {
       position: absolute;
       top: 50%;
@@ -88,27 +90,28 @@
       display: flex;
       align-items: center;
       gap: 8px;
-      z-index: 101;
-      box-shadow: 0 3px 8px rgba(210, 51, 105, 0.2);
+      z-index: 102;
+      box-shadow: 0 3px 8px rgba(210,51,105,0.2);
       transition: all 0.3s ease;
       font-weight: 500;
+      white-space: nowrap; /* لضمان عدم انكسار النص */
     }
-
+    
     .translate-btn:hover {
       background-color: #fce4ed;
       transform: translateY(-50%) scale(1.05);
-      box-shadow: 0 4px 12px rgba(210, 51, 105, 0.3);
+      box-shadow: 0 4px 12px rgba(210,51,105,0.3);
     }
-
+    
     .translate-btn:active {
       transform: translateY(-50%) scale(0.95);
     }
-
+    
     .translate-btn svg {
       width: 20px;
       height: 14px;
     }
-
+    
     /* القائمة الجانبية */
     .sidebar {
       position: fixed;
@@ -119,15 +122,15 @@
       background-color: white;
       padding: 25px;
       overflow-y: auto;
-      transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+      transition: right 0.4s cubic-bezier(0.22,0.61,0.36,1);
       z-index: 1000;
-      box-shadow: -8px 0 25px rgba(255, 102, 178, 0.15);
+      box-shadow: -8px 0 25px rgba(255,102,178,0.15);
     }
-
+    
     .sidebar.active {
       right: 0;
     }
-
+    
     .close-btn {
       position: absolute;
       top: 18px;
@@ -139,21 +142,21 @@
       color: #888;
       transition: all 0.3s ease;
     }
-
+    
     .close-btn:hover {
       color: #ff66b2;
       transform: rotate(90deg);
     }
-
+    
     .sidebar ul {
       list-style: none;
       margin-top: 50px;
     }
-
+    
     .sidebar ul li {
       margin-bottom: 22px;
     }
-
+    
     .sidebar ul li a {
       text-decoration: none;
       color: #555;
@@ -164,8 +167,9 @@
       border-radius: 12px;
       transition: all 0.3s ease;
       font-weight: 500;
+      word-wrap: break-word;
     }
-
+    
     .sidebar ul li a i {
       margin-left: 12px;
       font-size: 20px;
@@ -173,24 +177,24 @@
       text-align: center;
       color: #ff66b2;
     }
-
+    
     .sidebar ul li a:hover {
       color: #d23369;
       background: linear-gradient(to left, #fff0f6, #fff);
       transform: translateX(-8px);
-      box-shadow: 3px 0 15px rgba(255, 102, 178, 0.1);
+      box-shadow: 3px 0 15px rgba(255,102,178,0.1);
     }
-
-    /* شريط التمرير */
+    
+    /* تصميم شريط التمرير للقائمة الجانبية */
     .sidebar::-webkit-scrollbar {
       width: 6px;
     }
-
+    
     .sidebar::-webkit-scrollbar-thumb {
       background-color: #ff8fab;
       border-radius: 3px;
     }
-
+    
     /* طبقة التعتيم */
     .overlay {
       position: fixed;
@@ -205,19 +209,19 @@
       transition: opacity 0.4s ease, visibility 0.4s ease;
       backdrop-filter: blur(3px);
     }
-
+    
     .overlay.active {
       opacity: 1;
       visibility: visible;
     }
-
+    
     /* المحتوى الرئيسي */
     main {
       padding: 30px;
       max-width: 1200px;
       margin: 0 auto;
     }
-
+    
     main h2 {
       text-align: center;
       margin-bottom: 40px;
@@ -227,7 +231,7 @@
       position: relative;
       padding-bottom: 15px;
     }
-
+    
     main h2::after {
       content: "";
       position: absolute;
@@ -239,8 +243,8 @@
       background: linear-gradient(to right, #ff66b2, #ff8fab);
       border-radius: 3px;
     }
-
-    /* الرسوم البيانية */
+    
+    /* رسوم بيانية */
     .chart-container {
       position: relative;
       width: 100%;
@@ -250,16 +254,16 @@
       background: white;
       border-radius: 15px;
       padding: 25px;
-      box-shadow: 0 8px 25px rgba(255, 102, 178, 0.1);
+      box-shadow: 0 8px 25px rgba(255,102,178,0.1);
       overflow: hidden;
       transition: transform 0.3s ease, box-shadow 0.3s ease;
     }
-
+    
     .chart-container:hover {
       transform: translateY(-5px);
-      box-shadow: 0 12px 30px rgba(255, 102, 178, 0.15);
+      box-shadow: 0 12px 30px rgba(255,102,178,0.15);
     }
-
+    
     .chart-container::before {
       content: "";
       position: absolute;
@@ -272,27 +276,27 @@
       animation: shimmer 1.5s infinite;
       z-index: 1;
     }
-
+    
     @keyframes shimmer {
       0% { background-position: 200% 0; }
       100% { background-position: -200% 0; }
     }
-
+    
     .chart-container.loaded::before {
       display: none;
     }
-
+    
     .chart-container canvas {
       position: relative;
       z-index: 2;
       opacity: 0;
       transition: opacity 0.7s ease;
     }
-
+    
     .chart-container.loaded canvas {
       opacity: 1;
     }
-
+    
     /* الفوتر */
     footer {
       background: linear-gradient(to right, #d23369, #ff66b2);
@@ -306,11 +310,11 @@
       right: 0;
       z-index: 99;
     }
-
+    
     footer p {
       margin: 0;
     }
-
+    
     /* تصميم متجاوب */
     @media (max-width: 992px) {
       .sidebar {
@@ -321,7 +325,7 @@
         height: 340px;
       }
     }
-
+    
     @media (max-width: 768px) {
       header h1 {
         font-size: 1.4em;
@@ -342,7 +346,7 @@
         padding: 9px 16px;
       }
     }
-
+    
     @media (max-width: 576px) {
       header {
         padding: 15px 0;
@@ -385,7 +389,7 @@
         padding: 8px 14px;
       }
     }
-
+    
     @media (max-width: 400px) {
       header h1 {
         font-size: 1.1em;
@@ -404,31 +408,25 @@
         font-size: 16px;
       }
     }
-
-    /* تأثيرات الحركة */
+    
+    /* تأثيرات حركة AOS */
     [data-aos] {
       transition: all 0.8s ease;
     }
   </style>
 </head>
 <body>
-
-  <!-- رأس الموقع -->
+  <!-- الهيدر -->
   <header>
-    <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
+    <span class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></span>
+    <h1 data-translate="site_title">PARAMEDICAL LILYAN ROSE</h1>
     <button class="translate-btn" onclick="switchLang()">
-      <svg id="flagIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40">
-        <rect width="60" height="40" fill="#c1272d"/>
-        <path fill="none" stroke="#006233" stroke-width="8" d="M0 20h60"/>
-        <path fill="#006233" d="M25 20a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/>
-        <path fill="#ffc400" d="M27 20a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
-      </svg>
-      <span id="langText">FR</span>
+      <!-- يمكنك إضافة أيقونة علم داخل هذا الزر -->
+      <span id="langText">AR</span>
     </button>
-    <h1 id="siteTitle">PARAMEDICAL LILYAN ROSE</h1>
   </header>
-
- <!-- القائمة الجانبية -->
+  
+  <!-- القائمة الجانبية -->
   <nav id="sidebar" class="sidebar">
     <button class="close-btn" onclick="toggleSidebar()">×</button>
     <ul>
@@ -471,31 +469,29 @@
     </ul>
   </nav>
   <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
-
+  
   <!-- المحتوى الرئيسي -->
   <main>
     <h2 id="mainTitle" data-aos="fade-down" data-translate="main_title">الرئيسية - رسوم بيانية للمبيعات</h2>
-    <!-- رسم بياني شريطي للمبيعات -->
     <div class="chart-container" data-aos="fade-up">
       <canvas id="salesChart"></canvas>
     </div>
-    <!-- رسم بياني دائري -->
     <div class="chart-container" data-aos="fade-up" data-aos-delay="150">
       <canvas id="doughnutChart"></canvas>
     </div>
   </main>
-
-  <!-- التذييل -->
+  
+  <!-- الفوتر -->
   <footer id="footerText" data-translate="footer_text">
     <p>جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE</p>
   </footer>
-
-  <!-- تضمين مكتبة AOS و Chart.js -->
-  <script src="path/to/aos.js"></script>
+  
+  <!-- السكربتات الخارجية -->
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-
+  
   <script>
-    // تهيئة تأثيرات AOS
+    // تهيئة AOS عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', function() {
       AOS.init({
         duration: 800,
@@ -503,14 +499,13 @@
         easing: 'ease-out-quart'
       });
     });
-
+    
     // دوال القائمة الجانبية
     let isSidebarOpen = false;
     function toggleSidebar() {
       const sidebar = document.getElementById('sidebar');
       const overlay = document.getElementById('overlay');
       const body = document.body;
-
       isSidebarOpen = !isSidebarOpen;
       if (isSidebarOpen) {
         sidebar.classList.add('active');
@@ -522,7 +517,7 @@
         body.style.overflow = '';
       }
     }
-
+    
     document.addEventListener('click', function(event) {
       const sidebar = document.getElementById('sidebar');
       const hamburger = document.querySelector('.hamburger');
@@ -533,60 +528,60 @@
         toggleSidebar();
       }
     });
-
+    
     window.addEventListener('resize', function() {
       if (window.innerWidth > 768 && isSidebarOpen) {
         toggleSidebar();
       }
     });
-
+    
     // تهيئة الرسوم البيانية
     function initCharts() {
       if (typeof Chart === 'undefined') {
         setTimeout(initCharts, 100);
         return;
       }
-
+      
       const chartContainers = document.querySelectorAll('.chart-container');
       chartContainers.forEach(container => {
         container.classList.add('loaded');
       });
-
+      
       const salesData = {
         labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
         datasets: [{
           label: 'المبيعات (بالآلاف)',
           data: [18, 25, 12, 15, 8, 14],
-          backgroundColor: 'rgba(255, 105, 180, 0.7)',
-          borderColor: 'rgba(255, 105, 180, 1)',
+          backgroundColor: 'rgba(255,105,180,0.7)',
+          borderColor: 'rgba(255,105,180,1)',
           borderWidth: 2,
           borderRadius: 6,
-          hoverBackgroundColor: 'rgba(255, 105, 180, 0.9)'
+          hoverBackgroundColor: 'rgba(255,105,180,0.9)'
         }]
       };
-
+      
       const doughnutData = {
         labels: ['منتج أ', 'منتج ب', 'منتج ج', 'منتج د'],
         datasets: [{
           label: 'توزيع المنتجات',
           data: [30, 25, 20, 25],
           backgroundColor: [
-            'rgba(255, 105, 180, 0.7)',
-            'rgba(255, 179, 217, 0.7)',
-            'rgba(255, 204, 229, 0.7)',
-            'rgba(255, 228, 242, 0.7)'
+            'rgba(255,105,180,0.7)',
+            'rgba(255,179,217,0.7)',
+            'rgba(255,204,229,0.7)',
+            'rgba(255,228,242,0.7)'
           ],
           borderColor: [
-            'rgba(255, 105, 180, 1)',
-            'rgba(255, 179, 217, 1)',
-            'rgba(255, 204, 229, 1)',
-            'rgba(255, 228, 242, 1)'
+            'rgba(255,105,180,1)',
+            'rgba(255,179,217,1)',
+            'rgba(255,204,229,1)',
+            'rgba(255,228,242,1)'
           ],
           borderWidth: 1,
           hoverOffset: 10
         }]
       };
-
+      
       const commonOptions = {
         responsive: true,
         maintainAspectRatio: false,
@@ -616,7 +611,7 @@
           }
         }
       };
-
+      
       new Chart(
         document.getElementById('salesChart').getContext('2d'),
         {
@@ -631,7 +626,7 @@
                   stepSize: 5,
                   font: { family: 'Tajawal' }
                 },
-                grid: { color: 'rgba(0, 0, 0, 0.05)' }
+                grid: { color: 'rgba(0,0,0,0.05)' }
               },
               x: {
                 grid: { display: false },
@@ -641,7 +636,7 @@
           }
         }
       );
-
+      
       new Chart(
         document.getElementById('doughnutChart').getContext('2d'),
         {
@@ -659,7 +654,7 @@
         }
       );
     }
-
+    
     const observer = new IntersectionObserver((entries) => {
       entries.forEach(entry => {
         if (entry.isIntersecting) {
@@ -668,7 +663,7 @@
         }
       });
     }, { threshold: 0.1 });
-
+    
     document.addEventListener('DOMContentLoaded', function() {
       const chartsSection = document.querySelectorAll('.chart-container');
       if (chartsSection) {
@@ -676,14 +671,13 @@
           observer.observe(chart);
         });
       }
-      // إغلاق القائمة عند النقر على رابط من القائمة الجانبية
       document.querySelectorAll('.sidebar a').forEach(link => {
         link.addEventListener('click', toggleSidebar);
       });
     });
   </script>
-
-  <!-- تضمين ملف الترجمة المشترك translate.js -->
+  
+  <!-- تضمين ملف الترجمة المشترك -->
   <script src="translate.js"></script>
 </body>
 </html>
