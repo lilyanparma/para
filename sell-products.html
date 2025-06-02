@@ -857,7 +857,7 @@
                 
                 <div id="fixedDiscountGroup" class="form-group" style="display: none;">
                     <label for="discountAmount" class="form-label">
-                        <i class="fas fa-money-bill-wave"></i> مبلغ الخصم (ر.س)
+                        <i class="fas fa-money-bill-wave"></i> مبلغ الخصم (MAD)
                     </label>
                     <input type="number" id="discountAmount" class="form-control" min="0" placeholder="5.00">
                 </div>
@@ -892,7 +892,7 @@
                 <div class="final-price-label">
                     <i class="fas fa-receipt"></i> السعر النهائي
                 </div>
-                <div id="finalPriceValue" class="final-price-value">50.00 ر.س</div>
+                <div id="finalPriceValue" class="final-price-value">50.00 MAD</div>
             </div>
             
             <div class="action-buttons">
@@ -1110,7 +1110,7 @@
         
         function displayProduct(product) {
             elements.productName.textContent = product.name;
-            elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${product.price.toFixed(2)} ر.س`;
+            elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${product.price.toFixed(2)} MAD`;
             
             // تحديث عرض كمية المخزون مع التأثيرات
             const stockElement = elements.productQuantity;
@@ -1156,7 +1156,7 @@
             }
             
             elements.productImage.src = product.image;
-            elements.finalPriceValue.textContent = product.price.toFixed(2) + ' ر.س';
+            elements.finalPriceValue.textContent = product.price.toFixed(2) + ' MAD';
             elements.productDetails.style.display = 'block';
             
             // تعطيل زر البيع إذا لم يكن هناك مخزون
@@ -1178,7 +1178,7 @@
         // دالة مساعدة لتهيئة التاريخ
         function formatDate(dateString) {
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
-            return new Date(dateString).toLocaleDateString('ar-SA', options);
+            return new Date(dateString).toLocaleDateString('en-US', options);
         }
         
         // 8. نظام الخصم
@@ -1461,7 +1461,7 @@
         }
         
         function showReturnSuccess(productName, productPrice) {
-            elements.returnSuccessText.textContent = `تم إرجاع ${productName} بقيمة ${productPrice.toFixed(2)} ر.س`;
+            elements.returnSuccessText.textContent = `تم إرجاع ${productName} بقيمة ${productPrice.toFixed(2)} MAD`;
             elements.returnSuccessNotice.style.display = 'block';
             
             setTimeout(() => {
