@@ -138,15 +138,15 @@
       <div class="report-summary">
           <div class="summary-card">
               <div class="summary-title">إجمالي المبيعات</div>
-              <div class="summary-value" id="totalSales">0.00 ر.س</div>
+              <div class="summary-value" id="totalSales">0.00 MAD</div>
           </div>
           <div class="summary-card">
               <div class="summary-title">إجمالي التكاليف</div>
-              <div class="summary-value" id="totalCosts">0.00 ر.س</div>
+              <div class="summary-value" id="totalCosts">0.00 MAD</div>
           </div>
           <div class="summary-card">
               <div class="summary-title">صافي الأرباح</div>
-              <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
+              <div class="summary-value profit" id="netProfit">0.00 MAD</div>
           </div>
       </div>
       
@@ -222,7 +222,7 @@
       function renderData() {
           // تعيين الفترة الزمنية وتاريخ الإنشاء
           document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
-          document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-SA');
+          document.getElementById('creationDate').textContent = new Date().toLocaleDateString('en-GB');
           
           // حساب الإجماليات وبناء الجدول
           let totalSales = 0;
@@ -244,22 +244,22 @@
               
               transactionsBody += `
                   <tr>
-                      <td>${new Date(item.date).toLocaleDateString('ar-SA')}</td>
+                      <td>${new Date(item.date).toLocaleDateString('en-GB')}</td>
                       <td>${item.product || 'غير معروف'}</td>
                       <td>${item.pharmacy || 'غير معروف'}</td>
-                      <td>${(item.finalPrice || 0).toFixed(2)} ر.س</td>
-                      <td>${(costVal || 0).toFixed(2)} ر.س</td>
+                      <td>${(item.finalPrice || 0).toFixed(2)} MAD</td>
+                      <td>${(costVal || 0).toFixed(2)} MAD</td>
                       <td class="${profit >= 0 ? 'transaction-profit' : 'transaction-loss'}">
-                          ${profit.toFixed(2)} ر.س
+                          ${profit.toFixed(2)} MAD
                       </td>
                   </tr>
               `;
           });
           
           // تحديث الحقول الإجمالية والجدول في الصفحة
-          document.getElementById('totalSales').textContent = totalSales.toFixed(2) + ' ر.س';
-          document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' ر.س';
-          document.getElementById('netProfit').textContent = (totalSales - totalCosts).toFixed(2) + ' ر.س';
+          document.getElementById('totalSales').textContent = totalSales.toFixed(2) + ' MAD';
+          document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' MAD';
+          document.getElementById('netProfit').textContent = (totalSales - totalCosts).toFixed(2) + ' MAD';
           
           document.getElementById('transactionsBody').innerHTML = transactionsBody || `
               <tr>
