@@ -620,7 +620,7 @@
     // معلومات المنتج
     info.innerHTML = `
       ${imageHtml}
-      <p><strong>السعر:</strong> ${product.price ? parseFloat(product.price).toFixed(2) + ' درهم' : 'غير محدد'}</p>
+      <p><strong>السعر:</strong> ${product.price ? parseFloat(product.price).toFixed(2) + ' MAD' : 'غير محدد'}</p>
       <p><strong>الكمية:</strong> ${product.quantity || 0} ${stockBadge}</p>
       ${expiryHtml}
       <p><strong>رقم المنتج:</strong> ${key}</p>
@@ -685,7 +685,7 @@
     if (!dateString) return 'غير محدد';
     const date = new Date(dateString);
     const options = { year: 'numeric', month: 'long', day: 'numeric' };
-    return date.toLocaleDateString('ar-EG', options);
+    return date.toLocaleDateString('en-GB', options);
   }
 
   // دالة التحقق من صلاحية المنتج
