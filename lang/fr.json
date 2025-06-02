@@ -9,34 +9,4 @@
   "main_title": "Accueil - Graphiques de ventes",
   "footer_text": "Tous droits réservés &copy; 2025 LILYAN ROSE"
 }
-{
-  "invoice": {
-    "title": "Facture de vente",
-    "pharmacy": "Pharmacie",
-    "number": "Numéro de facture",
-    "date": "Date et heure",
-    "product": "Produit",
-    "originalPrice": "Prix original",
-    "discount": "Remise",
-    "discountReason": "Raison de la remise",
-    "total": "Total",
-    "paymentMethod": "Mode de paiement",
-    "paymentMethods": {
-      "cash": "Espèces",
-      "card": "Carte bancaire",
-      "transfer": "Virement bancaire"
-    },
-    "noReason": "Aucune raison mentionnée",
-    "none": "Aucun",
-    "footer": "Merci pour votre confiance - Pour toute question"
-  },
-  "buttons": {
-    "print": "Imprimer",
-    "close": "Fermer"
-  },
-  "errors": {
-    "loadError": "Une erreur s'est produite lors du chargement de la facture",
-    "parseError": "Erreur dans l'analyse des données de la facture"
-  },
-  "currency": "AMD"
-}
+
