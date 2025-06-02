@@ -1,231 +1,277 @@
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>كشف أرباح المبيعات</title>
-    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
-        * {
-            box-sizing: border-box;
-            margin: 0;
-            padding: 0;
-            font-family: 'Tajawal', sans-serif;
-        }
-        
-        body {
-            background: #f5f7fa;
-            color: #2c3e50;
-            line-height: 1.6;
-            padding: 10px;
-        }
-        
-        .report-container {
-            max-width: 100%;
-            margin: 0 auto;
-            background: white;
-            border-radius: 8px;
-            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
-            overflow: hidden;
-        }
-        
-        .report-header {
-            background: linear-gradient(135deg, #3498db, #2980b9);
-            color: white;
-            padding: 15px;
-            text-align: center;
-        }
-        
-        .report-title {
-            font-size: 22px;
-            margin-bottom: 5px;
-        }
-        
-        .report-period {
-            font-size: 16px;
-        }
-        
-        .report-summary {
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            padding: 15px;
-            background: #ecf0f1;
-        }
-        
-        .summary-card {
-            flex: 1;
-            min-width: 120px;
-            background: white;
-            padding: 10px;
-            border-radius: 5px;
-            text-align: center;
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
-        }
-        
-        .summary-title {
-            font-size: 14px;
-            color: #7f8c8d;
-            margin-bottom: 5px;
-        }
-        
-        .summary-value {
-            font-size: 18px;
-            font-weight: bold;
-            color: #2c3e50;
-        }
-        
-        .profit {
-            color: #27ae60;
-        }
-        
-        .transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 10px;
-            font-size: 14px;
-        }
-        
-        .transactions-table th {
-            background: #3498db;
-            color: white;
-            padding: 8px;
-            text-align: right;
-        }
-        
-        .transactions-table td {
-            padding: 8px;
-            border-bottom: 1px solid #ecf0f1;
-        }
-        
-        .transaction-profit {
-            color: #27ae60;
-            font-weight: bold;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 15px;
-            font-size: 12px;
-            color: #7f8c8d;
-        }
-        
-        @media print {
-            body {
-                padding: 0;
-                background: white;
-            }
-            
-            .report-container {
-                box-shadow: none;
-            }
-        }
-    </style>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>كشف أرباح المبيعات</title>
+  <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+
+  <!-- إضافة سكربتات Firebase -->
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
+  <style>
+      * {
+          box-sizing: border-box;
+          margin: 0;
+          padding: 0;
+          font-family: 'Tajawal', sans-serif;
+      }
+      
+      body {
+          background: #f5f7fa;
+          color: #2c3e50;
+          line-height: 1.6;
+          padding: 10px;
+      }
+      
+      .report-container {
+          max-width: 100%;
+          margin: 0 auto;
+          background: white;
+          border-radius: 8px;
+          box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+          overflow: hidden;
+      }
+      
+      .report-header {
+          background: linear-gradient(135deg, #3498db, #2980b9);
+          color: white;
+          padding: 15px;
+          text-align: center;
+      }
+      
+      .report-title {
+          font-size: 22px;
+          margin-bottom: 5px;
+      }
+      
+      .report-period {
+          font-size: 16px;
+      }
+      
+      .report-summary {
+          display: flex;
+          flex-wrap: wrap;
+          gap: 10px;
+          padding: 15px;
+          background: #ecf0f1;
+      }
+      
+      .summary-card {
+          flex: 1;
+          min-width: 120px;
+          background: white;
+          padding: 10px;
+          border-radius: 5px;
+          text-align: center;
+          box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      }
+      
+      .summary-title {
+          font-size: 14px;
+          color: #7f8c8d;
+          margin-bottom: 5px;
+      }
+      
+      .summary-value {
+          font-size: 18px;
+          font-weight: bold;
+          color: #2c3e50;
+      }
+      
+      .profit {
+          color: #27ae60;
+      }
+      
+      .transactions-table {
+          width: 100%;
+          border-collapse: collapse;
+          margin-top: 10px;
+          font-size: 14px;
+      }
+      
+      .transactions-table th {
+          background: #3498db;
+          color: white;
+          padding: 8px;
+          text-align: right;
+      }
+      
+      .transactions-table td {
+          padding: 8px;
+          border-bottom: 1px solid #ecf0f1;
+      }
+      
+      .transaction-profit {
+          color: #27ae60;
+          font-weight: bold;
+      }
+      
+      .footer {
+          text-align: center;
+          padding: 15px;
+          font-size: 12px;
+          color: #7f8c8d;
+      }
+      
+      @media print {
+          body {
+              padding: 0;
+              background: white;
+          }
+          
+          .report-container {
+              box-shadow: none;
+          }
+      }
+  </style>
 </head>
 <body>
-    <div class="report-container">
-        <div class="report-header">
-            <h1 class="report-title"><i class="fas fa-cash-register"></i> كشف أرباح المبيعات</h1>
-            <p class="report-period" id="reportPeriod"></p>
-        </div>
-        
-        <div class="report-summary">
-            <div class="summary-card">
-                <div class="summary-title">إجمالي المبيعات</div>
-                <div class="summary-value" id="totalSales">0.00 ر.س</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">إجمالي التكاليف</div>
-                <div class="summary-value" id="totalCosts">0.00 ر.س</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">صافي الأرباح</div>
-                <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
-            </div>
-        </div>
-        
-        <table class="transactions-table">
-            <thead>
-                <tr>
-                    <th width="15%">التاريخ</th>
-                    <th width="25%">المنتج</th>
-                    <th width="15%">الصيدلية</th>
-                    <th width="15%">سعر البيع</th>
-                    <th width="15%">التكلفة</th>
-                    <th width="15%">الربح</th>
-                </tr>
-            </thead>
-            <tbody id="transactionsBody">
-                <!-- سيتم ملؤه بواسطة JavaScript -->
-            </tbody>
-        </table>
-        
-        <div class="footer">
-            <p>تم إنشاء الكشف بتاريخ <span id="creationDate"></span></p>
-            <button onclick="window.print()" style="margin-top:10px; padding:5px 10px; background:#3498db; color:white; border:none; border-radius:3px;">
-                <i class="fas fa-print"></i> طباعة الكشف
-            </button>
-        </div>
-    </div>
+  <div class="report-container">
+      <div class="report-header">
+          <h1 class="report-title"><i class="fas fa-cash-register"></i> كشف أرباح المبيعات</h1>
+          <p class="report-period" id="reportPeriod"></p>
+      </div>
+      
+      <div class="report-summary">
+          <div class="summary-card">
+              <div class="summary-title">إجمالي المبيعات</div>
+              <div class="summary-value" id="totalSales">0.00 ر.س</div>
+          </div>
+          <div class="summary-card">
+              <div class="summary-title">إجمالي التكاليف</div>
+              <div class="summary-value" id="totalCosts">0.00 ر.س</div>
+          </div>
+          <div class="summary-card">
+              <div class="summary-title">صافي الأرباح</div>
+              <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
+          </div>
+      </div>
+      
+      <table class="transactions-table">
+          <thead>
+              <tr>
+                  <th width="15%">التاريخ</th>
+                  <th width="25%">المنتج</th>
+                  <th width="15%">الصيدلية</th>
+                  <th width="15%">سعر البيع</th>
+                  <th width="15%">التكلفة</th>
+                  <th width="15%">الربح</th>
+              </tr>
+          </thead>
+          <tbody id="transactionsBody">
+              <!-- سيتم ملؤه بواسطة JavaScript -->
+          </tbody>
+      </table>
+      
+      <div class="footer">
+          <p>تم إنشاء الكشف بتاريخ <span id="creationDate"></span></p>
+          <button onclick="window.print()" style="margin-top:10px; padding:5px 10px; background:#3498db; color:white; border:none; border-radius:3px;">
+              <i class="fas fa-print"></i> طباعة الكشف
+          </button>
+      </div>
+  </div>
 
-    <script>
-        // استخراج البيانات من URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const year = urlParams.get('year') || new Date().getFullYear();
-        const month = urlParams.get('month') || new Date().getMonth() + 1;
-        const data = JSON.parse(urlParams.get('data') || '[]');
-        
-        // أسماء الأشهر العربية
-        const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-        
-        // عرض البيانات
-        function renderData() {
-            // تعيين الفترة الزمنية
-            document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
-            
-            // تعيين تاريخ الإنشاء
-            document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-SA');
-            
-            // حساب الإجماليات
-            let totalSales = 0;
-            let totalCosts = 0;
-            let transactionsBody = '';
-            
-            data.forEach((item, index) => {
-                const profit = (item.finalPrice || 0) - (item.cost || 0);
-                totalSales += item.finalPrice || 0;
-                totalCosts += item.cost || 0;
-                
-                transactionsBody += `
-                    <tr>
-                        <td>${new Date(item.date).toLocaleDateString('ar-SA')}</td>
-                        <td>${item.product || 'غير معروف'}</td>
-                        <td>${item.pharmacy || 'غير معروف'}</td>
-                        <td>${(item.finalPrice || 0).toFixed(2)} ر.س</td>
-                        <td>${(item.cost || 0).toFixed(2)} ر.س</td>
-                        <td class="${profit >= 0 ? 'transaction-profit' : 'transaction-loss'}">
-                            ${profit.toFixed(2)} ر.س
-                        </td>
-                    </tr>
-                `;
+  <script>
+      // إعدادات Firebase
+      const firebaseConfig = {
+        apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+        authDomain: "pharmacy-system-9def6.firebaseapp.com",
+        databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+        projectId: "pharmacy-system-9def6",
+        storageBucket: "pharmacy-system-9def6.firebasestorage.app",
+        messagingSenderId: "630855008414",
+        appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+        measurementId: "G-LC5NDKP6QZ"
+      };
+      // تهيئة Firebase
+      firebase.initializeApp(firebaseConfig);
+      const database = firebase.database();
+      
+      // تعريف مصفوفة لتخزين بيانات المنتجات
+      let allProducts = [];
+
+      // استخراج البيانات من URL (بيانات الفواتير)
+      const urlParams = new URLSearchParams(window.location.search);
+      const year = urlParams.get('year') || new Date().getFullYear();
+      const month = urlParams.get('month') || new Date().getMonth() + 1;
+      const data = JSON.parse(urlParams.get('data') || '[]');
+      
+      // أسماء الأشهر العربية
+      const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+      
+      // دالة لتحميل بيانات المنتجات من Firebase
+      function loadProducts() {
+          return database.ref("products").once("value")
+            .then(snapshot => {
+                allProducts = [];
+                snapshot.forEach(childSnapshot => {
+                    let product = childSnapshot.val();
+                    product.id = childSnapshot.key;
+                    allProducts.push(product);
+                });
+            })
+            .catch(error => {
+                console.error("Error loading products:", error);
             });
-            
-            // تحديث الإجماليات
-            document.getElementById('totalSales').textContent = totalSales.toFixed(2) + ' ر.س';
-            document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' ر.س';
-            document.getElementById('netProfit').textContent = (totalSales - totalCosts).toFixed(2) + ' ر.س';
-            
-            // عرض المعاملات
-            document.getElementById('transactionsBody').innerHTML = transactionsBody || `
-                <tr>
-                    <td colspan="6" style="text-align:center; padding:20px;">لا توجد معاملات في هذه الفترة</td>
-                </tr>
-            `;
-        }
-        
-        // تشغيل عند تحميل الصفحة
-        document.addEventListener('DOMContentLoaded', renderData);
-    </script>
+      }
+      
+      // دالة عرض البيانات
+      function renderData() {
+          // تعيين الفترة الزمنية وتاريخ الإنشاء
+          document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
+          document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-SA');
+          
+          // حساب الإجماليات وبناء الجدول
+          let totalSales = 0;
+          let totalCosts = 0;
+          let transactionsBody = '';
+          
+          data.forEach((item) => {
+              // البحث في فاتورة المبيعات: إذا لم يكن حقل cost موجودًا في الفاتورة، نبحث عنه في allProducts باستخدام اسم المنتج
+              let costVal = item.cost;
+              if (typeof costVal === 'undefined' || costVal === null) {
+                  const productData = allProducts.find(prod => prod.name === item.product);
+                  costVal = productData ? productData.cost : 0;
+              }
+              
+              // حساب الربح لكل معاملة
+              const profit = (item.finalPrice || 0) - costVal;
+              totalSales += item.finalPrice || 0;
+              totalCosts += costVal;
+              
+              transactionsBody += `
+                  <tr>
+                      <td>${new Date(item.date).toLocaleDateString('ar-SA')}</td>
+                      <td>${item.product || 'غير معروف'}</td>
+                      <td>${item.pharmacy || 'غير معروف'}</td>
+                      <td>${(item.finalPrice || 0).toFixed(2)} ر.س</td>
+                      <td>${(costVal || 0).toFixed(2)} ر.س</td>
+                      <td class="${profit >= 0 ? 'transaction-profit' : 'transaction-loss'}">
+                          ${profit.toFixed(2)} ر.س
+                      </td>
+                  </tr>
+              `;
+          });
+          
+          // تحديث الحقول الإجمالية والجدول في الصفحة
+          document.getElementById('totalSales').textContent = totalSales.toFixed(2) + ' ر.س';
+          document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' ر.س';
+          document.getElementById('netProfit').textContent = (totalSales - totalCosts).toFixed(2) + ' ر.س';
+          
+          document.getElementById('transactionsBody').innerHTML = transactionsBody || `
+              <tr>
+                  <td colspan="6" style="text-align:center; padding:20px;">لا توجد معاملات في هذه الفترة</td>
+              </tr>
+          `;
+      }
+      
+      // عند تحميل الصفحة، أولاً نحمل بيانات المنتجات ثم نقوم بعرض البيانات
+      document.addEventListener('DOMContentLoaded', function() {
+          loadProducts().then(renderData);
+      });
+  </script>
 </body>
 </html>
