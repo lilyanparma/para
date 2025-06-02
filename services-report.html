@@ -139,15 +139,15 @@
         <div class="report-summary">
             <div class="summary-card">
                 <div class="summary-title">إجمالي الإيرادات</div>
-                <div class="summary-value" id="totalRevenue">0.00 ر.س</div>
+                <div class="summary-value" id="totalRevenue">0.00 MAD</div>
             </div>
             <div class="summary-card">
                 <div class="summary-title">إجمالي التكاليف</div>
-                <div class="summary-value" id="totalCosts">0.00 ر.س</div>
+                <div class="summary-value" id="totalCosts">0.00 MAD</div>
             </div>
             <div class="summary-card">
                 <div class="summary-title">صافي الأرباح</div>
-                <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
+                <div class="summary-value profit" id="netProfit">0.00 MAD</div>
             </div>
         </div>
         
@@ -190,7 +190,7 @@
             document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
             
             // تعيين تاريخ الإنشاء
-            document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-SA');
+            document.getElementById('creationDate').textContent = new Date().toLocaleDateString('en-GB');
             
             // حساب الإجماليات
             let totalRevenue = 0;
@@ -204,21 +204,21 @@
                 
                 transactionsBody += `
                     <tr>
-                        <td>${new Date(item.date).toLocaleDateString('ar-SA')}</td>
+                        <td>${new Date(item.date).toLocaleDateString('en-GB')}</td>
                         <td>${item.name || 'غير معروف'}</td>
                         <td><div class="service-details">${item.details || 'لا يوجد تفاصيل'}</div></td>
-                        <td>${(item.price || 0).toFixed(2)} ر.س</td>
+                        <td>${(item.price || 0).toFixed(2)} MAD</td>
                         <td class="${profit >= 0 ? 'transaction-profit' : 'transaction-loss'}">
-                            ${profit.toFixed(2)} ر.س
+                            ${profit.toFixed(2)} MAD
                         </td>
                     </tr>
                 `;
             });
             
             // تحديث الإجماليات
-            document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2) + ' ر.س';
-            document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' ر.س';
-            document.getElementById('netProfit').textContent = (totalRevenue - totalCosts).toFixed(2) + ' ر.س';
+            document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2) + ' MAD';
+            document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' MAD';
+            document.getElementById('netProfit').textContent = (totalRevenue - totalCosts).toFixed(2) + ' MAD';
             
             // عرض المعاملات
             document.getElementById('transactionsBody').innerHTML = transactionsBody || `
