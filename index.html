@@ -463,17 +463,19 @@
 }
 
     function setFranceFlag() {
-      const flagIcon = document.getElementById("flagIcon");
-      if(flagIcon) {
-        flagIcon.innerHTML = `
-          <svg width="24" height="24" viewBox="0 0 60 40">
-            <rect width="20" height="40" fill="#0055A4"></rect>
-            <rect x="20" width="20" height="40" fill="white"></rect>
-            <rect x="40" width="20" height="40" fill="#EF4135"></rect>
-          </svg>
-        `;
-      }
-    }
+  const flagIcon = document.getElementById("flagIcon");
+  if (flagIcon) {
+    flagIcon.innerHTML = `
+      <svg width="24" height="16" viewBox="0 0 60 40" xmlns="http://www.w3.org/2000/svg">
+        <rect width="20" height="40" fill="#0055A4"></rect>
+        <rect x="20" width="20" height="40" fill="white"></rect>
+        <rect x="40" width="20" height="40" fill="#EF4135"></rect>
+      </svg>
+    `;
+  }
+  document.getElementById("langText").textContent = "FR";
+}
+
     
     /* --- دوال الترجمة باستخدام data-translate --- */
     function applyTranslations(translations) {
