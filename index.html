@@ -1,16 +1,16 @@
 <!DOCTYPE html>
-<html lang="ar">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <!-- عنوان الصفحة سيتم تحديثه من ملف الترجمة -->
+  <!-- عنوان الصفحة سيُترجم باستخدام data-translate -->
   <title data-translate="site_title">PARAMEDICAL LILYAN ROSE</title>
   
   <!-- Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
-  <!-- Font Awesome -->
+  <!-- Font Awesome للأيقونات -->
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-  <!-- مكتبة AOS -->
+  <!-- مكتبة AOS لتأثيرات التمرير -->
   <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
   
   <style>
@@ -107,11 +107,6 @@
       transform: translateY(-50%) scale(0.95);
     }
     
-    .translate-btn svg {
-      width: 20px;
-      height: 14px;
-    }
-    
     /* القائمة الجانبية */
     .sidebar {
       position: fixed;
@@ -185,7 +180,7 @@
       box-shadow: 3px 0 15px rgba(255,102,178,0.1);
     }
     
-    /* تصميم شريط التمرير للقائمة الجانبية */
+    /* شريط التمرير */
     .sidebar::-webkit-scrollbar {
       width: 6px;
     }
@@ -315,101 +310,7 @@
       margin: 0;
     }
     
-    /* تصميم متجاوب */
-    @media (max-width: 992px) {
-      .sidebar {
-        width: 260px;
-      }
-      
-      .chart-container {
-        height: 340px;
-      }
-    }
-    
-    @media (max-width: 768px) {
-      header h1 {
-        font-size: 1.4em;
-        padding: 0 70px;
-      }
-      
-      .chart-container {
-        height: 300px;
-        padding: 20px;
-      }
-      
-      main h2 {
-        font-size: 1.7em;
-      }
-      
-      .sidebar ul li a {
-        font-size: 18px;
-        padding: 9px 16px;
-      }
-    }
-    
-    @media (max-width: 576px) {
-      header {
-        padding: 15px 0;
-      }
-      
-      header h1 {
-        font-size: 1.2em;
-        padding: 0 65px;
-      }
-      
-      .hamburger {
-        left: 15px;
-        font-size: 24px;
-      }
-      
-      .translate-btn {
-        right: 15px;
-        padding: 7px 12px;
-        font-size: 13px;
-      }
-      
-      .sidebar {
-        width: 240px;
-        padding: 20px;
-      }
-      
-      .chart-container {
-        height: 270px;
-        margin: 25px auto;
-        padding: 15px;
-      }
-      
-      main h2 {
-        font-size: 1.5em;
-        margin-bottom: 30px;
-      }
-      
-      .sidebar ul li a {
-        font-size: 17px;
-        padding: 8px 14px;
-      }
-    }
-    
-    @media (max-width: 400px) {
-      header h1 {
-        font-size: 1.1em;
-        padding: 0 60px;
-      }
-      
-      .sidebar {
-        width: 220px;
-      }
-      
-      .chart-container {
-        height: 240px;
-      }
-      
-      .sidebar ul li a {
-        font-size: 16px;
-      }
-    }
-    
-    /* تأثيرات حركة AOS */
+    /* تأثيرات AOS */
     [data-aos] {
       transition: all 0.8s ease;
     }
@@ -420,11 +321,11 @@
   <header>
     <span class="hamburger" onclick="toggleSidebar()"><i class="fas fa-bars"></i></span>
     <h1 data-translate="site_title">PARAMEDICAL LILYAN ROSE</h1>
-   <button class="translate-btn" onclick="switchLang()">
-  <span id="flagIcon"><!-- سيتم تحديث علم اللغة هنا --></span>
-  <span id="langText">AR</span>
-</button>
-
+    <!-- زر تبديل اللغة مع عنصرين لتحديث النص والعلم -->
+    <button class="translate-btn" onclick="switchLang()">
+      <span id="flagIcon"></span>
+      <span id="langText">AR</span>
+    </button>
   </header>
   
   <!-- القائمة الجانبية -->
@@ -434,37 +335,37 @@
       <li>
         <a href="index.html" data-aos="fade-left" data-aos-delay="100">
           <i class="fas fa-home"></i>
-          <span id="menuHome" data-translate="menu_home">الصفحة الرئيسية</span>
+          <span data-translate="menu_home">الصفحة الرئيسية</span>
         </a>
       </li>
       <li>
         <a href="products.html" data-aos="fade-left" data-aos-delay="150">
           <i class="fas fa-box-open"></i>
-          <span id="menuProducts" data-translate="menu_products">منتجات</span>
+          <span data-translate="menu_products">منتجات</span>
         </a>
       </li>
       <li>
         <a href="view-products.html" data-aos="fade-left" data-aos-delay="200">
           <i class="fas fa-list-ul"></i>
-          <span id="menuViewProducts" data-translate="menu_view_products">عرض المنتجات</span>
+          <span data-translate="menu_view_products">عرض المنتجات</span>
         </a>
       </li>
       <li>
         <a href="sell-products.html" data-aos="fade-left" data-aos-delay="225">
           <i class="fas fa-cash-register"></i>
-          <span id="menuSellProducts" data-translate="menu_sell_products">بيع المنتجات</span>
+          <span data-translate="menu_sell_products">بيع المنتجات</span>
         </a>
       </li>
       <li>
         <a href="services.html" data-aos="fade-left" data-aos-delay="250">
           <i class="fas fa-concierge-bell"></i>
-          <span id="menuServices" data-translate="menu_services">خدمات اضافية</span>
+          <span data-translate="menu_services">خدمات اضافية</span>
         </a>
       </li>
       <li>
         <a href="profits.html" data-aos="fade-left" data-aos-delay="300">
           <i class="fas fa-chart-line"></i>
-          <span id="menuProfits" data-translate="menu_profits">الارباح و الحسابات</span>
+          <span data-translate="menu_profits">الارباح و الحسابات</span>
         </a>
       </li>
     </ul>
@@ -487,10 +388,11 @@
     <p>جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE</p>
   </footer>
   
-  <!-- السكربتات الخارجية -->
+  <!-- تضمين مكتبات AOS و Chart.js -->
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
   
+  <!-- جافاسكريبت الوظائفي -->
   <script>
     // تهيئة AOS عند تحميل الصفحة
     document.addEventListener('DOMContentLoaded', function() {
@@ -499,186 +401,103 @@
         once: true,
         easing: 'ease-out-quart'
       });
+      
+      // تحديث واجهة زر الترجمة بحيث يُظهر العلم والنص المناسب
+      updateLanguageUI();
+      
+      // تحميل ملف الترجمة إذا كانت اللغة المختارة ليست العربية
+      const selectedLang = localStorage.getItem("selectedLanguage") || "ar";
+      if(selectedLang !== "ar") {
+        fetch(`lang/${selectedLang}.json`)
+          .then(response => response.json())
+          .then(translations => {
+            applyTranslations(translations);
+          })
+          .catch(error => console.error("Error loading translations:", error));
+      }
     });
     
     // دوال القائمة الجانبية
     let isSidebarOpen = false;
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('overlay');
+      const sidebar = document.getElementById("sidebar");
+      const overlay = document.getElementById("overlay");
       const body = document.body;
       isSidebarOpen = !isSidebarOpen;
-      if (isSidebarOpen) {
-        sidebar.classList.add('active');
-        overlay.classList.add('active');
-        body.style.overflow = 'hidden';
+      if(isSidebarOpen) {
+        sidebar.classList.add("active");
+        overlay.classList.add("active");
+        body.style.overflow = "hidden";
       } else {
-        sidebar.classList.remove('active');
-        overlay.classList.remove('active');
-        body.style.overflow = '';
+        sidebar.classList.remove("active");
+        overlay.classList.remove("active");
+        body.style.overflow = "";
       }
     }
     
-    document.addEventListener('click', function(event) {
-      const sidebar = document.getElementById('sidebar');
-      const hamburger = document.querySelector('.hamburger');
-      if (isSidebarOpen &&
-          !sidebar.contains(event.target) &&
-          event.target !== hamburger &&
-          !hamburger?.contains(event.target)) {
-        toggleSidebar();
+    // دالة تحديث واجهة زر الترجمة (العلم والنص)
+    function updateLanguageUI() {
+      const selectedLang = localStorage.getItem("selectedLanguage") || "ar";
+      const langText = document.getElementById("langText");
+      if(selectedLang === "ar") {
+        langText.textContent = "AR";
+        setMoroccoFlag();
+      } else if(selectedLang === "fr") {
+        langText.textContent = "FR";
+        setFranceFlag();
       }
-    });
-    
-    window.addEventListener('resize', function() {
-      if (window.innerWidth > 768 && isSidebarOpen) {
-        toggleSidebar();
-      }
-    });
-    
-    // تهيئة الرسوم البيانية
-    function initCharts() {
-      if (typeof Chart === 'undefined') {
-        setTimeout(initCharts, 100);
-        return;
-      }
-      
-      const chartContainers = document.querySelectorAll('.chart-container');
-      chartContainers.forEach(container => {
-        container.classList.add('loaded');
-      });
-      
-      const salesData = {
-        labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'],
-        datasets: [{
-          label: 'المبيعات (بالآلاف)',
-          data: [18, 25, 12, 15, 8, 14],
-          backgroundColor: 'rgba(255,105,180,0.7)',
-          borderColor: 'rgba(255,105,180,1)',
-          borderWidth: 2,
-          borderRadius: 6,
-          hoverBackgroundColor: 'rgba(255,105,180,0.9)'
-        }]
-      };
-      
-      const doughnutData = {
-        labels: ['منتج أ', 'منتج ب', 'منتج ج', 'منتج د'],
-        datasets: [{
-          label: 'توزيع المنتجات',
-          data: [30, 25, 20, 25],
-          backgroundColor: [
-            'rgba(255,105,180,0.7)',
-            'rgba(255,179,217,0.7)',
-            'rgba(255,204,229,0.7)',
-            'rgba(255,228,242,0.7)'
-          ],
-          borderColor: [
-            'rgba(255,105,180,1)',
-            'rgba(255,179,217,1)',
-            'rgba(255,204,229,1)',
-            'rgba(255,228,242,1)'
-          ],
-          borderWidth: 1,
-          hoverOffset: 10
-        }]
-      };
-      
-      const commonOptions = {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            position: 'top',
-            rtl: true,
-            labels: {
-              font: {
-                size: window.innerWidth < 576 ? 11 : 13,
-                family: 'Tajawal'
-              },
-              padding: 20,
-              usePointStyle: true,
-              pointStyle: 'circle'
-            }
-          },
-          tooltip: {
-            bodyFont: {
-              family: 'Tajawal'
-            },
-            callbacks: {
-              label: function(context) {
-                return `${context.label}: ${context.raw}%`;
-              }
-            }
-          }
-        }
-      };
-      
-      new Chart(
-        document.getElementById('salesChart').getContext('2d'),
-        {
-          type: 'bar',
-          data: salesData,
-          options: {
-            ...commonOptions,
-            scales: {
-              y: {
-                beginAtZero: true,
-                ticks: {
-                  stepSize: 5,
-                  font: { family: 'Tajawal' }
-                },
-                grid: { color: 'rgba(0,0,0,0.05)' }
-              },
-              x: {
-                grid: { display: false },
-                ticks: { font: { family: 'Tajawal' } }
-              }
-            }
-          }
-        }
-      );
-      
-      new Chart(
-        document.getElementById('doughnutChart').getContext('2d'),
-        {
-          type: 'doughnut',
-          data: doughnutData,
-          options: {
-            ...commonOptions,
-            cutout: '65%',
-            plugins: {
-              legend: {
-                position: window.innerWidth < 768 ? 'bottom' : 'right'
-              }
-            }
-          }
-        }
-      );
     }
     
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach(entry => {
-        if (entry.isIntersecting) {
-          initCharts();
-          observer.unobserve(entry.target);
+    function setMoroccoFlag() {
+      const flagIcon = document.getElementById("flagIcon");
+      if(flagIcon) {
+        flagIcon.innerHTML = `
+          <svg width="24" height="24" viewBox="0 0 24 24">
+            <rect width="24" height="24" fill="#c1272d"></rect>
+            <circle cx="12" cy="12" r="5" fill="#006233"></circle>
+          </svg>
+        `;
+      }
+    }
+    
+    function setFranceFlag() {
+      const flagIcon = document.getElementById("flagIcon");
+      if(flagIcon) {
+        flagIcon.innerHTML = `
+          <svg width="24" height="24" viewBox="0 0 60 40">
+            <rect width="20" height="40" fill="#0055A4"></rect>
+            <rect x="20" width="20" height="40" fill="white"></rect>
+            <rect x="40" width="20" height="40" fill="#EF4135"></rect>
+          </svg>
+        `;
+      }
+    }
+    
+    // دالة تبديل اللغة وإعادة تحميل الصفحة
+    function switchLang() {
+      const currentLang = localStorage.getItem("selectedLanguage") || "ar";
+      const newLang = (currentLang === "ar") ? "fr" : "ar";
+      localStorage.setItem("selectedLanguage", newLang);
+      location.reload();
+    }
+    
+    // دوال الترجمة باستخدام data-translate
+    function applyTranslations(translations) {
+      document.querySelectorAll("[data-translate]").forEach(element => {
+        const key = element.getAttribute("data-translate");
+        const translatedText = resolveTranslation(translations, key);
+        if(translatedText) {
+          element.textContent = translatedText;
         }
       });
-    }, { threshold: 0.1 });
+    }
     
-    document.addEventListener('DOMContentLoaded', function() {
-      const chartsSection = document.querySelectorAll('.chart-container');
-      if (chartsSection) {
-        chartsSection.forEach(chart => {
-          observer.observe(chart);
-        });
-      }
-      document.querySelectorAll('.sidebar a').forEach(link => {
-        link.addEventListener('click', toggleSidebar);
-      });
-    });
+    function resolveTranslation(obj, key) {
+      return key.split(".").reduce((current, part) => current && current[part], obj);
+    }
   </script>
   
-  <!-- تضمين ملف الترجمة المشترك -->
-  <script src="translate.js"></script>
+  <!-- تضمين ملف translate.js إن كنت تفضله كوحدة منفصلة (اختياري) -->
+  <!-- <script src="translate.js"></script> -->
 </body>
 </html>
