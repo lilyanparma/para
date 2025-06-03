@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>إدارة المنتجات - Lilyan Rose</title>
+  <title>إدارة المنتجات - نظام الدُفعات</title>
   
   <!-- مكتبات Firebase -->
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
@@ -244,6 +244,23 @@
       width: 40%;
     }
     
+    /* جدول الدفعات */
+    .batches-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 15px 0;
+    }
+    
+    .batches-table th, .batches-table td {
+      padding: 10px;
+      border: 1px solid #ddd;
+      text-align: center;
+    }
+    
+    .batches-table th {
+      background-color: #f2f2f2;
+    }
+    
     /* صورة المنتج */
     .product-image {
       max-width: 100%;
@@ -311,6 +328,35 @@
       font-weight: bold !important;
     }
     
+    /* بطاقة الدفعة */
+    .batch-card {
+      background: white;
+      border-radius: 8px;
+      padding: 15px;
+      margin-bottom: 15px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      border-left: 4px solid var(--primary);
+    }
+    
+    .batch-header {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    
+    .batch-actions {
+      display: flex;
+      gap: 5px;
+    }
+    
+    .batch-btn {
+      padding: 5px 10px;
+      border: none;
+      border-radius: 4px;
+      font-size: 0.8rem;
+      cursor: pointer;
+    }
+    
     @keyframes slideIn {
       from { transform: translateX(100%); opacity: 0; }
       to { transform: translateX(0); opacity: 1; }
@@ -337,13 +383,18 @@
         background-color: transparent;
         font-weight: bold;
       }
+      
+      .batches-table th, .batches-table td {
+        padding: 5px;
+        font-size: 0.9rem;
+      }
     }
   </style>
 </head>
 <body>
   <header>
-    <h1><i class="fas fa-barcode"></i> إدارة المنتجات</h1>
-    <p>نظام مسح الباركود وإدارة المخزون</p>
+    <h1><i class="fas fa-boxes"></i> إدارة المنتجات بنظام الدُفعات</h1>
+    <p>نظام مسح الباركود وإدارة المخزون حسب تواريخ الصلاحية</p>
   </header>
   
   <div class="control-buttons">
@@ -362,17 +413,17 @@
     </button>
   </div>
   
-  <!-- منطقة مسح الباركود الجديدة -->
+  <!-- منطقة مسح الباركود -->
   <div id="cameraScanner">
-  <video id="scannerVideo" muted playsinline></video>
-  <div class="scanner-overlay">
-    <div class="scanner-frame"></div>
-    <div class="scanner-instruction">
-      <i class="fas fa-barcode fa-3x"></i>
-      <p>وجه الكاميرا نحو الباركود</p>
+    <video id="scannerVideo" muted playsinline></video>
+    <div class="scanner-overlay">
+      <div class="scanner-frame"></div>
+      <div class="scanner-instruction">
+        <i class="fas fa-barcode fa-3x"></i>
+        <p>وجه الكاميرا نحو الباركود</p>
+      </div>
     </div>
   </div>
-</div>
   
   <div class="result-message" id="resultMessage"></div>
   
@@ -393,8 +444,8 @@
             <td id="infoName"></td>
           </tr>
           <tr>
-            <td class="info-label">الكمية المتاحة:</td>
-            <td id="infoQuantity"></td>
+            <td class="info-label">إجمالي الكمية:</td>
+            <td id="infoTotalQuantity"></td>
           </tr>
           <tr>
             <td class="info-label">سعر البيع:</td>
@@ -405,26 +456,28 @@
             <td id="infoCost"></td>
           </tr>
           <tr>
-            <td class="info-label">تاريخ انتهاء الصلاحية:</td>
-            <td id="infoExpiry"></td>
-          </tr>
-          <tr>
             <td class="info-label">تاريخ الإضافة:</td>
             <td id="infoDate"></td>
           </tr>
         </table>
         
         <div id="productImageContainer"></div>
+        
+        <h3 style="margin: 20px 0 10px;">الدُفعات المتاحة</h3>
+        <div id="batchesContainer"></div>
       </div>
       
       <div id="productForm" style="display: none;">
         <input type="text" id="editName" class="input-field" placeholder="اسم المنتج" required>
-        <input type="number" id="editQuantity" class="input-field" placeholder="الكمية" min="0" required>
         <input type="number" id="editPrice" class="input-field" placeholder="سعر البيع" min="0" step="0.01" required>
         <input type="number" id="editCost" class="input-field" placeholder="سعر الشراء" min="0" step="0.01" required>
-        <input type="date" id="editExpiry" class="input-field" placeholder="تاريخ انتهاء الصلاحية (اختياري)">
         <input type="date" id="editDate" class="input-field" required>
         <input type="file" id="editImage" class="input-field" accept="image/*">
+        
+        <h3 style="margin: 20px 0 10px;">إضافة دفعة جديدة</h3>
+        <input type="text" id="batchNumber" class="input-field" placeholder="رقم الدفعة (اختياري)">
+        <input type="number" id="batchQuantity" class="input-field" placeholder="الكمية" min="1" required>
+        <input type="date" id="batchExpiry" class="input-field" placeholder="تاريخ انتهاء الصلاحية" required>
       </div>
       
       <div class="modal-actions" id="modalActions">
@@ -458,7 +511,7 @@
     let codeReader = new ZXing.BrowserMultiFormatReader();
     let cameraActive = false;
     
-    // ================ وظائف المسح الضوئي الجديدة ================
+    // ================ وظائف المسح الضوئي ================
     async function toggleCamera() {
       if (cameraActive) {
         await stopScanner();
@@ -467,39 +520,39 @@
       }
     }
     
-async function startScanner() {
-  document.getElementById('manualEntry').style.display = 'none';
-  const scannerContainer = document.getElementById('cameraScanner');
-  scannerContainer.style.display = 'block';
-  document.getElementById('resultMessage').textContent = 'جاري تحضير الماسح...';
-  
-  try {
-    await codeReader.decodeFromVideoDevice(
-      undefined, 
-      'scannerVideo', // تم التغيير هنا من 'cameraScanner video' إلى 'scannerVideo'
-      (result, err) => {
-        if (result) {
-          const code = result.text;
-          stopScanner();
-          processScannedCode(code);
-        }
+    async function startScanner() {
+      document.getElementById('manualEntry').style.display = 'none';
+      const scannerContainer = document.getElementById('cameraScanner');
+      scannerContainer.style.display = 'block';
+      document.getElementById('resultMessage').textContent = 'جاري تحضير الماسح...';
+      
+      try {
+        await codeReader.decodeFromVideoDevice(
+          undefined, 
+          'scannerVideo',
+          (result, err) => {
+            if (result) {
+              const code = result.text;
+              stopScanner();
+              processScannedCode(code);
+            }
+            
+            if (err && !(err instanceof ZXing.NotFoundException)) {
+              console.error(err);
+              showAlert('حدث خطأ في الماسح: ' + err.message, 'danger');
+              stopScanner();
+            }
+          }
+        );
         
-        if (err && !(err instanceof ZXing.NotFoundException)) {
-          console.error(err);
-          showAlert('حدث خطأ في الماسح: ' + err.message, 'danger');
-          stopScanner();
-        }
+        cameraActive = true;
+        document.getElementById('resultMessage').textContent = 'جاري المسح... ضع الباركود أمام الكاميرا';
+      } catch (err) {
+        console.error(err);
+        showAlert('تعذر تشغيل الكاميرا: ' + err.message, 'danger');
+        scannerContainer.style.display = 'none';
       }
-    );
-    
-    cameraActive = true;
-    document.getElementById('resultMessage').textContent = 'جاري المسح... ضع الباركود أمام الكاميرا';
-  } catch (err) {
-    console.error(err);
-    showAlert('تعذر تشغيل الكاميرا: ' + err.message, 'danger');
-    scannerContainer.style.display = 'none';
-  }
-}
+    }
     
     function stopScanner() {
       if (codeReader && cameraActive) {
@@ -519,7 +572,6 @@ async function startScanner() {
         const snapshot = await database.ref('products/' + code).once('value');
         if (snapshot.exists()) {
           const productData = snapshot.val();
-          productData.quantity = parseFloat(productData.quantity) || 0;
           showProductInfo(productData);
           showAlert('تم العثور على المنتج', 'success');
         } else {
@@ -551,12 +603,11 @@ async function startScanner() {
         
         if (snapshot.exists()) {
           const productData = snapshot.val();
-          productData.quantity = parseFloat(productData.quantity) || 0;
           currentProduct = { code: code, ...productData };
           showProductInfo(currentProduct);
           showAlert('تم العثور على المنتج', 'success');
         } else {
-          currentProduct = { code: code, quantity: 0 };
+          currentProduct = { code: code };
           showAddProductForm(code);
           showAlert('منتج جديد، يرجى إدخال البيانات', 'warning');
         }
@@ -568,69 +619,97 @@ async function startScanner() {
     
     // ================ عرض وتعديل المنتجات ================
     function showProductInfo(product) {
-      const validQuantity = parseFloat(product.quantity) || 0;
+      // حساب الكمية الإجمالية
+      let totalQuantity = 0;
+      if (product.batches) {
+        totalQuantity = Object.values(product.batches).reduce((sum, batch) => sum + (parseFloat(batch.quantity) || 0), 0);
+      }
       
       document.getElementById('modalTitle').textContent = product.name || 'معلومات المنتج';
       document.getElementById('infoCode').textContent = product.code;
       document.getElementById('infoName').textContent = product.name || 'غير محدد';
-      document.getElementById('infoQuantity').textContent = validQuantity;
+      document.getElementById('infoTotalQuantity').textContent = totalQuantity;
       document.getElementById('infoPrice').textContent = product.price ? `${parseFloat(product.price).toFixed(2)} ر.س` : 'غير محدد';
       document.getElementById('infoCost').textContent = product.cost ? `${parseFloat(product.cost).toFixed(2)} ر.س` : 'غير محدد';
-      document.getElementById('infoExpiry').textContent = product.expiryDate || 'غير محدد';
       document.getElementById('infoDate').textContent = product.date || 'غير محدد';
-      
-      checkProductExpiry(product.expiryDate);
       
       const imageContainer = document.getElementById('productImageContainer');
       imageContainer.innerHTML = product.image ? 
         `<img src="${product.image}" alt="صورة المنتج" class="product-image">` : 
         '<p>لا توجد صورة للمنتج</p>';
       
+      // عرض الدُفعات
+      const batchesContainer = document.getElementById('batchesContainer');
+      batchesContainer.innerHTML = '';
+      
+      if (!product.batches || Object.keys(product.batches).length === 0) {
+        batchesContainer.innerHTML = '<p>لا توجد دفعات لهذا المنتج</p>';
+      } else {
+        // تحويل الدُفعات إلى مصفوفة وترتيبها حسب تاريخ الصلاحية (الأقرب أولاً)
+        const batchesArray = Object.entries(product.batches).map(([batchId, batch]) => ({
+          id: batchId,
+          ...batch
+        }));
+        
+        batchesArray.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+        
+        batchesArray.forEach(batch => {
+          const batchCard = document.createElement('div');
+          batchCard.className = 'batch-card';
+          
+          const today = new Date();
+          const expiryDate = new Date(batch.expiryDate);
+          const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+          
+          let expiryStatus = '';
+          if (diffDays < 0) {
+            expiryStatus = '<span class="expired">(منتهي الصلاحية)</span>';
+          } else if (diffDays <= 30) {
+            expiryStatus = `<span class="expiring-soon">(سينتهي خلال ${diffDays} يوم)</span>`;
+          }
+          
+          batchCard.innerHTML = `
+            <div class="batch-header">
+              <div>
+                <strong>الدفعة: ${batch.batchNumber || batch.id}</strong>
+                <p>الكمية: ${batch.quantity} - تاريخ الصلاحية: ${batch.expiryDate} ${expiryStatus}</p>
+              </div>
+              <div class="batch-actions">
+                <button class="batch-btn btn-warning" onclick="editBatch('${batch.id}')">
+                  <i class="fas fa-edit"></i>
+                </button>
+                <button class="batch-btn btn-danger" onclick="deleteBatch('${batch.id}')">
+                  <i class="fas fa-trash"></i>
+                </button>
+              </div>
+            </div>
+          `;
+          
+          batchesContainer.appendChild(batchCard);
+        });
+      }
+      
       const actions = document.getElementById('modalActions');
       let buttonsHTML = `
         <button class="btn btn-warning" onclick="showEditForm()">
-          <i class="fas fa-edit"></i> تعديل
+          <i class="fas fa-edit"></i> تعديل المنتج
+        </button>
+        <button class="btn btn-info" onclick="showAddBatchForm()">
+          <i class="fas fa-plus"></i> إضافة دفعة
         </button>
         <button class="btn btn-danger" onclick="deleteProduct()">
-          <i class="fas fa-trash"></i> حذف
+          <i class="fas fa-trash"></i> حذف المنتج
         </button>
       `;
       
-      if (validQuantity < 5) {
-        buttonsHTML += `
-          <button class="btn btn-info" onclick="addStock()">
-            <i class="fas fa-plus"></i> إضافة مخزون
-          </button>
-        `;
-      }
-      
       actions.innerHTML = buttonsHTML;
-      currentProduct = { ...product, quantity: validQuantity };
+      currentProduct = product;
       
       document.getElementById('productInfo').style.display = 'block';
       document.getElementById('productForm').style.display = 'none';
       document.getElementById('productModal').style.display = 'block';
-      checkInventory(validQuantity);
-    }
-    
-    function checkProductExpiry(expiryDate) {
-      if (!expiryDate) return;
       
-      const expiryElement = document.getElementById('infoExpiry');
-      const today = new Date();
-      const expiry = new Date(expiryDate);
-      const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-      
-      expiryElement.className = '';
-      
-      if (diffDays < 0) {
-        expiryElement.classList.add('expired');
-        showAlert('تحذير: هذا المنتج منتهي الصلاحية!', 'danger');
-      } 
-      else if (diffDays <= 30) {
-        expiryElement.classList.add('expiring-soon');
-        showAlert(`تنبيه: المنتج سينتهي صلاحيته خلال ${diffDays} يوم`, 'warning');
-      }
+      checkInventory(totalQuantity);
     }
     
     function showAddProductForm(code) {
@@ -641,12 +720,15 @@ async function startScanner() {
       document.getElementById('productForm').style.display = 'block';
       
       document.getElementById('editName').value = '';
-      document.getElementById('editQuantity').value = '1';
       document.getElementById('editPrice').value = '';
       document.getElementById('editCost').value = '';
-      document.getElementById('editExpiry').value = '';
       document.getElementById('editDate').value = new Date().toISOString().split('T')[0];
       document.getElementById('editImage').value = '';
+      
+      // حقول الدفعة
+      document.getElementById('batchNumber').value = '';
+      document.getElementById('batchQuantity').value = '1';
+      document.getElementById('batchExpiry').value = '';
       
       const actions = document.getElementById('modalActions');
       actions.innerHTML = `
@@ -665,10 +747,8 @@ async function startScanner() {
       document.getElementById('modalTitle').textContent = 'تعديل المنتج';
       
       document.getElementById('editName').value = currentProduct.name || '';
-      document.getElementById('editQuantity').value = currentProduct.quantity || '1';
       document.getElementById('editPrice').value = currentProduct.price || '';
       document.getElementById('editCost').value = currentProduct.cost || '';
-      document.getElementById('editExpiry').value = currentProduct.expiryDate || '';
       document.getElementById('editDate').value = currentProduct.date || new Date().toISOString().split('T')[0];
       
       const imageContainer = document.getElementById('productImageContainer');
@@ -689,6 +769,34 @@ async function startScanner() {
       actions.innerHTML = `
         <button class="btn btn-success" onclick="updateProduct()">
           <i class="fas fa-save"></i> حفظ التعديلات
+        </button>
+        <button class="btn btn-danger" onclick="showProductInfo(currentProduct)">
+          <i class="fas fa-times"></i> إلغاء
+        </button>
+      `;
+    }
+    
+    function showAddBatchForm() {
+      document.getElementById('modalTitle').textContent = 'إضافة دفعة جديدة';
+      
+      document.getElementById('productInfo').style.display = 'none';
+      document.getElementById('productForm').style.display = 'block';
+      
+      // تعبئة بيانات المنتج الأساسية
+      document.getElementById('editName').value = currentProduct.name || '';
+      document.getElementById('editPrice').value = currentProduct.price || '';
+      document.getElementById('editCost').value = currentProduct.cost || '';
+      document.getElementById('editDate').value = currentProduct.date || new Date().toISOString().split('T')[0];
+      
+      // إعداد حقول الدفعة
+      document.getElementById('batchNumber').value = '';
+      document.getElementById('batchQuantity').value = '1';
+      document.getElementById('batchExpiry').value = '';
+      
+      const actions = document.getElementById('modalActions');
+      actions.innerHTML = `
+        <button class="btn btn-success" onclick="addNewBatch()">
+          <i class="fas fa-save"></i> حفظ الدفعة
         </button>
         <button class="btn btn-danger" onclick="showProductInfo(currentProduct)">
           <i class="fas fa-times"></i> إلغاء
@@ -725,20 +833,17 @@ async function startScanner() {
     // ================ إدارة البيانات ================
     async function addNewProduct() {
       const name = document.getElementById('editName').value.trim();
-      const quantity = parseFloat(document.getElementById('editQuantity').value) || 0;
       const price = parseFloat(document.getElementById('editPrice').value) || 0;
       const cost = parseFloat(document.getElementById('editCost').value) || 0;
-      const expiryDate = document.getElementById('editExpiry').value;
       const date = document.getElementById('editDate').value;
       const imageFile = document.getElementById('editImage').files[0];
       
+      const batchNumber = document.getElementById('batchNumber').value.trim();
+      const batchQuantity = parseFloat(document.getElementById('batchQuantity').value) || 0;
+      const batchExpiry = document.getElementById('batchExpiry').value;
+      
       if (!name) {
         showAlert('الرجاء إدخال اسم المنتج', 'warning');
-        return;
-      }
-      
-      if (isNaN(quantity) || quantity < 0) {
-        showAlert('الرجاء إدخال كمية صحيحة', 'warning');
         return;
       }
       
@@ -757,15 +862,34 @@ async function startScanner() {
         return;
       }
       
+      if (isNaN(batchQuantity) || batchQuantity <= 0) {
+        showAlert('الرجاء إدخال كمية صحيحة للدفعة', 'warning');
+        return;
+      }
+      
+      if (!batchExpiry) {
+        showAlert('الرجاء إدخال تاريخ صلاحية للدفعة', 'warning');
+        return;
+      }
+      
       currentProduct = {
         ...currentProduct,
         name,
-        quantity,
         price,
         cost,
-        expiryDate: expiryDate || null,
         date,
-        maxQuantity: quantity
+        batches: {}
+      };
+      
+      // إنشاء معرف فريد للدفعة
+      const batchId = database.ref().child('batches').push().key;
+      
+      // إضافة الدفعة الأولى
+      currentProduct.batches[batchId] = {
+        batchNumber: batchNumber || `B${Date.now().toString().slice(-4)}`,
+        quantity: batchQuantity,
+        expiryDate: batchExpiry,
+        addedDate: new Date().toISOString().split('T')[0]
       };
       
       if (imageFile) {
@@ -780,7 +904,7 @@ async function startScanner() {
       
       try {
         await database.ref('products/' + currentProduct.code).set(currentProduct);
-        showAlert('تم إضافة المنتج بنجاح!', 'success');
+        showAlert('تم إضافة المنتج والدفعة الأولى بنجاح!', 'success');
         showProductInfo(currentProduct);
       } catch (error) {
         showAlert('حدث خطأ أثناء حفظ المنتج: ' + error.message, 'danger');
@@ -790,20 +914,13 @@ async function startScanner() {
     
     async function updateProduct() {
       const name = document.getElementById('editName').value.trim();
-      const quantity = parseFloat(document.getElementById('editQuantity').value) || 0;
       const price = parseFloat(document.getElementById('editPrice').value) || 0;
       const cost = parseFloat(document.getElementById('editCost').value) || 0;
-      const expiryDate = document.getElementById('editExpiry').value;
       const date = document.getElementById('editDate').value;
       const imageFile = document.getElementById('editImage').files[0];
       
       if (!name) {
         showAlert('الرجاء إدخال اسم المنتج', 'warning');
-        return;
-      }
-      
-      if (isNaN(quantity) || quantity < 0) {
-        showAlert('الرجاء إدخال كمية صحيحة', 'warning');
         return;
       }
       
@@ -825,10 +942,8 @@ async function startScanner() {
       currentProduct = {
         ...currentProduct,
         name,
-        quantity,
         price,
         cost,
-        expiryDate: expiryDate || null,
         date
       };
       
@@ -852,37 +967,90 @@ async function startScanner() {
       }
     }
     
-    // ================ إضافة مخزون ================
-    async function addStock() {
+    async function addNewBatch() {
+      const batchNumber = document.getElementById('batchNumber').value.trim();
+      const batchQuantity = parseFloat(document.getElementById('batchQuantity').value) || 0;
+      const batchExpiry = document.getElementById('batchExpiry').value;
+      
+      if (isNaN(batchQuantity) || batchQuantity <= 0) {
+        showAlert('الرجاء إدخال كمية صحيحة للدفعة', 'warning');
+        return;
+      }
+      
+      if (!batchExpiry) {
+        showAlert('الرجاء إدخال تاريخ صلاحية للدفعة', 'warning');
+        return;
+      }
+      
+      // إنشاء معرف فريد للدفعة
+      const batchId = database.ref().child('batches').push().key;
+      
+      const newBatch = {
+        batchNumber: batchNumber || `B${Date.now().toString().slice(-4)}`,
+        quantity: batchQuantity,
+        expiryDate: batchExpiry,
+        addedDate: new Date().toISOString().split('T')[0]
+      };
+      
       try {
-        if (!currentProduct) {
-          showAlert('لا يوجد بيانات منتج متاحة', 'danger');
-          return;
+        // إضافة الدفعة الجديدة إلى المنتج
+        await database.ref(`products/${currentProduct.code}/batches/${batchId}`).set(newBatch);
+        
+        // تحديث بيانات المنتج الحالية
+        if (!currentProduct.batches) {
+          currentProduct.batches = {};
         }
-
-        const currentQuantity = parseFloat(currentProduct.quantity) || 0;
-        const amount = prompt('أدخل الكمية المضافة:', '1');
-        const amountNum = parseFloat(amount);
+        currentProduct.batches[batchId] = newBatch;
         
-        if (isNaN(amountNum) || amountNum <= 0) {
-          showAlert('الرجاء إدخال رقم صحيح موجب', 'warning');
-          return;
-        }
-
-        const newQuantity = currentQuantity + amountNum;
-        
-        await database.ref('products/' + currentProduct.code).update({ 
-          quantity: newQuantity,
-          lastStockAdded: new Date().toISOString()
-        });
-        
-        currentProduct.quantity = newQuantity;
-        document.getElementById('infoQuantity').textContent = newQuantity;
-        showAlert(`تمت إضافة ${amountNum} قطعة للمخزون!`, 'success');
-        checkInventory(newQuantity);
-        
+        showAlert('تمت إضافة الدفعة الجديدة بنجاح!', 'success');
+        showProductInfo(currentProduct);
       } catch (error) {
-        showAlert('حدث خطأ أثناء إضافة المخزون: ' + error.message, 'danger');
+        showAlert('حدث خطأ أثناء إضافة الدفعة: ' + error.message, 'danger');
+        console.error('تفاصيل الخطأ:', error);
+      }
+    }
+    
+    async function editBatch(batchId) {
+      const batch = currentProduct.batches[batchId];
+      if (!batch) return;
+      
+      const newQuantity = prompt('أدخل الكمية الجديدة:', batch.quantity);
+      const quantityNum = parseFloat(newQuantity);
+      
+      if (isNaN(quantityNum) || quantityNum < 0) {
+        showAlert('الرجاء إدخال رقم صحيح موجب', 'warning');
+        return;
+      }
+      
+      try {
+        await database.ref(`products/${currentProduct.code}/batches/${batchId}/quantity`).set(quantityNum);
+        
+        // تحديث بيانات المنتج الحالية
+        currentProduct.batches[batchId].quantity = quantityNum;
+        
+        showAlert('تم تحديث كمية الدفعة بنجاح!', 'success');
+        showProductInfo(currentProduct);
+      } catch (error) {
+        showAlert('حدث خطأ أثناء تحديث الدفعة: ' + error.message, 'danger');
+        console.error('تفاصيل الخطأ:', error);
+      }
+    }
+    
+    async function deleteBatch(batchId) {
+      if (!confirm('هل أنت متأكد من حذف هذه الدفعة؟ لا يمكن التراجع عن هذه العملية.')) {
+        return;
+      }
+      
+      try {
+        await database.ref(`products/${currentProduct.code}/batches/${batchId}`).remove();
+        
+        // تحديث بيانات المنتج الحالية
+        delete currentProduct.batches[batchId];
+        
+        showAlert('تم حذف الدفعة بنجاح!', 'success');
+        showProductInfo(currentProduct);
+      } catch (error) {
+        showAlert('حدث خطأ أثناء حذف الدفعة: ' + error.message, 'danger');
         console.error('تفاصيل الخطأ:', error);
       }
     }
@@ -891,7 +1059,7 @@ async function startScanner() {
     function checkInventory(quantity) {
       quantity = parseFloat(quantity) || 0;
       
-      const quantityElement = document.getElementById('infoQuantity');
+      const quantityElement = document.getElementById('infoTotalQuantity');
       if (quantity <= 3) {
         quantityElement.style.color = 'red';
         quantityElement.style.fontWeight = 'bold';
@@ -927,13 +1095,13 @@ async function startScanner() {
     }
     
     function deleteProduct() {
-      if (!confirm('هل أنت متأكد من حذف هذا المنتج؟ لا يمكن التراجع عن هذه العملية.')) {
+      if (!confirm('هل أنت متأكد من حذف هذا المنتج؟ سيتم حذف جميع الدُفعات التابعة له.')) {
         return;
       }
       
       database.ref('products/' + currentProduct.code).remove()
         .then(() => {
-          showAlert('تم حذف المنتج بنجاح!', 'success');
+          showAlert('تم حذف المنتج وكل دفعاته بنجاح!', 'success');
           closeModal();
         })
         .catch(error => {
@@ -956,17 +1124,22 @@ async function startScanner() {
         
         Object.keys(products).forEach(code => {
           const product = products[code];
-          if (!product.expiryDate) return;
+          if (!product.batches) return;
           
-          const expiry = new Date(product.expiryDate);
-          
-          if (expiry < today) {
-            showAlert(`تحذير: المنتج ${product.name || code} منتهي الصلاحية`, 'danger');
-          } 
-          else if (expiry <= monthLater) {
-            const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
-            showAlert(`تنبيه: المنتج ${product.name || code} سينتهي خلال ${diffDays} يوم`, 'warning');
-          }
+          // التحقق من كل دفعة
+          Object.values(product.batches).forEach(batch => {
+            if (!batch.expiryDate) return;
+            
+            const expiry = new Date(batch.expiryDate);
+            
+            if (expiry < today) {
+              showAlert(`تحذير: الدفعة ${batch.batchNumber || 'غير معروفة'} من المنتج ${product.name || code} منتهية الصلاحية`, 'danger');
+            } 
+            else if (expiry <= monthLater) {
+              const diffDays = Math.ceil((expiry - today) / (1000 * 60 * 60 * 24));
+              showAlert(`تنبيه: الدفعة ${batch.batchNumber || 'غير معروفة'} من المنتج ${product.name || code} ستنتهي خلال ${diffDays} يوم`, 'warning');
+            }
+          });
         });
       } catch (error) {
         console.error('Error checking products expiry:', error);
