@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -133,62 +134,60 @@
     </style>
 </head>
 <body>
-  <div class="invoice-content">
-    <div class="invoice-header">
-      <!-- إضافة data-translate داخل العنوان -->
-      <h2><i class="fas fa-receipt"></i> <span data-translate="invoice.title">فاتورة بيع</span></h2>
+    <div class="invoice-content">
+        <div class="invoice-header">
+            <h2><i class="fas fa-receipt"></i> فاتورة بيع</h2>
+        </div>
+        <div class="invoice-body">
+            <div id="invoicePharmacy" class="invoice-pharmacy">صيدلية النخبة</div>
+            <div class="invoice-details">
+                <div class="invoice-row">
+                    <span>رقم الفاتورة:</span>
+                    <span id="invoiceNumber">#0001</span>
+                </div>
+                <div class="invoice-row">
+                    <span>التاريخ والوقت:</span>
+                    <span id="invoiceDate">01/01/2023 10:00 ص</span>
+                </div>
+                <div class="invoice-row">
+                    <span>المنتج:</span>
+                    <span id="invoiceProduct">اسم المنتج</span>
+                </div>
+                <div class="invoice-row">
+                    <span>السعر الأصلي:</span>
+                    <span id="invoiceOriginalPrice">50.00 ر.س</span>
+                </div>
+                <div id="invoiceDiscountRow" class="invoice-row" style="display: none;">
+                    <span>الخصم:</span>
+                    <span id="invoiceDiscount">0.00 ر.س (0%)</span>
+                </div>
+                <div id="invoiceReasonRow" class="invoice-row" style="display: none;">
+                    <span>سبب الخصم:</span>
+                    <span id="invoiceReason">لا يوجد</span>
+                </div>
+                <div class="invoice-row total">
+                    <span>المجموع:</span>
+                    <span id="invoiceTotal">50.00 ر.س</span>
+                </div>
+                <div class="invoice-row">
+                    <span>طريقة الدفع:</span>
+                    <span id="invoicePaymentMethod">نقداً</span>
+                </div>
+            </div>
+            <div class="invoice-actions">
+                <button id="printInvoice" class="btn btn-primary">
+                    <i class="fas fa-print"></i> طباعة
+                </button>
+                <button id="closeInvoice" class="btn btn-success">
+                    <i class="fas fa-times"></i> إغلاق
+                </button>
+            </div>
+        </div>
+        <div class="invoice-footer">
+            شكراً لثقتكم بنا - للاستفسار: 0551234567
+        </div>
     </div>
-    <div class="invoice-body">
-      <!-- يمكن ترجمة اسم الصيدلية إن رغبت -->
-      <div id="invoicePharmacy" class="invoice-pharmacy" data-translate="invoice.pharmacy">Lilyan Rose</div>
-      <div class="invoice-details">
-        <div class="invoice-row">
-          <span data-translate="invoice.number">رقم الفاتورة:</span>
-          <span id="invoiceNumber">#0001</span>
-        </div>
-        <div class="invoice-row">
-          <span data-translate="invoice.date">التاريخ والوقت:</span>
-          <span id="invoiceDate">01/01/2023 10:00 ص</span>
-        </div>
-        <div class="invoice-row">
-          <span data-translate="invoice.product">المنتج:</span>
-          <span id="invoiceProduct">اسم المنتج</span>
-        </div>
-        <div class="invoice-row">
-          <span data-translate="invoice.originalPrice">السعر الأصلي:</span>
-          <span id="invoiceOriginalPrice">50.00 AMD</span>
-        </div>
-        <div id="invoiceDiscountRow" class="invoice-row" style="display: none;">
-          <span data-translate="invoice.discount">الخصم:</span>
-          <span id="invoiceDiscount">0.00 AMD (0%)</span>
-        </div>
-        <div id="invoiceReasonRow" class="invoice-row" style="display: none;">
-          <span data-translate="invoice.discountReason">سبب الخصم:</span>
-          <span id="invoiceReason">لا يوجد</span>
-        </div>
-        <div class="invoice-row total">
-          <span data-translate="invoice.total">المجموع:</span>
-          <span id="invoiceTotal">50.00 AMD</span>
-        </div>
-        <div class="invoice-row">
-          <span data-translate="invoice.paymentMethod">طريقة الدفع:</span>
-          <span id="invoicePaymentMethod">نقداً</span>
-        </div>
-      </div>
-      <div class="invoice-actions">
-        <button id="printInvoice" class="btn btn-primary">
-          <i class="fas fa-print"></i> <span data-translate="buttons.print">طباعة</span>
-        </button>
-        <button id="closeInvoice" class="btn btn-success">
-          <i class="fas fa-times"></i> <span data-translate="buttons.close">إغلاق</span>
-        </button>
-      </div>
-    </div>
-    <div class="invoice-footer" data-translate="invoice.footer">
-      شكراً لثقتكم بنا - للاستفسار: 0551234567
-    </div>
-  </div>
- <script src="translate.js"></script>
+
 <script>
     // دالة لتحميل بيانات الفاتورة من URL
     function loadInvoiceData() {
@@ -209,14 +208,14 @@
     // دالة لعرض بيانات الفاتورة
     function displayInvoice(invoice) {
         const date = new Date(invoice.date);
-        const dateStr = date.toLocaleDateString('en-GB') + ' ' + 
-                        date.toLocaleTimeString('en-GB', {hour: '2-digit', minute:'2-digit'});
+        const dateStr = date.toLocaleDateString('ar-SA') + ' ' + 
+                        date.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
         
         document.getElementById('invoiceNumber').textContent = invoice.id;
         document.getElementById('invoiceDate').textContent = dateStr;
         document.getElementById('invoiceProduct').textContent = invoice.product;
-        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' AMD';
-        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' AMD';
+        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' ر.س';
+        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
         
         let paymentMethodText = 'نقداً';
         if (invoice.paymentMethod === 'card') paymentMethodText = 'بطاقة بنكية';
@@ -229,9 +228,9 @@
             
             const discountValue = (invoice.originalPrice - invoice.finalPrice).toFixed(2);
             if (invoice.discount.type === 'percent') {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} AMD (${invoice.discount.value}%)`;
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س (${invoice.discount.value}%)`;
             } else {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} AMD`;
+                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س`;
             }
             
             document.getElementById('invoiceReason').textContent = invoice.discount.reason || 'لا يوجد سبب مذكور';
