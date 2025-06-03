@@ -127,6 +127,32 @@
       gap: 5px;
     }
     
+    
+    .batches-section {
+    border-top: 1px solid #eee;
+    padding-top: 10px;
+}
+
+.batch-item {
+    border-left: 3px solid #4CAF50;
+}
+
+.batch-item .expired-badge {
+    background-color: var(--danger);
+    color: white;
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+
+.batch-item .expiring-soon-badge {
+    background-color: var(--warning);
+    color: var(--dark);
+    padding: 2px 5px;
+    border-radius: 3px;
+    font-size: 0.8em;
+}
+    
     .view-btn:hover {
       border-color: var(--primary);
     }
@@ -491,8 +517,7 @@
     });
   }
 
-  // دالة تطبيق الفلاتر
-  function applyFilters() {
+function applyFilters() {
     const searchTerm = document.getElementById('searchProductInput').value.trim().toLowerCase();
     const stockStatus = document.getElementById('stockFilter').value;
     const expiryStatus = document.getElementById('expiryFilter').value;
@@ -500,12 +525,6 @@
     
     // فرز المنتجات حسب الاختيار
     const sortedProducts = sortProducts(allProducts, sortBy);
-    
-    // إذا كانت كل الفلاتر فارغة، نعرض جميع المنتجات
-    if (!searchTerm && !stockStatus && !expiryStatus) {
-      displayProducts(allProducts);
-      return;
-    }
     
     let visibleCount = 0;
     const container = document.getElementById('productsContainer');
@@ -515,46 +534,60 @@
     fragment.appendChild(gridContainer);
     
     sortedProducts.forEach(([key, product]) => {
-      let matches = true;
-      
-      // فلترة حسب البحث (بالاسم فقط)
-      if (searchTerm && !(product.name || '').toLowerCase().includes(searchTerm)) {
-        matches = false;
-      }
-      
-      // فلترة حسب حالة المخزون
-      if (stockStatus === 'inStock' && (!product.quantity || product.quantity <= 0)) {
-        matches = false;
-      } else if (stockStatus === 'lowStock' && (!product.quantity || product.quantity > 5)) {
-        matches = false;
-      } else if (stockStatus === 'outOfStock' && product.quantity > 0) {
-        matches = false;
-      }
-      
-      // فلترة حسب الصلاحية
-      if (expiryStatus === 'expired' && (!product.expiryDate || !isProductExpired(product.expiryDate))) {
-        matches = false;
-      } else if (expiryStatus === 'expiringSoon' && (!product.expiryDate || !isProductExpiringSoon(product.expiryDate))) {
-        matches = false;
-      } else if (expiryStatus === 'valid' && product.expiryDate && isProductExpired(product.expiryDate)) {
-        matches = false;
-      }
-      
-      if (matches) {
-        visibleCount++;
-        const card = createProductCard(key, product);
-        gridContainer.appendChild(card);
-      }
+        let matches = true;
+        
+        // فلترة حسب البحث (بالاسم فقط)
+        if (searchTerm && !(product.name || '').toLowerCase().includes(searchTerm)) {
+            matches = false;
+        }
+        
+        // حساب الكمية الإجمالية من الدفعات
+        let totalQuantity = 0;
+        if (product.batches) {
+            totalQuantity = Object.values(product.batches).reduce((sum, batch) => sum + (parseFloat(batch.quantity) || 0), 0);
+        } else {
+            totalQuantity = parseFloat(product.quantity) || 0;
+        }
+        
+        // فلترة حسب حالة المخزون
+        if (stockStatus === 'inStock' && totalQuantity <= 0) {
+            matches = false;
+        } else if (stockStatus === 'lowStock' && totalQuantity > 5) {
+            matches = false;
+        } else if (stockStatus === 'outOfStock' && totalQuantity > 0) {
+            matches = false;
+        }
+        
+        // فلترة حسب الصلاحية (تفحص كل الدفعات)
+        if (expiryStatus === 'expired') {
+            if (!product.batches || !Object.values(product.batches).some(batch => isProductExpired(batch.expiryDate))) {
+                matches = false;
+            }
+        } else if (expiryStatus === 'expiringSoon') {
+            if (!product.batches || !Object.values(product.batches).some(batch => isProductExpiringSoon(batch.expiryDate))) {
+                matches = false;
+            }
+        } else if (expiryStatus === 'valid') {
+            if (product.batches && Object.values(product.batches).some(batch => isProductExpired(batch.expiryDate))) {
+                matches = false;
+            }
+        }
+        
+        if (matches) {
+            visibleCount++;
+            const card = createProductCard(key, product);
+            gridContainer.appendChild(card);
+        }
     });
     
     // عرض رسالة إذا لم توجد نتائج
     if (visibleCount === 0) {
-      container.innerHTML = '<div id="noProducts">لا توجد نتائج مطابقة للبحث والفلاتر</div>';
+        container.innerHTML = '<div id="noProducts">لا توجد نتائج مطابقة للبحث والفلاتر</div>';
     } else {
-      container.innerHTML = '';
-      container.appendChild(fragment);
+        container.innerHTML = '';
+        container.appendChild(fragment);
     }
-  }
+}
 
   // دالة لعرض المنتجات
   function displayProducts(products) {
@@ -584,8 +617,7 @@
     container.appendChild(fragment);
   }
 
-  // دالة إنشاء بطاقة منتج
-  function createProductCard(key, product) {
+function createProductCard(key, product) {
     const card = document.createElement('div');
     card.className = 'product-card visible';
     card.dataset.id = key;
@@ -607,29 +639,62 @@
         </div>`
       : "";
     
-    // حالة المخزون
-    const stockStatus = getStockStatus(product.quantity);
+    // حساب الكمية الإجمالية
+    let totalQuantity = 0;
+    let batchesHtml = '';
+    
+    if (product.batches) {
+        // تحويل الدفعات إلى مصفوفة وترتيبها حسب الصلاحية (FEFO)
+        const batchesArray = Object.entries(product.batches).map(([batchId, batch]) => ({
+            id: batchId,
+            ...batch
+        })).sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+        
+        totalQuantity = batchesArray.reduce((sum, batch) => sum + (parseFloat(batch.quantity) || 0), 0);
+        
+        // إنشاء HTML للدفعات
+        batchesHtml = `
+            <div class="batches-section" style="margin-top: 15px;">
+                <h4 style="margin-bottom: 10px; color: var(--secondary);">الدُفعات:</h4>
+                ${batchesArray.map(batch => {
+                    const expiryInfo = getExpiryInfo(batch.expiryDate);
+                    return `
+                        <div class="batch-item" style="margin-bottom: 8px; padding: 8px; background: #f9f9f9; border-radius: 5px;">
+                            <div style="display: flex; justify-content: space-between;">
+                                <span><strong>رقم الدفعة:</strong> ${batch.batchNumber || batch.id}</span>
+                                <span><strong>الكمية:</strong> ${batch.quantity}</span>
+                            </div>
+                            <div style="display: flex; justify-content: space-between; margin-top: 5px;">
+                                <span><strong>الصلاحية:</strong> ${formatDate(batch.expiryDate)}</span>
+                                ${expiryInfo.badge || ''}
+                            </div>
+                        </div>
+                    `;
+                }).join('')}
+            </div>
+        `;
+    }
+    
+    // حالة المخزون بناءً على الكمية الإجمالية
+    const stockStatus = getStockStatus(totalQuantity);
     const stockBadge = stockStatus.badge ? `<span class="badge ${stockStatus.class}">${stockStatus.badge}</span>` : '';
     
-    // تاريخ الصلاحية
-    const expiryInfo = getExpiryInfo(product.expiryDate);
-    const expiryHtml = product.expiryDate
-      ? `<p><strong>تاريخ الصلاحية:</strong> ${formatDate(product.expiryDate)} ${expiryInfo.badge || ''}</p>`
-      : "";
-
     // معلومات المنتج
     info.innerHTML = `
       ${imageHtml}
-      <p><strong>السعر:</strong> ${product.price ? parseFloat(product.price).toFixed(2) + ' MAD' : 'غير محدد'}</p>
-      <p><strong>الكمية:</strong> ${product.quantity || 0} ${stockBadge}</p>
-      ${expiryHtml}
+      <p><strong>السعر:</strong> ${product.price ? parseFloat(product.price).toFixed(2) + ' ر.س' : 'غير محدد'}</p>
+      <p><strong>الكمية الإجمالية:</strong> ${totalQuantity} ${stockBadge}</p>
       <p><strong>رقم المنتج:</strong> ${key}</p>
+      ${batchesHtml}
     `;
 
     // إضافة تنبيهات للمنتجات الحرجة
-    if (expiryInfo.isExpired || stockStatus.class === 'out-of-stock-badge') {
+    const hasExpiredBatches = product.batches && Object.values(product.batches).some(batch => isProductExpired(batch.expiryDate));
+    const hasExpiringSoonBatches = product.batches && Object.values(product.batches).some(batch => isProductExpiringSoon(batch.expiryDate));
+    
+    if (hasExpiredBatches || stockStatus.class === 'out-of-stock-badge') {
       card.style.borderLeft = '4px solid var(--danger)';
-    } else if (expiryInfo.badge.includes('expiring-soon-badge') || stockStatus.class === 'low-stock-badge') {
+    } else if (hasExpiringSoonBatches || stockStatus.class === 'low-stock-badge') {
       card.style.borderLeft = '4px solid var(--warning)';
     }
 
@@ -651,7 +716,7 @@
     }
     
     return card;
-  }
+}
 
   // دالة الترتيب
   function sortProducts(products, sortOption) {
