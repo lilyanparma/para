@@ -1,24 +1,14 @@
-// عند تحميل الصفحة، نقوم بالتحقق من اللغة المختارة
-document.addEventListener("DOMContentLoaded", function() {
-  // استرجاع اللغة المختارة من localStorage، وإذا لم توجد نجعل اللغة العربية الافتراضية.
-  const selectedLang = localStorage.getItem('selectedLanguage') || 'ar';
+// دالة تبديل اللغة (تعتمد هنا على تبديل العربية والفرنسية كمثال)
+function switchLang() {
+  // الحصول على اللغة الحالية، والعربية "ar" هي الافتراضية
+  const currentLang = localStorage.getItem("selectedLanguage") || "ar";
+  // التبديل: إذا كانت الحالية "ar" نبدل إلى "fr"، والعكس صحيح
+  const newLang = currentLang === "ar" ? "fr" : "ar";
+  localStorage.setItem("selectedLanguage", newLang);
+  location.reload(); // إعادة تحميل الصفحة لتطبيق التغييرات
+}
 
-  // إذا كانت اللغة العربية، لا حاجة لتحميل ملف ترجمة لأن المحتوى الأصلي عربي.
-  if (selectedLang === 'ar') {
-    console.log("العربية مختارة، لن يتم تحميل ملف ترجمة.");
-    return;
-  }
-
-  // إذا كانت اللغة غير العربية، نقوم بتحميل ملف الترجمة المناسب من مجلد lang
-  fetch(`lang/${selectedLang}.json`)
-    .then(response => response.json())
-    .then(translations => {
-      applyTranslations(translations);
-    })
-    .catch(error => console.error("Error loading translations:", error));
-});
-
-// دالة لتحديث العناصر التي تحمل سمة data-translate بالنصوص المترجمة
+// دالة تقوم بتحديث جميع العناصر التي تحمل سمة data-translate باستخدام ملف الترجمة
 function applyTranslations(translations) {
   document.querySelectorAll('[data-translate]').forEach(element => {
     const key = element.getAttribute('data-translate');
@@ -29,17 +19,27 @@ function applyTranslations(translations) {
   });
 }
 
-// دالة مساعدة تدعم المفاتيح المتداخلة مثل "invoice.title"
+// دالة مساعدة لتفسير المفاتيح المتداخلة مثل "invoice.title"
 function resolveTranslation(obj, key) {
   return key.split('.').reduce((current, part) => current && current[part], obj);
 }
 
-// دالة لتبديل اللغة بين العربية والفرنسية وإعادة تحميل الصفحة
-function switchLang() {
-  // استرجاع اللغة الحالية، والافتراضية هنا "ar"
-  const currentLang = localStorage.getItem('selectedLanguage') || 'ar';
-  // تحديد اللغة الجديدة: إذا كانت العربية، نتبدل إلى "fr"، والعكس صحيح
-  const newLang = currentLang === 'ar' ? 'fr' : 'ar';
-  localStorage.setItem('selectedLanguage', newLang);
-  location.reload(); // إعادة تحميل الصفحة لتطبيق التغييرات
-}
+// عند تحميل الصفحة، قم بالتحقق من اللغة المختارة
+document.addEventListener("DOMContentLoaded", function() {
+  // استرجاع اللغة المختارة من localStorage؛ إذا لم توجد نجعل العربية الافتراضية
+  const selectedLang = localStorage.getItem('selectedLanguage') || 'ar';
+
+  // إذا كانت العربية مختارة، فلا حاجة لتحميل ملف ترجمة
+  if (selectedLang === 'ar') {
+    console.log("اللغة العربية مختارة. لن يتم تحميل ملف ترجمة.");
+    return;
+  }
+
+  // إذا كانت اللغة المختارة غير العربية، نقوم بتحميل ملف الترجمة المناسب
+  fetch(`lang/${selectedLang}.json`)
+    .then(response => response.json())
+    .then(translations => {
+      applyTranslations(translations);
+    })
+    .catch(error => console.error("Error loading translations:", error));
+});
