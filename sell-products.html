@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -380,65 +379,38 @@
             font-weight: bold;
         }
         
-        .product-expiry {
-            color: var(--gray);
-            font-size: 1.1rem;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            margin-bottom: 15px;
-        }
-        
-        .product-expiry.expiry-soon {
-            color: var(--warning);
-            font-weight: bold;
-        }
-        
-        .product-expiry.expiry-passed {
-            color: var(--danger);
-            font-weight: bold;
-            animation: pulse 1.5s infinite;
-        }
-        
-        /* أنماط جديدة للدفعات */
-        .batches-container {
-            margin-top: 20px;
-            border-top: 1px solid #eee;
-            padding-top: 20px;
-        }
-        
-        .batch-item {
-            background: #f8f9fa;
-            padding: 15px;
+        /* بطاقات الدفعات */
+        .batch-card {
+            background: white;
             border-radius: 10px;
-            margin-bottom: 10px;
+            padding: 15px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.05);
             border-left: 4px solid var(--primary);
-            transition: all 0.3s;
-        }
-        
-        .batch-item:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 5px 15px rgba(0,0,0,0.05);
+            position: relative;
         }
         
         .batch-header {
             display: flex;
             justify-content: space-between;
-            margin-bottom: 8px;
+            margin-bottom: 10px;
         }
         
-        .batch-number {
-            font-weight: bold;
-            color: var(--primary);
+        .batch-title {
+            font-weight: 600;
+            color: var(--dark);
         }
         
         .batch-quantity {
-            font-weight: bold;
+            color: var(--gray);
         }
         
         .batch-expiry {
-            font-size: 0.9rem;
             color: var(--gray);
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            gap: 5px;
         }
         
         .batch-expiry.expiry-soon {
@@ -452,13 +424,16 @@
         }
         
         .batch-select-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             background: var(--primary);
             color: white;
             border: none;
-            padding: 5px 10px;
             border-radius: 5px;
+            padding: 5px 10px;
+            font-size: 0.8rem;
             cursor: pointer;
-            font-size: 0.9rem;
             transition: all 0.3s;
         }
         
@@ -466,9 +441,32 @@
             background: var(--primary-dark);
         }
         
+        .batch-select-btn.selected {
+            background: var(--success);
+        }
+        
         .batch-select-btn:disabled {
-            background: #ccc;
+            background: var(--gray);
             cursor: not-allowed;
+        }
+        
+        .batches-container {
+            margin-top: 20px;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 10px;
+            border: 1px solid #eee;
+            border-radius: 10px;
+        }
+        
+        .batches-title {
+            font-size: 1.2rem;
+            margin-bottom: 15px;
+            color: var(--dark);
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
         
         @keyframes blink {
@@ -907,9 +905,11 @@
             </div>
             
             <!-- قسم الدفعات -->
-            <div id="batchesContainer" class="batches-container">
-                <h3><i class="fas fa-box-open"></i> الدفعات المتاحة</h3>
-                <div id="batchesList"></div>
+            <div class="batches-container" id="batchesContainer">
+                <h3 class="batches-title">
+                    <i class="fas fa-box-open"></i> الدفعات المتاحة
+                </h3>
+                <!-- سيتم ملؤها ديناميكيًا -->
             </div>
             
             <button id="applyDiscount" class="btn btn-outline">
@@ -1049,7 +1049,6 @@
             productQuantity: document.getElementById('productQuantity'),
             productExpiry: document.getElementById('productExpiry'),
             batchesContainer: document.getElementById('batchesContainer'),
-            batchesList: document.getElementById('batchesList'),
             applyDiscount: document.getElementById('applyDiscount'),
             discountSection: document.getElementById('discountSection'),
             percentDiscountBtn: document.getElementById('percentDiscountBtn'),
@@ -1174,7 +1173,7 @@
                             cost: parseFloat(productData.cost),
                             batches: productData.batches || {},
                             image: productData.image || 'https://via.placeholder.com/150',
-                            date: productData.date || 'غير محدد'
+                            date: productData.date || new Date().toISOString().split('T')[0]
                         };
                         
                         displayProduct(currentProduct);
@@ -1193,73 +1192,9 @@
         function displayProduct(product) {
             elements.productName.textContent = product.name;
             elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${product.price.toFixed(2)} ر.س`;
-            elements.productImage.src = product.image;
             
-            // حساب الكمية الإجمالية من الدفعات
-            let totalQuantity = 0;
-            let hasExpiredBatches = false;
-            let hasSoonExpiringBatches = false;
-            
-            // عرض الدفعات
-            elements.batchesList.innerHTML = '';
-            
-            if (Object.keys(product.batches).length === 0) {
-                elements.batchesList.innerHTML = '<p>لا توجد دفعات متاحة لهذا المنتج</p>';
-                elements.productQuantity.innerHTML = '<i class="fas fa-boxes"></i> <span class="out-of-stock">انتهى المخزون</span>';
-                elements.productQuantity.className = 'product-stock out-of-stock';
-                elements.productExpiry.innerHTML = '<i class="fas fa-calendar-alt"></i> تاريخ الصلاحية: غير محدد';
-                elements.productExpiry.className = 'product-expiry';
-                elements.sellBtn.disabled = true;
-                elements.sellBtn.style.opacity = 0.6;
-                elements.sellBtn.style.cursor = 'not-allowed';
-                return;
-            }
-            
-            // تحويل الدفعات إلى مصفوفة وترتيبها حسب تاريخ الصلاحية (الأقرب أولاً)
-            const batchesArray = Object.entries(product.batches).map(([batchId, batch]) => ({
-                id: batchId,
-                ...batch
-            }));
-            
-            batchesArray.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
-            
-            batchesArray.forEach(batch => {
-                totalQuantity += parseFloat(batch.quantity) || 0;
-                
-                const today = new Date();
-                const expiryDate = new Date(batch.expiryDate);
-                const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-                
-                let expiryStatus = '';
-                if (diffDays < 0) {
-                    expiryStatus = '<span class="expiry-passed">(منتهي الصلاحية)</span>';
-                    hasExpiredBatches = true;
-                } else if (diffDays <= 30) {
-                    expiryStatus = `<span class="expiry-soon">(سينتهي خلال ${diffDays} يوم)</span>`;
-                    hasSoonExpiringBatches = true;
-                }
-                
-                const batchElement = document.createElement('div');
-                batchElement.className = 'batch-item';
-                batchElement.innerHTML = `
-                    <div class="batch-header">
-                        <span class="batch-number">الدفعة: ${batch.batchNumber || batch.id}</span>
-                        <span class="batch-quantity">الكمية: ${batch.quantity}</span>
-                    </div>
-                    <div class="batch-expiry ${diffDays < 0 ? 'expiry-passed' : diffDays <= 30 ? 'expiry-soon' : ''}">
-                        تاريخ الصلاحية: ${formatDate(batch.expiryDate)} ${expiryStatus}
-                    </div>
-                    <button class="batch-select-btn" data-batch-id="${batch.id}" ${batch.quantity <= 0 || diffDays < 0 ? 'disabled' : ''}>
-                        اختيار هذه الدفعة
-                    </button>
-                `;
-                
-                elements.batchesList.appendChild(batchElement);
-                
-                // إضافة حدث اختيار الدفعة
-                const selectBtn = batchElement.querySelector('.batch-select-btn');
-                selectBtn.addEventListener('click', () => selectBatch(batch));
-            });
+            // حساب إجمالي الكمية من جميع الدفعات
+            const totalQuantity = calculateTotalQuantity(product.batches);
             
             // تحديث عرض كمية المخزون مع التأثيرات
             const stockElement = elements.productQuantity;
@@ -1277,20 +1212,10 @@
                 stockElement.className = 'product-stock';
             }
             
-            // تحديث عرض تاريخ الصلاحية العام
-            const expiryElement = elements.productExpiry;
+            // عرض الدفعات المتاحة
+            displayBatches(product.batches);
             
-            if (hasExpiredBatches) {
-                expiryElement.innerHTML = '<i class="fas fa-calendar-alt"></i> <span class="expiry-passed">يوجد دفعات منتهية الصلاحية</span>';
-                expiryElement.className = 'product-expiry expiry-passed';
-            } else if (hasSoonExpiringBatches) {
-                expiryElement.innerHTML = '<i class="fas fa-calendar-alt"></i> <span class="expiry-soon">يوجد دفعات قريبة من الانتهاء</span>';
-                expiryElement.className = 'product-expiry expiry-soon';
-            } else {
-                expiryElement.innerHTML = '<i class="fas fa-calendar-alt"></i> تاريخ الصلاحية: جميع الدفعات صالحة';
-                expiryElement.className = 'product-expiry';
-            }
-            
+            elements.productImage.src = product.image;
             elements.finalPriceValue.textContent = product.price.toFixed(2) + ' ر.س';
             elements.productDetails.style.display = 'block';
             
@@ -1309,27 +1234,129 @@
             elements.cardPayment.classList.remove('active');
             elements.transferPayment.classList.remove('active');
             
-            // إلغاء اختيار أي دفعة سابقة
+            // إعادة تعيين الدفعة المحددة
             selectedBatch = null;
+        }
+        
+        // حساب إجمالي الكمية من جميع الدفعات
+        function calculateTotalQuantity(batches) {
+            if (!batches) return 0;
+            
+            return Object.values(batches).reduce((total, batch) => {
+                return total + (parseInt(batch.quantity) || 0);
+            }, 0);
+        }
+        
+        // عرض الدفعات المتاحة
+        function displayBatches(batches) {
+            elements.batchesContainer.innerHTML = `
+                <h3 class="batches-title">
+                    <i class="fas fa-box-open"></i> الدفعات المتاحة
+                </h3>
+            `;
+            
+            if (!batches || Object.keys(batches).length === 0) {
+                elements.batchesContainer.innerHTML += `
+                    <div class="batch-card">
+                        <p>لا توجد دفعات متاحة لهذا المنتج</p>
+                    </div>
+                `;
+                return;
+            }
+            
+            // تحويل الدفعات إلى مصفوفة وترتيبها حسب تاريخ الصلاحية (الأقرب أولاً)
+            const batchesArray = Object.entries(batches).map(([batchId, batch]) => ({
+                id: batchId,
+                ...batch
+            }));
+            
+            batchesArray.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+            
+            batchesArray.forEach(batch => {
+                const batchCard = document.createElement('div');
+                batchCard.className = 'batch-card';
+                
+                const today = new Date();
+                const expiryDate = new Date(batch.expiryDate);
+                const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                
+                let expiryStatus = '';
+                if (diffDays < 0) {
+                    expiryStatus = '<span class="batch-expiry expiry-passed">(منتهي الصلاحية)</span>';
+                } else if (diffDays <= 30) {
+                    expiryStatus = `<span class="batch-expiry expiry-soon">(متبقي ${diffDays} يوم)</span>`;
+                } else {
+                    expiryStatus = '<span class="batch-expiry">(صالحة)</span>';
+                }
+                
+                batchCard.innerHTML = `
+                    <div class="batch-header">
+                        <div>
+                            <div class="batch-title">الدفعة: ${batch.batchNumber || batch.id}</div>
+                            <div class="batch-quantity">الكمية: ${batch.quantity} قطع</div>
+                        </div>
+                        ${expiryStatus}
+                    </div>
+                    <button class="batch-select-btn" data-batch-id="${batch.id}">
+                        <i class="fas fa-check"></i> اختيار
+                    </button>
+                `;
+                
+                // تعطيل الزر إذا كانت الكمية صفر أو منتهية الصلاحية
+                const selectBtn = batchCard.querySelector('.batch-select-btn');
+                if (batch.quantity <= 0 || diffDays < 0) {
+                    selectBtn.disabled = true;
+                }
+                
+                // تحديد الدفعة المختارة
+                if (selectedBatch && selectedBatch.id === batch.id) {
+                    selectBtn.classList.add('selected');
+                }
+                
+                // حدث النقر على زر الاختيار
+                selectBtn.addEventListener('click', () => {
+                    selectBatch(batch);
+                });
+                
+                elements.batchesContainer.appendChild(batchCard);
+            });
         }
         
         // اختيار دفعة معينة
         function selectBatch(batch) {
+            const today = new Date();
+            const expiryDate = new Date(batch.expiryDate);
+            const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+            
+            // التحقق من صلاحية الدفعة
+            if (diffDays < 0) {
+                showToast('لا يمكن اختيار دفعة منتهية الصلاحية', 'error');
+                return;
+            }
+            
+            // التحقق من توفر الكمية
+            if (batch.quantity <= 0) {
+                showToast('لا توجد كمية متاحة في هذه الدفعة', 'error');
+                return;
+            }
+            
             selectedBatch = batch;
             
-            // إزالة التحديد من جميع الأزرار
+            // تحديث أزرار الاختيار
             document.querySelectorAll('.batch-select-btn').forEach(btn => {
-                btn.style.backgroundColor = '';
+                btn.classList.remove('selected');
+                if (btn.dataset.batchId === batch.id) {
+                    btn.classList.add('selected');
+                }
             });
-            
-            // تمييز الزر المحدد
-            event.target.style.backgroundColor = '#e6f7ff';
             
             showToast(`تم اختيار الدفعة ${batch.batchNumber || batch.id}`, 'success');
         }
         
         // دالة مساعدة لتهيئة التاريخ
         function formatDate(dateString) {
+            if (!dateString) return 'غير محدد';
+            
             const options = { year: 'numeric', month: 'long', day: 'numeric' };
             return new Date(dateString).toLocaleDateString('ar-SA', options);
         }
@@ -1438,27 +1465,25 @@
         elements.sellBtn.addEventListener('click', function() {
             if (!currentProduct) return;
             
-            // إذا كان المنتج لديه دفعات، يجب اختيار دفعة
-            if (Object.keys(currentProduct.batches).length > 0 && !selectedBatch) {
-                showToast('⚠️ يرجى اختيار دفعة من القائمة', 'warning');
+            // التحقق من اختيار دفعة
+            if (!selectedBatch) {
+                showToast('الرجاء اختيار دفعة للبيع', 'warning');
                 return;
             }
             
             // التحقق من وجود مخزون في الدفعة المختارة
-            if (selectedBatch && selectedBatch.quantity <= 0) {
-                showToast('⚠️ لا يمكن إتمام البيع - انتهى المخزون في الدفعة المختارة!', 'error');
+            if (selectedBatch.quantity <= 0) {
+                showToast('⚠️ لا توجد كمية متاحة في الدفعة المختارة!', 'error');
                 return;
             }
             
-            // التحقق من تاريخ الصلاحية للدفعة المختارة
-            if (selectedBatch && selectedBatch.expiryDate) {
-                const today = new Date();
-                const expiryDate = new Date(selectedBatch.expiryDate);
-                
-                if (expiryDate < today) {
-                    showToast('⚠️ لا يمكن بيع منتج من دفعة منتهية الصلاحية!', 'error');
-                    return;
-                }
+            // التحقق من صلاحية الدفعة المختارة
+            const today = new Date();
+            const expiryDate = new Date(selectedBatch.expiryDate);
+            
+            if (expiryDate < today) {
+                showToast('⚠️ لا يمكن بيع منتج من دفعة منتهية الصلاحية!', 'error');
+                return;
             }
             
             const finalPrice = parseFloat(elements.finalPriceValue.textContent);
@@ -1478,22 +1503,14 @@
                 };
             }
             
-            // تحديث المخزون في قاعدة البيانات
-            let updates = {};
+            // تحديث المخزون في الدفعة المختارة
+            const newQuantity = selectedBatch.quantity - 1;
             
-            if (selectedBatch) {
-                // تخفيض كمية الدفعة المختارة
-                const newQuantity = selectedBatch.quantity - 1;
-                updates[`products/${currentProduct.barcode}/batches/${selectedBatch.id}/quantity`] = newQuantity;
-            } else {
-                // إذا لم يكن هناك دفعات، نستخدم الكمية العامة (للتخزين القديم)
-                const newQuantity = currentProduct.quantity - 1;
-                updates[`products/${currentProduct.barcode}/quantity`] = newQuantity;
-            }
-            
-            database.ref().update(updates)
+            database.ref(`products/${currentProduct.barcode}/batches/${selectedBatch.id}`).update({
+                quantity: newQuantity
+            })
             .then(() => {
-                // إنشاء الفاتورة
+                // إنشاء الفاتورة مع معلومات الدفعة
                 const invoice = createInvoice(currentProduct, finalPrice, paymentMethod, discountInfo, selectedBatch);
                 
                 // حفظ الفاتورة في قاعدة البيانات
@@ -1511,7 +1528,7 @@
             });
         });
         
-        // 11. وظيفة إنشاء الفاتورة
+        // 11. وظيفة إنشاء الفاتورة مع دعم الدفعات
         function createInvoice(product, finalPrice, paymentMethod, discountInfo = null, batch = null) {
             const now = new Date();
             const invoiceId = 'INV-' + now.getFullYear() + (now.getMonth()+1).toString().padStart(2, '0') + 
@@ -1525,19 +1542,25 @@
                     name: product.name,
                     barcode: product.barcode,
                     price: product.price,
-                    cost: product.cost,
-                    image: product.image
+                    cost: product.cost
                 },
                 originalPrice: product.price,
                 finalPrice: finalPrice,
                 paymentMethod: paymentMethod,
                 discount: discountInfo,
-                batch: batch ? {
+                batch: null
+            };
+            
+            // إضافة معلومات الدفعة إذا كانت موجودة
+            if (batch) {
+                invoice.batch = {
                     id: batch.id,
                     batchNumber: batch.batchNumber || batch.id,
-                    expiryDate: batch.expiryDate
-                } : null
-            };
+                    expiryDate: batch.expiryDate,
+                    originalQuantity: batch.quantity + 1, // نضيف 1 لأننا خصمناها قبل
+                    remainingQuantity: batch.quantity
+                };
+            }
             
             invoiceCounter++;
             
@@ -1579,7 +1602,7 @@
                 });
         }
         
-        // 14. وظيفة إرجاع المنتج
+        // 14. وظيفة إرجاع المنتج مع دعم الدفعات
         elements.returnBtn.addEventListener('click', function() {
             if (!currentProduct) {
                 showToast('لا يوجد منتج مختار للإرجاع', 'warning');
@@ -1608,42 +1631,60 @@
             try {
                 showToast('جارٍ معالجة طلب الإرجاع...', 'info');
                 
-                let updates = {};
+                // 1. البحث عن آخر فاتورة بيع لهذا المنتج
+                const snapshot = await database.ref('invoices').orderByChild('product/barcode').equalTo(currentProduct.barcode).limitToLast(1).once('value');
                 
-                if (selectedBatch) {
-                    // زيادة كمية الدفعة المختارة
-                    const newQuantity = selectedBatch.quantity + 1;
-                    updates[`products/${currentProduct.barcode}/batches/${selectedBatch.id}/quantity`] = newQuantity;
-                } else {
-                    // إذا لم يكن هناك دفعات، نستخدم الكمية العامة (للتخزين القديم)
-                    const newQuantity = currentProduct.quantity + 1;
-                    updates[`products/${currentProduct.barcode}/quantity`] = newQuantity;
+                if (!snapshot.exists()) {
+                    showToast('لا توجد فواتير سابقة لهذا المنتج', 'error');
+                    return;
                 }
                 
-                // 1. تحديث المخزون
-                await database.ref().update(updates);
+                let invoiceData = null;
+                let invoiceId = null;
                 
-                // 2. تسجيل عملية الإرجاع
+                snapshot.forEach(invoice => {
+                    invoiceId = invoice.key;
+                    invoiceData = invoice.val();
+                });
+                
+                // 2. التحقق من وجود دفعة في الفاتورة
+                if (!invoiceData.batch) {
+                    showToast('لا يمكن إرجاع المنتج - لا توجد معلومات عن الدفعة في الفاتورة', 'error');
+                    return;
+                }
+                
+                // 3. تحديث كمية الدفعة في قاعدة البيانات
+                const batchRef = database.ref(`products/${currentProduct.barcode}/batches/${invoiceData.batch.id}`);
+                const batchSnapshot = await batchRef.once('value');
+                
+                if (!batchSnapshot.exists()) {
+                    showToast('لا يمكن إرجاع المنتج - الدفعة غير موجودة', 'error');
+                    return;
+                }
+                
+                const currentQuantity = batchSnapshot.val().quantity || 0;
+                await batchRef.update({
+                    quantity: currentQuantity + 1
+                });
+                
+                // 4. تسجيل عملية الإرجاع
                 const returnData = {
                     barcode: currentProduct.barcode,
                     productName: currentProduct.name,
                     returnedAt: firebase.database.ServerValue.TIMESTAMP,
-                    price: currentProduct.price,
+                    price: invoiceData.finalPrice,
                     reason: returnReason,
                     processedBy: "User",
-                    batch: selectedBatch ? {
-                        id: selectedBatch.id,
-                        batchNumber: selectedBatch.batchNumber || selectedBatch.id,
-                        expiryDate: selectedBatch.expiryDate
-                    } : null
+                    invoiceId: invoiceId,
+                    batch: invoiceData.batch
                 };
                 
                 await database.ref('returns/').push(returnData);
                 
-                // 3. عرض إشعار النجاح
-                showReturnSuccess(currentProduct.name, currentProduct.price);
+                // 5. عرض إشعار النجاح
+                showReturnSuccess(currentProduct.name, invoiceData.finalPrice);
                 
-                // 4. إعادة تعيين النظام
+                // 6. إعادة تعيين النظام
                 resetSystem();
                 
             } catch (error) {
