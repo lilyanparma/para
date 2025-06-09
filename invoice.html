@@ -198,20 +198,73 @@
             background: #218838;
         }
         
-        @media print {
-            body {
-                background: white;
-                padding: 0;
-            }
-            .invoice-container {
-                box-shadow: none;
-                border: none;
-                max-width: 100%;
-                margin: 0;
-            }
-            .invoice-actions {
-                display: none;
-            }
+       /* ... ضع هذا الكود داخل وسم <style> بدلاً من كود @media print القديم ... */
+
+@media print {
+    /* إعدادات أساسية للطباعة */
+    body {
+        background: white;
+        padding: 0;
+        font-size: 10pt; /* حجم خط أساسي أصغر مناسب للإيصالات */
+        color: black;
+    }
+
+    /* إخفاء الأزرار والشعار (لتوفير المساحة في الإيصال) */
+    .invoice-actions, .invoice-logo-container {
+        display: none;
+    }
+
+    .invoice-container {
+        box-shadow: none;
+        border: none;
+        max-width: 100%; /* اجعل العرض مرناً */
+        margin: 0;
+    }
+    
+    /* تنسيق رأس الإيصال */
+    .invoice-header h2 {
+        font-size: 14pt;
+    }
+    .invoice-pharmacy {
+        font-size: 12pt;
+    }
+    .invoice-meta, .invoice-payment {
+        text-align: center;
+    }
+    .invoice-meta div {
+        justify-content: center;
+    }
+
+    /* الأهم: إعادة هيكلة الجدول ليعمل على ورق ضيق */
+    .invoice-items-table thead {
+        display: none; /* إخفاء رأس الجدول التقليدي */
+    }
+
+    .invoice-items-table tr {
+        display: block; /* جعل كل صف ككتلة منفصلة */
+        margin-bottom: 15px;
+        border-bottom: 1px dashed #ccc;
+        padding-bottom: 10px;
+    }
+
+    .invoice-items-table td {
+        display: block; /* جعل كل خلية تحتل سطراً كاملاً */
+        text-align: right;
+        padding: 2px 0;
+        border-bottom: none;
+    }
+
+    /* إضافة عناوين للحقول باستخدام CSS */
+    .invoice-items-table td:nth-of-type(1)::before { content: "المنتج: "; font-weight: bold; }
+    .invoice-items-table td:nth-of-type(2)::before { content: "الكمية: "; font-weight: bold; }
+    .invoice-items-table td:nth-of-type(3)::before { content: "الدفعة: "; font-weight: bold; }
+    .invoice-items-table td:nth-of-type(4)::before { content: "الإجمالي: "; font-weight: bold; }
+
+    /* تنسيق ملخص الحسابات */
+    .summary-row {
+        justify-content: space-between;
+    }
+}
 
             /* أضف هذا التنسيق إلى قسم <style> في ملف الفاتورة */
 
