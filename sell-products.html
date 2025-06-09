@@ -2408,32 +2408,32 @@ function displayInvoiceList(invoices) {
 
 
         // 15. إعادة تعيين النظام
-        function resetSystem() {
-            elements.barcodeInput.value = '';
-            elements.productDetails.style.display = 'none';
-            elements.invoiceItemsContainer.style.display = 'none';
-            elements.invoiceDiscountSection.style.display = 'none';
-            elements.invoicePlaceholder.style.display = 'none';
-            
-            if (elements.searchWrapper.style.display !== 'flex') {
-                toggleSearch();
-            }
+       function resetSystem() {
+    elements.barcodeInput.value = '';
+    elements.productDetails.style.display = 'none';
+    elements.invoiceItemsContainer.style.display = 'none'; // هذا يخفي قائمة المنتجات، وهو صحيح
+    elements.invoiceDiscountSection.style.display = 'none';
+    // elements.invoicePlaceholder.style.display = 'none'; // <-- تم تعطيل هذا السطر
 
-            resetProductSelection();
-            invoiceItems = [];
-            invoiceOverallDiscount = { type: 'none', value: 0, reason: '' };
-            currentSubTotal = 0;
-            currentFinalInvoicePrice = 0;
+    if (elements.searchWrapper.style.display !== 'flex') {
+        toggleSearch();
+    }
 
-            displayInvoiceItems();
-            calculateAndDisplayTotals();
-            elements.invoiceDiscountPercent.value = '';
-            elements.invoiceDiscountAmount.value = '';
-            elements.invoiceReasonInput.value = '';
-            setPaymentMethod('cash');
-            
-            if(cameraActive) stopCamera();
-        }
+    resetProductSelection();
+    invoiceItems = [];
+    invoiceOverallDiscount = { type: 'none', value: 0, reason: '' };
+    currentSubTotal = 0;
+    currentFinalInvoicePrice = 0;
+
+    displayInvoiceItems();
+    calculateAndDisplayTotals();
+    elements.invoiceDiscountPercent.value = '';
+    elements.invoiceDiscountAmount.value = '';
+    elements.invoiceReasonInput.value = '';
+    setPaymentMethod('cash');
+    
+    if(cameraActive) stopCamera();
+}
 
         function resetProductSelection() {
              currentProduct = null;
