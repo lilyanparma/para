@@ -6,8 +6,11 @@
     <title>كشف أرباح الخدمات</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+
     <style>
-        /* === التنسيقات الجديدة المتوافقة مع تصميم المشروع === */
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
@@ -16,7 +19,7 @@
             --bg-color: #f8f9fa;
             --card-bg: #ffffff;
             --text-color: #333;
-            --shadow: 0 4px M20px rgba(0,0,0,0.08);
+            --shadow: 0 4px 20px rgba(0,0,0,0.08);
             --border-radius: 12px;
             --transition: all 0.3s ease;
         }
@@ -98,99 +101,26 @@
             color: #343a40;
         }
         
-        .summary-value.profit {
-            color: var(--profit-color);
-        }
+        .summary-value.profit { color: var(--profit-color); }
+        .summary-value.cost { color: var(--cost-color); }
+        
+        .table-wrapper { overflow-x: auto; padding: 10px; }
+        .transactions-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
+        .transactions-table th { background: #764ba2; color: white; padding: 15px; text-align: right; font-weight: 600; }
+        .transactions-table td { padding: 15px; border-bottom: 1px solid #e9ecef; color: #495057; }
+        .transactions-table tbody tr:hover { background-color: #f8f9fa; }
+        .transaction-profit { color: var(--profit-color); font-weight: bold; }
+        .transaction-cost { color: var(--cost-color); }
+        .service-details { font-size: 0.9rem; color: #6c757d; margin-top: 3px; }
+        .footer { text-align: center; padding: 25px; font-size: 0.9rem; color: #6c757d; background: #f1f2f6; }
+        .print-btn { border: none; padding: 12px 25px; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 15px rgba(0,0,0,0.2); background: var(--secondary-gradient); color: white; margin-top: 15px; }
+        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
+        .loading-overlay { display: flex; justify-content: center; align-items: center; padding: 50px; font-size: 1.2rem; color: #667eea; }
 
-        .summary-value.cost {
-            color: var(--cost-color);
-        }
-        
-        .table-wrapper {
-            overflow-x: auto;
-            padding: 10px;
-        }
-
-        .transactions-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 1rem;
-        }
-        
-        .transactions-table th {
-            background: #764ba2;
-            color: white;
-            padding: 15px;
-            text-align: right;
-            font-weight: 600;
-        }
-        
-        .transactions-table td {
-            padding: 15px;
-            border-bottom: 1px solid #e9ecef;
-            color: #495057;
-        }
-
-        .transactions-table tbody tr:hover {
-            background-color: #f8f9fa;
-        }
-        
-        .transaction-profit {
-            color: var(--profit-color);
-            font-weight: bold;
-        }
-
-        .transaction-cost {
-            color: var(--cost-color);
-        }
-        
-        .service-details {
-            font-size: 0.9rem;
-            color: #6c757d;
-            margin-top: 3px;
-        }
-        
-        .footer {
-            text-align: center;
-            padding: 25px;
-            font-size: 0.9rem;
-            color: #6c757d;
-            background: #f1f2f6;
-        }
-        
-        .print-btn {
-            border: none;
-            padding: 12px 25px;
-            border-radius: 50px;
-            font-size: 1rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: var(--transition);
-            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
-            background: var(--secondary-gradient);
-            color: white;
-            margin-top: 15px;
-        }
-
-        .print-btn:hover {
-            transform: translateY(-3px);
-            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
-        }
-        
         @media print {
-            body {
-                padding: 0;
-                background: white;
-            }
-            
-            .report-container, .summary-card {
-                box-shadow: none;
-                border: 1px solid #ddd;
-            }
-
-            .print-btn, .footer {
-                display: none;
-            }
+            body { padding: 0; background: white; }
+            .report-container, .summary-card { box-shadow: none; border: 1px solid #ddd; }
+            .print-btn, .footer { display: none; }
         }
     </style>
 </head>
@@ -201,35 +131,38 @@
             <p class="report-period" id="reportPeriod"></p>
         </div>
         
-        <div class="report-summary">
-            <div class="summary-card">
-                <div class="summary-title">إجمالي الإيرادات</div>
-                <div class="summary-value" id="totalRevenue">0.00 ر.س</div>
+        <div id="reportBody">
+            <div class="report-summary">
+                <div class="summary-card">
+                    <div class="summary-title">إجمالي الإيرادات</div>
+                    <div class="summary-value" id="totalRevenue">0.00 ر.س</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">إجمالي التكاليف</div>
+                    <div class="summary-value cost" id="totalCosts">0.00 ر.س</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-title">صافي الأرباح</div>
+                    <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
+                </div>
             </div>
-            <div class="summary-card">
-                <div class="summary-title">إجمالي التكاليف</div>
-                <div class="summary-value cost" id="totalCosts">0.00 ر.س</div>
-            </div>
-            <div class="summary-card">
-                <div class="summary-title">صافي الأرباح</div>
-                <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
-            </div>
-        </div>
-        
-        <div class="table-wrapper">
-            <table class="transactions-table">
-                <thead>
-                    <tr>
-                        <th width="15%">التاريخ</th>
-                        <th width="25%">الخدمة</th>
-                        <th width="15%">الإيراد</th>
-                        <th width="15%">التكلفة</th>
-                        <th width="15%">الربح</th>
-                    </tr>
-                </thead>
-                <tbody id="transactionsBody">
+            
+            <div class="table-wrapper">
+                <table class="transactions-table">
+                    <thead>
+                        <tr>
+                            <th width="15%">التاريخ</th>
+                            <th width="30%">الخدمة</th>
+                            <th width="15%">الإيراد</th>
+                            <th width="15%">التكلفة</th>
+                            <th width="20%">الربح</th>
+                        </tr>
+                    </thead>
+                    <tbody id="transactionsBody">
+                        <tr><td colspan="5"><div class="loading-overlay">جاري تحميل البيانات...</div></td></tr>
                     </tbody>
-            </table>
+                </table>
+            </div>
         </div>
         
         <div class="footer">
@@ -241,24 +174,66 @@
     </div>
 
     <script>
-        // استخراج البيانات من URL
-        const urlParams = new URLSearchParams(window.location.search);
-        const year = urlParams.get('year') || new Date().getFullYear();
-        const month = urlParams.get('month') || new Date().getMonth() + 1;
-        const data = JSON.parse(urlParams.get('data') || '[]');
+        // === الكود الجديد لجلب البيانات وعرضها ===
+
+        // 1. تهيئة Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+            authDomain: "pharmacy-system-9def6.firebaseapp.com",
+            databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+            projectId: "pharmacy-system-9def6",
+            storageBucket: "pharmacy-system-9def6.appspot.com",
+            messagingSenderId: "630855008414",
+            appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f"
+        };
+        firebase.initializeApp(firebaseConfig);
+        const database = firebase.database();
         
+        // 2. قراءة المعلمات من الرابط
+        const urlParams = new URLSearchParams(window.location.search);
+        const year = urlParams.get('year');
+        const month = urlParams.get('month');
         const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
         
-        function renderData() {
+        // 3. دالة جلب البيانات وتصفيتها وعرضها
+        async function fetchAndRenderReport() {
+            if (!year || !month) {
+                document.getElementById('reportBody').innerHTML = '<div class="loading-overlay">خطأ: لم يتم تحديد السنة والشهر.</div>';
+                return;
+            }
+
             document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
             document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
+
+            try {
+                const snapshot = await database.ref('services').once('value');
+                const allServices = snapshot.val() ? Object.values(snapshot.val()) : [];
+
+                const filteredServices = allServices.filter(service => {
+                    if (!service.date) return false;
+                    const itemDate = new Date(service.date);
+                    return itemDate.getFullYear() == year && (itemDate.getMonth() + 1) == month;
+                });
+
+                renderReport(filteredServices);
+
+            } catch (error) {
+                console.error("Error fetching data:", error);
+                document.getElementById('reportBody').innerHTML = '<div class="loading-overlay">فشل تحميل البيانات من قاعدة البيانات.</div>';
+            }
+        }
+
+        // 4. دالة عرض البيانات بعد جلبها
+        function renderReport(services) {
+            let totalRevenue = 0, totalCosts = 0, transactionsBody = '';
+
+            if (services.length === 0) {
+                document.getElementById('transactionsBody').innerHTML = `<tr><td colspan="5" style="text-align:center; padding:20px;">لا توجد خدمات في هذه الفترة</td></tr>`;
+                updateSummary(0, 0);
+                return;
+            }
             
-            let totalRevenue = 0;
-            let totalCosts = 0;
-            let transactionsBody = '';
-            
-            data.forEach((item) => {
-                // ** تعديل مهم: تم تغيير item.serviceCost إلى item.cost ليتوافق مع البيانات الفعلية **
+            services.forEach((item) => {
                 const price = item.price || 0;
                 const cost = item.cost || 0;
                 const profit = price - cost;
@@ -280,19 +255,20 @@
                 `;
             });
             
-            // ** تعديل مهم: تم تغيير العملة إلى ر.س للتوحيد **
-            document.getElementById('totalRevenue').textContent = totalRevenue.toFixed(2) + ' ر.س';
-            document.getElementById('totalCosts').textContent = totalCosts.toFixed(2) + ' ر.س';
-            document.getElementById('netProfit').textContent = (totalRevenue - totalCosts).toFixed(2) + ' ر.س';
-            
-            document.getElementById('transactionsBody').innerHTML = transactionsBody || `
-                <tr>
-                    <td colspan="5" style="text-align:center; padding:20px;">لا توجد خدمات في هذه الفترة</td>
-                </tr>
-            `;
+            document.getElementById('transactionsBody').innerHTML = transactionsBody;
+            updateSummary(totalRevenue, totalCosts);
         }
         
-        document.addEventListener('DOMContentLoaded', renderData);
+        // 5. دالة تحديث ملخص الأرباح
+        function updateSummary(revenue, costs) {
+            const profit = revenue - costs;
+            document.getElementById('totalRevenue').textContent = revenue.toFixed(2) + ' ر.س';
+            document.getElementById('totalCosts').textContent = costs.toFixed(2) + ' ر.س';
+            document.getElementById('netProfit').textContent = profit.toFixed(2) + ' ر.س';
+        }
+
+        // 6. تشغيل عند تحميل الصفحة
+        document.addEventListener('DOMContentLoaded', fetchAndRenderReport);
     </script>
 </body>
 </html>
