@@ -666,8 +666,7 @@
   </style>
 </head>
 <body>
- <!-- Header with modern gradient -->
-<header class="header">
+ <header class="header">
   <h1>
     <i class="fas fa-concierge-bell"></i> الخدمات الإضافية
   </h1>
@@ -675,7 +674,6 @@
 </header>
 
   <div class="container">
-    <!-- Action Buttons -->
     <div class="action-buttons">
       <button class="btn btn-add" id="toggleAddFormBtn">
         <i class="fas fa-plus-circle"></i> إضافة خدمة جديدة
@@ -688,7 +686,6 @@
       </button>
     </div>
 
-    <!-- New Search bar with dropdown results -->
     <div class="search-container" id="searchContainer">
       <div class="search-wrapper">
         <input type="text" id="searchInput" class="search-input" placeholder="ابحث عن خدمة...">
@@ -697,11 +694,9 @@
       </div>
     </div>
 
-    <!-- Alerts -->
     <div id="successAlert" class="alert alert-success"></div>
     <div id="errorAlert" class="alert alert-error"></div>
 
-    <!-- Add Service Form (hidden by default) -->
     <div class="form-container" id="addServiceForm">
       <div class="form-header">
         <h2 class="form-title">
@@ -725,6 +720,11 @@
       </div>
       
       <div class="form-group">
+        <label for="serviceCost">تكلفة الخدمة (ر.س)</label>
+        <input type="number" id="serviceCost" class="form-control" placeholder="أدخل تكلفة الخدمة إن وجدت">
+      </div>
+
+      <div class="form-group">
         <label for="serviceDetails">تفاصيل الخدمة</label>
         <textarea id="serviceDetails" class="form-control" rows="3" placeholder="أدخل تفاصيل الخدمة"></textarea>
       </div>
@@ -739,17 +739,14 @@
       </div>
     </div>
 
-    <!-- Services Container -->
     <div class="services-container" id="servicesContainer"></div>
     
-    <!-- Loading Spinner -->
     <div id="loading" class="loading">
       <div class="spinner"></div>
       <p>جاري تحميل البيانات...</p>
     </div>
   </div>
 
-  <!-- Edit Service Modal -->
   <div class="modal" id="editModal">
     <div class="modal-content">
       <div class="modal-header">
@@ -769,7 +766,6 @@
           <i class="fas fa-search"></i> بحث
         </button>
         
-        <!-- Edit Form (hidden by default) -->
         <div id="editForm" style="display: none; margin-top: 1.5rem;">
           <div class="form-group">
             <label for="editName">اسم الخدمة</label>
@@ -784,6 +780,11 @@
           <div class="form-group">
             <label for="editPrice">سعر الخدمة (ر.س)</label>
             <input type="number" id="editPrice" class="form-control">
+          </div>
+
+          <div class="form-group">
+            <label for="editCost">تكلفة الخدمة (ر.س)</label>
+            <input type="number" id="editCost" class="form-control">
           </div>
           
           <div class="form-group">
@@ -807,7 +808,6 @@
     </div>
   </div>
 
-  <!-- Firebase & App Script -->
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
   
@@ -842,6 +842,7 @@
     serviceName: document.getElementById('serviceName'),
     serviceDate: document.getElementById('serviceDate'),
     servicePrice: document.getElementById('servicePrice'),
+    serviceCost: document.getElementById('serviceCost'), // <-- عنصر التكلفة الجديد
     serviceDetails: document.getElementById('serviceDetails'),
     addServiceBtn: document.getElementById('addServiceBtn'),
     cancelAddBtn: document.getElementById('cancelAddBtn'),
@@ -855,6 +856,7 @@
     editName: document.getElementById('editName'),
     editDate: document.getElementById('editDate'),
     editPrice: document.getElementById('editPrice'),
+    editCost: document.getElementById('editCost'), // <-- عنصر التكلفة الجديد في التعديل
     editDetails: document.getElementById('editDetails'),
     saveEditBtn: document.getElementById('saveEditBtn'),
     deleteServiceBtn: document.getElementById('deleteServiceBtn'),
@@ -939,6 +941,7 @@
       elements.serviceName.value = '';
       elements.serviceDate.value = '';
       elements.servicePrice.value = '';
+      elements.serviceCost.value = ''; // <-- إفراغ الحقل
       elements.serviceDetails.value = '';
     }
   }
@@ -978,6 +981,11 @@
       serviceCard.className = 'service-card';
       serviceCard.setAttribute('data-key', service.key);
       
+      // === تعديل العرض لإظهار التكلفة والربح ===
+      const price = service.price || 0;
+      const cost = service.cost || 0;
+      const profit = price - cost;
+
       serviceCard.innerHTML = `
         <div class="service-header">
           <h3><i class="fas fa-concierge-bell"></i> ${service.name}</h3>
@@ -985,10 +993,16 @@
         </div>
         <div class="service-body">
           <div class="service-price">
-            <i class="fas fa-money-bill-wave"></i> ${service.price} ر.س
+            <i class="fas fa-money-bill-wave"></i> السعر: ${price.toFixed(2)} ر.س
+          </div>
+          <div class="service-details-content" style="font-size: 0.95rem; color: #888; margin-bottom: 10px;">
+             التكلفة: ${cost.toFixed(2)} ر.س
+          </div>
+          <div class="service-price" style="color: #28a745; font-size: 1.2rem; margin-top: 5px; border-top: 1px dashed #eee; padding-top: 10px;">
+             <i class="fas fa-chart-line"></i> الربح: ${profit.toFixed(2)} ر.س
           </div>
           ${service.details ? `
-          <div class="service-details">
+          <div class="service-details" style="margin-top: 1rem;">
             <div class="service-details-title">
               <i class="fas fa-info-circle"></i> تفاصيل الخدمة
             </div>
@@ -1027,16 +1041,12 @@
     const name = elements.serviceName.value.trim();
     const date = elements.serviceDate.value;
     const price = elements.servicePrice.value.trim();
+    const cost = elements.serviceCost.value.trim(); // <-- قراءة التكلفة
     const details = elements.serviceDetails.value.trim();
 
     // Validation
     if (!name || !date || !price) {
-      showError('الرجاء ملء جميع الحقول المطلوبة');
-      return;
-    }
-
-    if (isNaN(price)) {
-      showError('يجب أن يكون السعر رقماً');
+      showError('الرجاء ملء جميع الحقول المطلوبة (الاسم، التاريخ، السعر)');
       return;
     }
 
@@ -1046,17 +1056,12 @@
       name,
       date,
       price: parseFloat(price),
+      cost: parseFloat(cost) || 0, // <-- حفظ التكلفة
       details
     })
     .then(() => {
       showSuccess('تم إضافة الخدمة بنجاح');
-      // Hide form after successful addition
       elements.addServiceForm.classList.remove('active');
-      // Clear form
-      elements.serviceName.value = '';
-      elements.serviceDate.value = '';
-      elements.servicePrice.value = '';
-      elements.serviceDetails.value = '';
     })
     .catch(error => {
       showError('حدث خطأ أثناء إضافة الخدمة: ' + error.message);
@@ -1088,7 +1093,6 @@
       return;
     }
 
-    // Search in services
     let foundService = null;
     let foundKey = null;
 
@@ -1104,6 +1108,7 @@
       elements.editName.value = foundService.name;
       elements.editDate.value = foundService.date;
       elements.editPrice.value = foundService.price;
+      elements.editCost.value = foundService.cost || ''; // <-- عرض التكلفة
       elements.editDetails.value = foundService.details || '';
       
       currentServiceKey = foundKey;
@@ -1124,15 +1129,11 @@
     const newName = elements.editName.value.trim();
     const newDate = elements.editDate.value;
     const newPrice = elements.editPrice.value.trim();
+    const newCost = elements.editCost.value.trim(); // <-- قراءة التكلفة الجديدة
     const newDetails = elements.editDetails.value.trim();
 
     if (!newName || !newDate || !newPrice) {
       showError('الرجاء ملء جميع الحقول المطلوبة');
-      return;
-    }
-
-    if (isNaN(newPrice)) {
-      showError('يجب أن يكون السعر رقماً');
       return;
     }
 
@@ -1142,6 +1143,7 @@
       name: newName,
       date: newDate,
       price: parseFloat(newPrice),
+      cost: parseFloat(newCost) || 0, // <-- تحديث التكلفة
       details: newDetails
     })
     .then(() => {
