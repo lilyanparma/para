@@ -11,6 +11,7 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
 
     <style>
+        /* === التنسيقات الجديدة المتوافقة مع تصميم المشروع (بشكل منظم) === */
         :root {
             --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             --secondary-gradient: linear-gradient(135deg, #a18cd1 0%, #fbc2eb 100%);
@@ -23,32 +24,187 @@
             --border-radius: 12px;
             --transition: all 0.3s ease;
         }
-        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Tajawal', sans-serif; }
-        body { background: var(--bg-color); color: var(--text-color); line-height: 1.6; padding: 15px; }
-        .report-container { max-width: 100%; margin: 0 auto; background: var(--card-bg); border-radius: var(--border-radius); box-shadow: var(--shadow); overflow: hidden; }
-        .report-header { background: var(--primary-gradient); color: white; padding: 25px; text-align: center; border-bottom: 5px solid #a18cd1; }
-        .report-title { font-size: 1.8rem; margin-bottom: 8px; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        .report-period { font-size: 1.1rem; opacity: 0.9; }
-        .report-summary { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 15px; padding: 20px; background: #f1f2f6; }
-        .summary-card { background: var(--card-bg); padding: 20px; border-radius: var(--border-radius); text-align: center; box-shadow: 0 2px 8px rgba(0,0,0,0.07); transition: var(--transition); }
-        .summary-card:hover { transform: translateY(-5px); box-shadow: 0 8px 20px rgba(0,0,0,0.1); }
-        .summary-title { font-size: 1rem; color: #6c757d; margin-bottom: 10px; font-weight: 500; }
-        .summary-value { font-size: 1.5rem; font-weight: 700; color: #343a40; }
-        .summary-value.profit { color: var(--profit-color); }
-        .summary-value.cost { color: var(--cost-color); }
-        .table-wrapper { overflow-x: auto; padding: 10px; }
-        .transactions-table { width: 100%; border-collapse: collapse; font-size: 1rem; }
-        .transactions-table th { background: #764ba2; color: white; padding: 15px; text-align: right; font-weight: 600; }
-        .transactions-table td { padding: 15px; border-bottom: 1px solid #e9ecef; color: #495057; }
-        .transactions-table tbody tr:hover { background-color: #f8f9fa; }
-        .transaction-profit { color: var(--profit-color); font-weight: bold; }
-        .transaction-cost { color: var(--cost-color); }
-        .service-details { font-size: 0.9rem; color: #6c757d; margin-top: 3px; }
-        .footer { text-align: center; padding: 25px; font-size: 0.9rem; color: #6c757d; background: #f1f2f6; }
-        .print-btn { border: none; padding: 12px 25px; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 15px rgba(0,0,0,0.2); background: var(--secondary-gradient); color: white; margin-top: 15px; }
-        .print-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
-        .loading-overlay { display: flex; justify-content: center; align-items: center; padding: 50px; font-size: 1.2rem; color: #667eea; }
-        @media print { body { padding: 0; background: white; } .report-container, .summary-card { box-shadow: none; border: 1px solid #ddd; } .print-btn, .footer { display: none; } }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Tajawal', sans-serif;
+        }
+        
+        body {
+            background: var(--bg-color);
+            color: var(--text-color);
+            line-height: 1.6;
+            padding: 15px;
+        }
+        
+        .report-container {
+            max-width: 100%;
+            margin: 0 auto;
+            background: var(--card-bg);
+            border-radius: var(--border-radius);
+            box-shadow: var(--shadow);
+            overflow: hidden;
+        }
+        
+        .report-header {
+            background: var(--primary-gradient);
+            color: white;
+            padding: 25px;
+            text-align: center;
+            border-bottom: 5px solid #a18cd1;
+        }
+        
+        .report-title {
+            font-size: 1.8rem;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .report-period {
+            font-size: 1.1rem;
+            opacity: 0.9;
+        }
+        
+        .report-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 15px;
+            padding: 20px;
+            background: #f1f2f6;
+        }
+        
+        .summary-card {
+            background: var(--card-bg);
+            padding: 20px;
+            border-radius: var(--border-radius);
+            text-align: center;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+            transition: var(--transition);
+        }
+
+        .summary-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 8px 20px rgba(0,0,0,0.1);
+        }
+        
+        .summary-title {
+            font-size: 1rem;
+            color: #6c757d;
+            margin-bottom: 10px;
+            font-weight: 500;
+        }
+        
+        .summary-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #343a40;
+        }
+        
+        .summary-value.profit {
+            color: var(--profit-color);
+        }
+
+        .summary-value.cost {
+            color: var(--cost-color);
+        }
+        
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 10px;
+        }
+
+        .transactions-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 1rem;
+        }
+        
+        .transactions-table th {
+            background: #764ba2;
+            color: white;
+            padding: 15px;
+            text-align: right;
+            font-weight: 600;
+        }
+        
+        .transactions-table td {
+            padding: 15px;
+            border-bottom: 1px solid #e9ecef;
+            color: #495057;
+        }
+
+        .transactions-table tbody tr:hover {
+            background-color: #f8f9fa;
+        }
+        
+        .transaction-profit {
+            color: var(--profit-color);
+            font-weight: bold;
+        }
+
+        .transaction-cost {
+            color: var(--cost-color);
+        }
+        
+        .service-details {
+            font-size: 0.9rem;
+            color: #6c757d;
+            margin-top: 3px;
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 25px;
+            font-size: 0.9rem;
+            color: #6c757d;
+            background: #f1f2f6;
+        }
+        
+        .print-btn {
+            border: none;
+            padding: 12px 25px;
+            border-radius: 50px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: var(--transition);
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            background: var(--secondary-gradient);
+            color: white;
+            margin-top: 15px;
+        }
+
+        .print-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+        }
+        
+        .loading-overlay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 50px;
+            font-size: 1.2rem;
+            color: #667eea;
+        }
+
+        @media print {
+            body {
+                padding: 0;
+                background: white;
+            }
+            
+            .report-container, .summary-card {
+                box-shadow: none;
+                border: 1px solid #ddd;
+            }
+
+            .print-btn, .footer {
+                display: none;
+            }
+        }
     </style>
 </head>
 <body>
@@ -101,8 +257,6 @@
     </div>
 
     <script>
-        // === الكود الجديد لجلب البيانات وعرضها ===
-
         // 1. تهيئة Firebase
         const firebaseConfig = {
             apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
