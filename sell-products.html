@@ -9,7 +9,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
-    <style>
+       <style>
         :root {
             --primary: #4361ee;
             --primary-dark: #3a56d4;
@@ -1104,15 +1104,17 @@
             </div>
         </div>
         
-        <div class="mode-selection-container">
-            <button id="manualModeBtn" class="sale-mode-btn active">
-                <i class="fas fa-hand-pointer"></i> بيع يدوي
-            </button>
-            <button id="quickModeBtn" class="sale-mode-btn">
-                <i class="fas fa-bolt"></i> بيع سريع
-            </button>
-            <button id="returnModeBtn" class="sale-mode-btn return-btn">
-                <i class="fas fa-undo"></i> إرجاع
+        <div class="actions-bar">
+            <div class="mode-selection-container">
+                <button id="manualModeBtn" class="sale-mode-btn active">
+                    <i class="fas fa-hand-pointer"></i> بيع يدوي
+                </button>
+                <button id="quickModeBtn" class="sale-mode-btn">
+                    <i class="fas fa-bolt"></i> بيع سريع
+                </button>
+            </div>
+            <button id="returnModeBtn" class="btn btn-warning">
+                <i class="fas fa-undo-alt"></i> إرجاع المنتجات
             </button>
         </div>
 
@@ -2154,53 +2156,112 @@
             if (e.key === 'Enter') findInvoice();
         });
         
-        async function findInvoice() {
-            const searchTerm = elements.invoiceSearchInput.value.trim();
-            if (!searchTerm) {
-                showToast('الرجاء إدخال رقم الفاتورة أو باركود المنتج', 'warning');
-                return;
+        // === MODIFIED: Improved invoice search logic ===
+// === نسخة مطورة: تبحث عن كل الفواتير المطابقة ===
+async function findInvoice() {
+    const searchTerm = elements.invoiceSearchInput.value.trim();
+    if (!searchTerm) {
+        showToast('الرجاء إدخال رقم الفاتورة أو باركود المنتج', 'warning');
+        return;
+    }
+    elements.invoiceSearchResult.innerHTML = `<p style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جار البحث...</p>`;
+
+    let foundInvoiceSnapshot = null;
+
+    // 1. البحث بالرقم التعريفي أولاً
+    const snapshotById = await database.ref('invoices/' + searchTerm).once('value');
+    if (snapshotById.exists()) {
+        foundInvoiceSnapshot = snapshotById;
+    } else {
+        const isPotentialKey = !searchTerm.startsWith('-') && searchTerm.length === 19 && /^[A-Za-z0-9_-]+$/.test(searchTerm);
+        if (isPotentialKey) {
+            const newSearchTerm = '-' + searchTerm;
+            const snapshotWithHyphen = await database.ref('invoices/' + newSearchTerm).once('value');
+            if (snapshotWithHyphen.exists()) {
+                foundInvoiceSnapshot = snapshotWithHyphen;
             }
-            elements.invoiceSearchResult.innerHTML = `<p style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جار البحث...</p>`;
+        }
+    }
 
-            // 1. Try searching by Invoice ID first
-            const invoiceByIdRef = database.ref('invoices/' + searchTerm);
-            const snapshotById = await invoiceByIdRef.once('value');
+    // إذا تم العثور على فاتورة بالرقم التعريفي، اعرضها مباشرة
+    if (foundInvoiceSnapshot) {
+        displayFoundInvoice(foundInvoiceSnapshot.key, foundInvoiceSnapshot.val());
+        return;
+    }
 
-            if (snapshotById.exists()) {
-                displayFoundInvoice(snapshotById.key, snapshotById.val());
-                return;
-            }
+    // 2. إذا لم يتم العثور عليها بالرقم التعريفي، ابحث بالباركود في كل الفواتير
+    const invoicesRef = database.ref('invoices');
+    invoicesRef.once('value').then((snapshot) => {
+        const matchingInvoices = []; // قائمة لتخزين كل الفواتير المطابقة
 
-            // 2. If not found, search by product barcode across all invoices
-            const invoicesRef = database.ref('invoices');
-            invoicesRef.once('value').then((snapshot) => {
-                let foundInvoice = null;
-                let foundInvoiceId = null;
-
-                if (snapshot.exists()) {
-                    snapshot.forEach((childSnapshot) => {
-                        const invoice = childSnapshot.val();
-                        const items = invoice.items || {};
-                        for (const itemKey in items) {
-                            if (items[itemKey].barcode === searchTerm) {
-                                foundInvoice = invoice;
-                                foundInvoiceId = childSnapshot.key;
-                                return true; // Break the forEach loop
-                            }
-                        }
-                    });
+        if (snapshot.exists()) {
+            snapshot.forEach((childSnapshot) => {
+                const invoice = childSnapshot.val();
+                const items = invoice.items || {};
+                for (const itemKey in items) {
+                    if (items[itemKey].barcode === searchTerm) {
+                        // أضف الفاتورة المطابقة إلى القائمة ولا تتوقف
+                        matchingInvoices.push({ id: childSnapshot.key, data: invoice });
+                        break; // انتقل للفاتورة التالية بعد العثور على المنتج داخلها
+                    }
                 }
-
-                if (foundInvoice) {
-                    displayFoundInvoice(foundInvoiceId, foundInvoice);
-                } else {
-                    elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">لم يتم العثور على فاتورة مطابقة.</p>`;
-                }
-            }).catch(err => {
-                 elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">حدث خطأ أثناء البحث.</p>`;
-                 console.error("Error searching invoices:", err);
             });
         }
+
+        // بعد الانتهاء من البحث، تحقق من عدد النتائج
+        if (matchingInvoices.length === 0) {
+            // لا توجد أي فاتورة مطابقة
+            elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">لم يتم العثور على فاتورة مطابقة.</p>`;
+        } else if (matchingInvoices.length === 1) {
+            // هناك فاتورة واحدة فقط، اعرضها مباشرة
+            const singleInvoice = matchingInvoices[0];
+            displayFoundInvoice(singleInvoice.id, singleInvoice.data);
+        } else {
+            // هناك عدة فواتير، اعرض قائمة للمستخدم ليختار منها
+            displayInvoiceList(matchingInvoices);
+        }
+
+    }).catch(err => {
+         elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">حدث خطأ أثناء البحث.</p>`;
+         console.error("خطأ في جلب بيانات الفواتير:", err);
+    });
+}
+
+
+/**
+ * دالة لعرض قائمة بالفواتير ليختار المستخدم منها
+ * @param {Array} invoices - قائمة الفواتير المطابقة
+ */
+function displayInvoiceList(invoices) {
+    elements.invoiceSearchResult.innerHTML = `<h4 style="text-align:center; margin-bottom: 15px;">تم العثور على عدة فواتير، الرجاء اختيار الفاتورة الصحيحة:</h4>`;
+    
+    // قم بترتيب الفواتير من الأحدث إلى الأقدم
+    invoices.sort((a, b) => new Date(b.data.date) - new Date(a.data.date));
+
+    invoices.forEach(invoiceInfo => {
+        const invoiceCard = document.createElement('div');
+        invoiceCard.className = 'invoice-item-card'; // إعادة استخدام نفس التصميم
+        invoiceCard.style.cursor = 'pointer';
+        invoiceCard.style.marginBottom = '10px';
+        
+        invoiceCard.innerHTML = `
+            <div>
+                <div class="invoice-item-name">رقم الفاتورة: ${invoiceInfo.id}</div>
+                <div class="invoice-item-details">
+                    التاريخ: ${formatDate(invoiceInfo.data.date)} | الإجمالي: ${invoiceInfo.data.finalPrice.toFixed(2)} ر.س
+                </div>
+            </div>
+            <i class="fas fa-chevron-left"></i>
+        `;
+        
+        // أضف حدث النقر على البطاقة لعرض تفاصيلها
+        invoiceCard.addEventListener('click', () => {
+            displayFoundInvoice(invoiceInfo.id, invoiceInfo.data);
+        });
+        
+        elements.invoiceSearchResult.appendChild(invoiceCard);
+    });
+}
         
         function displayFoundInvoice(invoiceId, invoiceData) {
             elements.invoiceSearchResult.innerHTML = '';
