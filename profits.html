@@ -350,178 +350,110 @@
     </div>
 
     <script>
-        // تهيئة Firebase
-        const firebaseConfig = {
-            apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-            authDomain: "pharmacy-system-9def6.firebaseapp.com",
-            databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
-            projectId: "pharmacy-system-9def6",
-            storageBucket: "pharmacy-system-9def6.appspot.com",
-            messagingSenderId: "630855008414",
-            appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-            measurementId: "G-LC5NDKP6QZ"
-        };
-        firebase.initializeApp(firebaseConfig);
-        const database = firebase.database();
+// تهيئة Firebase
+const firebaseConfig = {
+    apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+    authDomain: "pharmacy-system-9def6.firebaseapp.com",
+    databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
+    projectId: "pharmacy-system-9def6",
+    storageBucket: "pharmacy-system-9def6.appspot.com",
+    messagingSenderId: "630855008414",
+    appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
+    measurementId: "G-LC5NDKP6QZ"
+};
+firebase.initializeApp(firebaseConfig);
+const database = firebase.database();
 
-        let salesData = [];
-        let servicesData = [];
-
-        function initDateSelectors() {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth() + 1;
-            const startYear = 2023;
-            
-            const yearSelectors = document.querySelectorAll('.year-selector');
-            yearSelectors.forEach(select => {
-                select.innerHTML = '';
-                for (let year = startYear; year <= currentYear; year++) {
-                    const option = document.createElement('option');
-                    option.value = year;
-                    option.textContent = year;
-                    select.appendChild(option);
-                }
-                select.value = currentYear;
-                
-                const monthId = select.id === 'sales-year' ? 'sales-month' : 'services-month';
-                updateMonths(select, monthId);
-            });
+// تهيئة محددات التاريخ
+function initDateSelectors() {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const startYear = 2023;
+    
+    document.querySelectorAll('.year-selector').forEach(select => {
+        select.innerHTML = '';
+        for (let year = startYear; year <= currentYear; year++) {
+            const option = document.createElement('option');
+            option.value = year;
+            option.textContent = year;
+            select.appendChild(option);
         }
+        select.value = currentYear;
+        const monthId = select.id.includes('sales') ? 'sales-month' : 'services-month';
+        updateMonths(select, monthId);
+    });
+}
 
-        function updateMonths(yearSelect, monthId) {
-            const now = new Date();
-            const currentYear = now.getFullYear();
-            const currentMonth = now.getMonth() + 1;
-            const selectedYear = parseInt(yearSelect.value);
-            
-            const monthSelector = document.getElementById(monthId);
-            const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
-            
-            monthSelector.innerHTML = '';
-            
-            for (let i = 0; i < 12; i++) {
-                const monthValue = i + 1;
-                const option = document.createElement('option');
-                option.value = monthValue;
-                option.textContent = arabicMonths[i];
-                
-                if (selectedYear === currentYear && monthValue > currentMonth) {
-                    option.disabled = true;
-                }
-                
-                if (selectedYear === currentYear && monthValue === currentMonth) {
-                    option.classList.add('current-month');
-                }
-                
-                monthSelector.appendChild(option);
-            }
-            
-            monthSelector.value = (selectedYear === currentYear) ? currentMonth : 1;
+function updateMonths(yearSelect, monthId) {
+    const now = new Date();
+    const currentYear = now.getFullYear();
+    const currentMonth = now.getMonth() + 1;
+    const selectedYear = parseInt(yearSelect.value);
+    
+    const monthSelector = document.getElementById(monthId);
+    const arabicMonths = ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو', 'يوليو', 'أغسطس', 'سبتمبر', 'أكتوبر', 'نوفمبر', 'ديسمبر'];
+    
+    monthSelector.innerHTML = '';
+    
+    for (let i = 0; i < 12; i++) {
+        const monthValue = i + 1;
+        const option = document.createElement('option');
+        option.value = monthValue;
+        option.textContent = arabicMonths[i];
+        if (selectedYear === currentYear && monthValue > currentMonth) {
+            option.disabled = true;
         }
-
-        async function loadData(type) {
-            const path = type === 'sales' ? 'invoices' : 'services';
-            const notificationTitle = type === 'sales' ? 'بيانات المبيعات' : 'بيانات الخدمات';
-            try {
-                const snapshot = await database.ref(path).once('value');
-                const data = snapshot.val() ? Object.values(snapshot.val()) : [];
-                if (type === 'sales') salesData = data; else servicesData = data;
-                showNotification('success', `اكتمل التحميل`, `تم جلب ${data.length} سجل من ${notificationTitle}`);
-                return data;
-            } catch (error) {
-                showNotification('error', 'خطأ في التحميل', `فشل تحميل ${notificationTitle}`);
-                console.error(`Error loading ${type} data:`, error);
-                return [];
-            }
+        if (selectedYear === currentYear && monthValue === currentMonth) {
+            option.classList.add('current-month');
         }
+        monthSelector.appendChild(option);
+    }
+    monthSelector.value = (selectedYear === currentYear) ? currentMonth : 1;
+}
 
-        function filterDataByMonth(data, year, month) {
-            return data.filter(item => {
-                if (!item.date) return false;
-                const itemDate = new Date(item.date);
-                return itemDate.getFullYear() == year && (itemDate.getMonth() + 1) == month;
-            });
-        }
+// تبديل عرض أقسام التقارير
+function toggleReport(event, reportId) {
+    const clickedBtn = event.currentTarget;
+    const targetContent = document.getElementById(reportId);
+    const isActive = clickedBtn.classList.contains('active');
 
-        function toggleReport(event, reportId) {
-            const clickedBtn = event.currentTarget;
-            const targetContent = document.getElementById(reportId);
-            const isActive = clickedBtn.classList.contains('active');
+    document.querySelectorAll('.report-content.active').forEach(c => c.classList.remove('active'));
+    document.querySelectorAll('.report-btn.active').forEach(b => b.classList.remove('active'));
+    document.getElementById('invoiceContainer').classList.remove('active');
 
-            document.querySelectorAll('.report-content.active').forEach(c => c.classList.remove('active'));
-            document.querySelectorAll('.report-btn.active').forEach(b => b.classList.remove('active'));
-            document.getElementById('invoiceContainer').classList.remove('active');
+    if (!isActive) {
+        clickedBtn.classList.add('active');
+        targetContent.classList.add('active');
+    }
+}
 
-            if (!isActive) {
-                clickedBtn.classList.add('active');
-                targetContent.classList.add('active');
-            }
-        }
-        
-        async function showSalesInvoice() {
-            const year = document.getElementById('sales-year').value;
-            const month = document.getElementById('sales-month').value;
-            
-            if (salesData.length === 0) await loadData('sales');
+// عرض تقرير المبيعات (بدون إرسال البيانات)
+function showSalesInvoice() {
+    const year = document.getElementById('sales-year').value;
+    const month = document.getElementById('sales-month').value;
+    
+    const queryParams = new URLSearchParams({ year, month });
+    
+    const frame = document.getElementById('invoiceFrame');
+    frame.src = `sales-report.html?${queryParams.toString()}`;
+    document.getElementById('invoiceContainer').classList.add('active');
+}
 
-            const filteredData = filterDataByMonth(salesData, year, month);
-            if (filteredData.length === 0) {
-                showNotification('warning', 'لا توجد بيانات', 'لا توجد مبيعات مسجلة في هذه الفترة.');
-                return;
-            }
+// عرض تقرير الخدمات (بدون إرسال البيانات)
+function showServicesInvoice() {
+    const year = document.getElementById('services-year').value;
+    const month = document.getElementById('services-month').value;
+    
+    const queryParams = new URLSearchParams({ year, month });
 
-            const queryParams = new URLSearchParams({ data: JSON.stringify(filteredData), year, month });
-            document.getElementById('invoiceFrame').src = `sales-report.html?${queryParams.toString()}`;
-            document.getElementById('invoiceContainer').classList.add('active');
-        }
-        
-        async function showServicesInvoice() {
-            const year = document.getElementById('services-year').value;
-            const month = document.getElementById('services-month').value;
+    const frame = document.getElementById('invoiceFrame');
+    frame.src = `services-report.html?${queryParams.toString()}`;
+    document.getElementById('invoiceContainer').classList.add('active');
+}
 
-            if (servicesData.length === 0) await loadData('services');
-            
-            const filteredData = filterDataByMonth(servicesData, year, month);
-            if (filteredData.length === 0) {
-                showNotification('warning', 'لا توجد بيانات', 'لا توجد خدمات مسجلة في هذه الفترة.');
-                return;
-            }
-
-            const queryParams = new URLSearchParams({ data: JSON.stringify(filteredData), year, month });
-            document.getElementById('invoiceFrame').src = `services-report.html?${queryParams.toString()}`;
-            document.getElementById('invoiceContainer').classList.add('active');
-        }
-        
-        let notificationTimeout;
-        function showNotification(type, title, message) {
-            const notification = document.getElementById('notification');
-            const icon = document.getElementById('notification-icon');
-            const icons = {
-                success: 'fa-check-circle',
-                warning: 'fa-exclamation-triangle',
-                error: 'fa-times-circle',
-                info: 'fa-info-circle'
-            };
-            
-            notification.className = `notification ${type}`;
-            icon.className = `fas ${icons[type]}`;
-            document.getElementById('notification-title').textContent = title;
-            document.getElementById('notification-message').textContent = message;
-            
-            notification.classList.add('show');
-            
-            clearTimeout(notificationTimeout);
-            notificationTimeout = setTimeout(() => {
-                notification.classList.remove('show');
-            }, 4000);
-        }
-        
-        document.addEventListener('DOMContentLoaded', () => {
-            initDateSelectors();
-            loadData('sales');
-            loadData('services');
-        });
+// تهيئة الصفحة
+document.addEventListener('DOMContentLoaded', initDateSelectors);
     </script>
 </body>
 </html>
