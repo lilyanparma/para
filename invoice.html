@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -8,11 +7,12 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <style>
-        /* أنماط الفاتورة (نفس الأنماط التي كانت في الملف الأصلي) */
         :root {
             --primary: #4361ee;
             --primary-dark: #3a56d4;
             --secondary: #3f37c9;
+            --success: #4cc9f0;
+            --danger: #f72585;
             --light: #f8f9fa;
             --dark: #212529;
             --gray: #6c757d;
@@ -28,97 +28,174 @@
         body {
             background-color: #f0f2f5;
             padding: 20px;
+            color: var(--dark);
         }
         
-        .invoice-content {
+        .invoice-container {
             background: white;
             width: 100%;
-            max-width: 500px;
+            max-width: 600px;
             margin: 0 auto;
             border-radius: 15px;
             overflow: hidden;
-            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+            border: 1px solid #eee;
         }
         
         .invoice-header {
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             color: white;
-            padding: 20px;
+            padding: 25px;
             text-align: center;
             position: relative;
         }
         
         .invoice-header h2 {
             margin: 0;
-            font-size: 1.5rem;
+            font-size: 1.8rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.2);
         }
         
         .invoice-body {
-            padding: 20px;
+            padding: 25px;
         }
         
         .invoice-pharmacy {
             text-align: center;
-            margin-bottom: 20px;
+            margin-bottom: 25px;
             font-weight: bold;
-            font-size: 1.2rem;
+            font-size: 1.3rem;
             color: var(--primary);
         }
         
-        .invoice-details {
-            margin-bottom: 20px;
-        }
-        
-        .invoice-row {
+        .invoice-meta {
+            margin-bottom: 25px;
+            padding: 15px;
+            background-color: var(--light);
+            border-radius: 10px;
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px dashed #eee;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+
+        .invoice-meta div {
+            font-size: 0.95rem;
+        }
+        .invoice-meta span {
+            font-weight: 600;
+            color: var(--dark);
         }
         
-        .invoice-row.total {
-            font-weight: bold;
-            font-size: 1.1rem;
-            color: var(--primary);
+        .invoice-items-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 25px;
+        }
+        
+        .invoice-items-table thead {
+            background-color: #f8f9fa;
+            color: var(--gray);
+            font-weight: 600;
+            font-size: 0.9rem;
+            text-transform: uppercase;
+        }
+
+        .invoice-items-table th, .invoice-items-table td {
+            padding: 12px 15px;
+            text-align: right;
+            border-bottom: 1px solid #e9ecef;
+        }
+        
+        .invoice-items-table tbody tr:last-child td {
             border-bottom: none;
+        }
+        
+        .invoice-summary {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 2px solid #e9ecef;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            font-size: 1.1rem;
+        }
+        
+        .summary-row span:first-child {
+            color: var(--gray);
+        }
+        
+        .summary-row.discount {
+            color: var(--danger);
+        }
+        
+        .summary-row.total {
+            font-weight: bold;
+            font-size: 1.4rem;
+            color: var(--primary);
+            border-top: 2px dashed #e9ecef;
             margin-top: 10px;
+            padding-top: 15px;
+        }
+        
+        .invoice-payment {
+            text-align: center;
+            margin-top: 25px;
+            padding: 10px;
+            background-color: #e6f7ff;
+            border: 1px solid #b3e0ff;
+            color: #0056b3;
+            border-radius: 8px;
         }
         
         .invoice-footer {
             text-align: center;
-            padding: 15px;
+            padding: 20px;
             background: #f9f9f9;
             font-size: 0.9rem;
             color: var(--gray);
+            border-top: 1px solid #eee;
         }
         
         .invoice-actions {
             display: flex;
-            gap: 10px;
-            margin-top: 20px;
+            gap: 15px;
+            padding: 25px;
+            background-color: #f8f9fa;
         }
         
         .btn {
-            padding: 10px 20px;
+            padding: 12px 25px;
             border: none;
             border-radius: 8px;
             font-weight: bold;
+            font-size: 1rem;
             cursor: pointer;
             flex: 1;
             display: flex;
             align-items: center;
             justify-content: center;
-            gap: 8px;
+            gap: 10px;
+            transition: all 0.3s ease;
         }
         
         .btn-primary {
             background: var(--primary);
             color: white;
         }
+        .btn-primary:hover {
+            background: var(--primary-dark);
+        }
         
         .btn-success {
-            background: #4cc9f0;
+            background: #28a745;
             color: white;
+        }
+        .btn-success:hover {
+            background: #218838;
         }
         
         @media print {
@@ -126,7 +203,12 @@
                 background: white;
                 padding: 0;
             }
-            
+            .invoice-container {
+                box-shadow: none;
+                border: none;
+                max-width: 100%;
+                margin: 0;
+            }
             .invoice-actions {
                 display: none;
             }
@@ -134,57 +216,66 @@
     </style>
 </head>
 <body>
-    <div class="invoice-content">
+    <div class="invoice-container">
         <div class="invoice-header">
             <h2><i class="fas fa-receipt"></i> فاتورة بيع</h2>
         </div>
         <div class="invoice-body">
             <div id="invoicePharmacy" class="invoice-pharmacy">صيدلية النخبة</div>
-            <div class="invoice-details">
-                <div class="invoice-row">
-                    <span>رقم الفاتورة:</span>
-                    <span id="invoiceNumber">#0001</span>
+            
+            <div class="invoice-meta">
+                <div>رقم الفاتورة: <span id="invoiceNumber"></span></div>
+                <div>التاريخ والوقت: <span id="invoiceDate"></span></div>
+            </div>
+
+            <table class="invoice-items-table">
+                <thead>
+                    <tr>
+                        <th>المنتج</th>
+                        <th>الكمية</th>
+                        <th>سعر الوحدة</th>
+                        <th>الإجمالي</th>
+                    </tr>
+                </thead>
+                <tbody id="invoiceItemsTableBody">
+                    </tbody>
+            </table>
+
+            <div class="invoice-summary">
+                <div class="summary-row">
+                    <span>الإجمالي الفرعي:</span>
+                    <span id="subTotal">0.00 ر.س</span>
                 </div>
-                <div class="invoice-row">
-                    <span>التاريخ والوقت:</span>
-                    <span id="invoiceDate">01/01/2023 10:00 ص</span>
-                </div>
-                <div class="invoice-row">
-                    <span>المنتج:</span>
-                    <span id="invoiceProduct">اسم المنتج</span>
-                </div>
-                <div class="invoice-row">
-                    <span>السعر الأصلي:</span>
-                    <span id="invoiceOriginalPrice">50.00 ر.س</span>
-                </div>
-                <div id="invoiceDiscountRow" class="invoice-row" style="display: none;">
+                <div id="invoiceDiscountRow" class="summary-row discount" style="display: none;">
                     <span>الخصم:</span>
-                    <span id="invoiceDiscount">0.00 ر.س (0%)</span>
+                    <span id="invoiceDiscount">0.00 ر.س</span>
                 </div>
-                <div id="invoiceReasonRow" class="invoice-row" style="display: none;">
-                    <span>سبب الخصم:</span>
-                    <span id="invoiceReason">لا يوجد</span>
+                <div id="invoiceReasonRow" class="summary-row" style="display: none; font-size: 0.9rem;">
+                     <span>سبب الخصم:</span>
+                     <span id="invoiceReason"></span>
                 </div>
-                <div class="invoice-row total">
-                    <span>المجموع:</span>
-                    <span id="invoiceTotal">50.00 ر.س</span>
-                </div>
-                <div class="invoice-row">
-                    <span>طريقة الدفع:</span>
-                    <span id="invoicePaymentMethod">نقداً</span>
+                <div class="summary-row total">
+                    <span>الإجمالي النهائي:</span>
+                    <span id="finalTotal">0.00 ر.س</span>
                 </div>
             </div>
-            <div class="invoice-actions">
-                <button id="printInvoice" class="btn btn-primary">
-                    <i class="fas fa-print"></i> طباعة
-                </button>
-                <button id="closeInvoice" class="btn btn-success">
-                    <i class="fas fa-times"></i> إغلاق
-                </button>
+
+            <div class="invoice-payment">
+                طريقة الدفع: <strong id="invoicePaymentMethod"></strong>
             </div>
         </div>
+
+        <div class="invoice-actions">
+            <button id="printInvoice" class="btn btn-primary">
+                <i class="fas fa-print"></i> طباعة
+            </button>
+            <button id="closeInvoice" class="btn btn-success">
+                <i class="fas fa-times-circle"></i> إغلاق
+            </button>
+        </div>
+
         <div class="invoice-footer">
-            شكراً لثقتكم بنا - للاستفسار: 0551234567
+            شكراً لثقتكم بنا.
         </div>
     </div>
 
@@ -192,49 +283,84 @@
     // دالة لتحميل بيانات الفاتورة من URL
     function loadInvoiceData() {
         const urlParams = new URLSearchParams(window.location.search);
-        const invoiceData = urlParams.get('data');
+        const invoiceDataParam = urlParams.get('data');
         
-        if (invoiceData) {
+        if (invoiceDataParam) {
             try {
-                const invoice = JSON.parse(decodeURIComponent(invoiceData));
+                // فك ترميز بيانات الفاتورة وتحويلها إلى كائن
+                const invoice = JSON.parse(decodeURIComponent(invoiceDataParam));
                 displayInvoice(invoice);
             } catch (e) {
                 console.error('خطأ في تحليل بيانات الفاتورة:', e);
-                alert('حدث خطأ في تحميل الفاتورة');
+                document.body.innerHTML = '<p style="text-align:center; color:red;">حدث خطأ أثناء تحميل بيانات الفاتورة.</p>';
             }
+        } else {
+             console.error('لا توجد بيانات فاتورة في الرابط.');
+             document.body.innerHTML = '<p style="text-align:center; color:red;">لم يتم العثور على بيانات الفاتورة.</p>';
         }
     }
 
-    // دالة لعرض بيانات الفاتورة
+    // دالة لعرض بيانات الفاتورة متعددة المنتجات
     function displayInvoice(invoice) {
+        // 1. تعبئة معلومات رأس الفاتورة
         const date = new Date(invoice.date);
-        const dateStr = date.toLocaleDateString('ar-SA') + ' ' + 
-                        date.toLocaleTimeString('ar-SA', {hour: '2-digit', minute:'2-digit'});
+        const dateStr = date.toLocaleDateString('ar-SA', { day: '2-digit', month: '2-digit', year: 'numeric' });
+        const timeStr = date.toLocaleTimeString('ar-SA', { hour: '2-digit', minute:'2-digit' });
         
+        document.getElementById('invoicePharmacy').textContent = invoice.pharmacy || "صيدلية النخبة";
         document.getElementById('invoiceNumber').textContent = invoice.id;
-        document.getElementById('invoiceDate').textContent = dateStr;
-        document.getElementById('invoiceProduct').textContent = invoice.product;
-        document.getElementById('invoiceOriginalPrice').textContent = invoice.originalPrice.toFixed(2) + ' ر.س';
-        document.getElementById('invoiceTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
+        document.getElementById('invoiceDate').textContent = `${dateStr} ${timeStr}`;
+
+        // 2. تعبئة جدول المنتجات
+        const itemsTableBody = document.getElementById('invoiceItemsTableBody');
+        itemsTableBody.innerHTML = ''; // مسح أي بيانات سابقة
+
+        if (invoice.items && invoice.items.length > 0) {
+            invoice.items.forEach(item => {
+                const row = itemsTableBody.insertRow();
+                row.innerHTML = `
+                    <td>${item.product.name}</td>
+                    <td>${item.quantity}</td>
+                    <td>${item.product.price.toFixed(2)} ر.س</td>
+                    <td>${item.itemTotal.toFixed(2)} ر.س</td>
+                `;
+            });
+        }
+
+        // 3. تعبئة ملخص الحسابات
+        document.getElementById('subTotal').textContent = invoice.subTotal.toFixed(2) + ' ر.س';
+        document.getElementById('finalTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
         
+        // 4. عرض الخصم إن وجد
+        const discountRow = document.getElementById('invoiceDiscountRow');
+        const reasonRow = document.getElementById('invoiceReasonRow');
+        if (invoice.overallDiscount && invoice.overallDiscount.type !== 'none' && invoice.overallDiscount.value > 0) {
+            discountRow.style.display = 'flex';
+            const discountAmount = invoice.subTotal - invoice.finalPrice;
+            
+            const discountValueSpan = document.getElementById('invoiceDiscount');
+            if (invoice.overallDiscount.type === 'percent') {
+                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} ر.س (${invoice.overallDiscount.value}%)`;
+            } else { // fixed
+                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} ر.س`;
+            }
+
+            if(invoice.overallDiscount.reason && invoice.overallDiscount.reason !== 'لا يوجد سبب مذكور') {
+                reasonRow.style.display = 'flex';
+                document.getElementById('invoiceReason').textContent = invoice.overallDiscount.reason;
+            } else {
+                reasonRow.style.display = 'none';
+            }
+        } else {
+            discountRow.style.display = 'none';
+            reasonRow.style.display = 'none';
+        }
+        
+        // 5. تعبئة طريقة الدفع
         let paymentMethodText = 'نقداً';
         if (invoice.paymentMethod === 'card') paymentMethodText = 'بطاقة بنكية';
         else if (invoice.paymentMethod === 'transfer') paymentMethodText = 'تحويل بنكي';
         document.getElementById('invoicePaymentMethod').textContent = paymentMethodText;
-        
-        if (invoice.discount) {
-            document.getElementById('invoiceDiscountRow').style.display = 'flex';
-            document.getElementById('invoiceReasonRow').style.display = 'flex';
-            
-            const discountValue = (invoice.originalPrice - invoice.finalPrice).toFixed(2);
-            if (invoice.discount.type === 'percent') {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س (${invoice.discount.value}%)`;
-            } else {
-                document.getElementById('invoiceDiscount').textContent = `${discountValue} ر.س`;
-            }
-            
-            document.getElementById('invoiceReason').textContent = invoice.discount.reason || 'لا يوجد سبب مذكور';
-        }
     }
 
     // دالة للتحقق إذا كانت الصفحة معروضة داخل iframe
@@ -249,19 +375,16 @@
     // دالة للتعامل مع زر الإغلاق
     function handleClose() {
         if (isInIframe()) {
-            // إذا كانت معروضة داخل iframe، نرسل رسالة للصفحة الأم
-            parent.postMessage('closeInvoice', '*');
+            // إرسال رسالة للصفحة الأم لإغلاق الـ iframe وتحديث الواجهة
+            window.parent.postMessage('closeInvoice', '*');
         } else {
-            // إذا كانت في نافذة منفصلة، نغلق النافذة
+            // إذا كانت في نافذة منفصلة، يتم إغلاق النافذة
             window.close();
         }
     }
 
     // أحداث الأزرار
-    document.getElementById('printInvoice').addEventListener('click', function() {
-        window.print();
-    });
-    
+    document.getElementById('printInvoice').addEventListener('click', () => window.print());
     document.getElementById('closeInvoice').addEventListener('click', handleClose);
 
     // تحميل بيانات الفاتورة عند فتح الصفحة
