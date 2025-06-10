@@ -199,6 +199,10 @@
         margin-top: 5px;
         font-weight: bold;
         font-size: 0.9rem;
+        /* ==== التعديل هنا ==== */
+        display: flex;
+        align-items: center;
+        gap: 8px;
     }
     .product-info .overall-status.danger {
         color: var(--danger);
@@ -206,7 +210,6 @@
     .product-info .overall-status.warning {
         color: var(--warning);
     }
-    /* --- الإضافة الجديدة هنا --- */
     .product-info .overall-status.info {
         color: var(--primary);
     }
@@ -470,32 +473,26 @@
     return badgesHTML;
   }
 
-  // --- الدالة المحدثة بالكامل هنا ---
   function getOverallStatusText(product) {
     let statusHTML = '';
     const totalQuantity = calculateTotalQuantity(product.batches);
 
-    // الحالة الأولى والأهم: نفد المخزون بالكامل (يوقف باقي الفحوصات)
     if (totalQuantity <= 0) {
         return '<p class="overall-status danger"><i class="fas fa-times-circle"></i> نفد المخزون بالكامل</p>';
     }
 
-    // الحالة الثانية: وجود دفعات منتهية الصلاحية (الأكثر خطورة)
     if (hasStatus(product, 'expired')) {
         statusHTML += '<p class="overall-status danger"><i class="fas fa-ban"></i> يحتوي على دفعات منتهية الصلاحية</p>';
     }
 
-    // الحالة الثالثة: وجود دفعات فارغة (بينما لا يزال هناك مخزون إجمالي)
     if (hasOutOfStockBatches(product)) {
         statusHTML += '<p class="overall-status danger"><i class="fas fa-archive"></i> يحتوي على دفعات فارغة</p>';
     }
 
-    // الحالة الرابعة: وجود دفعات قريبة من الانتهاء
     if (hasStatus(product, 'expiringSoon')) {
         statusHTML += '<p class="overall-status warning"><i class="fas fa-exclamation-triangle"></i> يحتوي على دفعات قريبة الانتهاء</p>';
     }
     
-    // الحالة الخامسة: المخزون الإجمالي قليل
     if (totalQuantity > 0 && totalQuantity <= 5) {
         statusHTML += '<p class="overall-status info"><i class="fas fa-box-open"></i> المخزون الإجمالي قليل</p>';
     }
