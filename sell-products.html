@@ -1322,6 +1322,8 @@
 
     <script>
         // 1. تهيئة Firebase
+        // ملاحظة: من الأفضل وضع هذا الكود في ملف منفصل مثل firebase-setup.js واستيراده
+        // لتجنب التكرار والمخاطر الأمنية. تم إبقاؤه هنا حسب الطلب.
         const firebaseConfig = {
             apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
             authDomain: "pharmacy-system-9def6.firebaseapp.com",
@@ -1347,7 +1349,7 @@
 
         // System state variables
         let saleMode = 'manual'; // 'manual' or 'quick'
-        let isUpdatingItemIndex = null; // To track if we are updating a batch for an item
+        let isUpdatingItemIndex = null;
 
         // Array to hold items for the current invoice
         let invoiceItems = [];
@@ -1357,11 +1359,9 @@
 
         // 3. عناصر واجهة المستخدم
         const elements = {
-            // Sale Mode & Return Buttons
             manualModeBtn: document.getElementById('manualModeBtn'),
             quickModeBtn: document.getElementById('quickModeBtn'),
             returnModeBtn: document.getElementById('returnModeBtn'),
-
             searchToggle: document.getElementById('searchToggle'),
             searchWrapper: document.getElementById('searchWrapper'),
             barcodeInput: document.getElementById('barcodeInput'),
@@ -1401,8 +1401,6 @@
             quantityInput: document.getElementById('quantityInput'),
             confirmQuantityBtn: document.getElementById('confirmQuantityBtn'),
             cancelQuantityBtn: document.getElementById('cancelQuantityBtn'),
-            
-            // Return Modals
             returnCenterModal: document.getElementById('returnCenterModal'),
             closeReturnCenterBtn: document.getElementById('closeReturnCenterBtn'),
             invoiceSearchInput: document.getElementById('invoiceSearchInput'),
@@ -1418,12 +1416,174 @@
             returnSuccessText: document.getElementById('returnSuccessText'),
         };
 
+        // =======================================================
+        // ========== START: الكود المعدل والجديد ==========
+        // =======================================================
+
+        /**
+         * [جديد] دالة لحساب وعرض نطاق السعر بناءً على الدفعات
+         * @param {object} batches - كائن يحتوي على دفعات المنتج
+         * @returns {string} - نص منسق لعرض السعر
+         */
+        function getPriceRange(batches) {
+            if (!batches || Object.keys(batches).length === 0) return 'غير محدد';
+            
+            const prices = Object.values(batches)
+                .map(b => parseFloat(b.price))
+                .filter(p => !isNaN(p) && p > 0);
+
+            if (prices.length === 0) return 'غير محدد';
+            
+            const minPrice = Math.min(...prices);
+            const maxPrice = Math.max(...prices);
+            
+            if (minPrice === maxPrice) {
+                return `${minPrice.toFixed(2)} ر.س`;
+            }
+            return `من ${minPrice.toFixed(2)} إلى ${maxPrice.toFixed(2)} ر.س`;
+        }
+
+        /**
+         * [مُعدّل] دالة عرض تفاصيل المنتج
+         */
+        function displayProduct(product) {
+            elements.productName.textContent = product.name;
+            
+            // --- التحسين الرئيسي هنا ---
+            const priceText = getPriceRange(product.batches);
+            elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${priceText}`;
+            // -------------------------
+
+            const totalQuantity = calculateTotalQuantity(product.batches);
+            const stockElement = elements.productQuantity;
+
+            if (totalQuantity <= 0) {
+                stockElement.innerHTML = '<i class="fas fa-boxes"></i> <span class="out-of-stock">انتهى المخزون</span>';
+                stockElement.className = 'product-stock out-of-stock';
+            } else if (totalQuantity <= 5) {
+                stockElement.innerHTML = `<i class="fas fa-boxes"></i> <span class="low-stock stock-warning">المخزون: ${totalQuantity} قطع</span>`;
+                stockElement.className = 'product-stock low-stock';
+            } else {
+                stockElement.innerHTML = `<i class="fas fa-boxes"></i> المخزون: ${totalQuantity} قطع`;
+                stockElement.className = 'product-stock';
+            }
+
+            updateProductExpiryStatus(product.batches);
+            displayBatches(product.batches);
+            elements.productImage.src = product.image;
+            elements.productDetails.style.display = 'block';
+
+            if (isUpdatingItemIndex !== null) {
+                elements.addToInvoiceBtn.style.display = 'none';
+                elements.updateInvoiceItemBtn.style.display = 'inline-flex';
+                const currentBatchId = invoiceItems[isUpdatingItemIndex].batch.id;
+                const batchToSelect = Object.values(product.batches).find(b => b.id === currentBatchId) || { id: currentBatchId, ...invoiceItems[isUpdatingItemIndex].batch };
+                if (batchToSelect) selectBatch(batchToSelect, true);
+                
+            } else {
+                elements.addToInvoiceBtn.style.display = 'inline-flex';
+                elements.updateInvoiceItemBtn.style.display = 'none';
+                elements.addToInvoiceBtn.disabled = totalQuantity <= 0;
+            }
+
+            selectedBatch = null;
+        }
+
+        /**
+         * [مُعدّل] دالة إضافة منتج إلى الفاتورة
+         */
+        function addProductToInvoice(product, batch, quantity) {
+            const item = {
+                product: {
+                    barcode: product.barcode,
+                    name: product.name,
+                    price: batch.price, // <-- الإصلاح: استخدام سعر الدفعة
+                    cost: batch.cost,   // <-- الإصلاح: استخدام تكلفة الدفعة
+                    image: product.image
+                },
+                batch: {
+                    id: batch.id,
+                    batchNumber: batch.batchNumber,
+                    expiryDate: batch.expiryDate,
+                },
+                quantity: quantity,
+                itemTotal: batch.price * quantity // <-- الإصلاح: الحساب بناءً على سعر الدفعة
+            };
+            invoiceItems.push(item);
+            showToast(`${product.name} (${quantity} قطع) أضيف إلى الفاتورة`, 'success');
+        }
+
+        /**
+         * [مُعدّل] دالة معالجة البيع السريع
+         */
+        async function handleQuickSale(product) {
+            // تحقق إذا كان المنتج موجوداً في الفاتورة بالفعل
+            const existingItemIndex = invoiceItems.findIndex(item => item.product.barcode === product.barcode);
+            
+            if (existingItemIndex !== -1) {
+                // إذا كان موجوداً، زد الكمية بواحد
+                const item = invoiceItems[existingItemIndex];
+                const newQuantity = item.quantity + 1;
+                
+                // تحقق من المخزون المتاح في نفس الدفعة
+                const batchSnapshot = await database.ref(`products/${product.barcode}/batches/${item.batch.id}/quantity`).once('value');
+                const liveBatchQuantity = batchSnapshot.val();
+                
+                if (newQuantity <= liveBatchQuantity) {
+                    item.quantity = newQuantity;
+                    item.itemTotal = item.product.price * newQuantity;
+                    showToast(`+1 ${item.product.name} (الإجمالي: ${newQuantity})`, 'info');
+                } else {
+                    showToast(`لا يوجد مخزون كافٍ لـ ${item.product.name} في هذه الدفعة`, 'error');
+                }
+
+            } else {
+                // إذا كان المنتج جديداً، ابحث عن أفضل دفعة وأضفه
+                const batches = product.batches;
+                if (!batches || Object.keys(batches).length === 0) {
+                    showToast(`المنتج ${product.name} ليس له دفعات متاحة`, 'error');
+                    return;
+                }
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0);
+
+                // فلترة الدفعات الصالحة (متوفرة وغير منتهية الصلاحية)
+                const validBatches = Object.entries(batches)
+                    .map(([id, batch]) => ({ id, ...batch }))
+                    .filter(batch => {
+                        const expiryDate = new Date(batch.expiryDate);
+                        return batch.quantity > 0 && expiryDate >= today;
+                    });
+                
+                if (validBatches.length === 0) {
+                    showToast(`لا توجد دفعات صالحة أو متاحة لـ ${product.name}`, 'error');
+                    return;
+                }
+                
+                // ترتيب الدفعات حسب تاريخ الصلاحية الأقرب
+                validBatches.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
+                const bestBatch = validBatches[0];
+
+                addProductToInvoice(product, bestBatch, 1);
+            }
+            
+            displayInvoiceItems();
+            calculateAndDisplayTotals();
+            elements.barcodeInput.value = ''; 
+            elements.barcodeInput.focus();
+        }
+
+        // =======================================================
+        // ========== END: الكود المعدل والجديد ==========
+        // =======================================================
+
+
         // 4. التحكم في شريط البحث
         elements.searchToggle.addEventListener('click', function() {
             toggleSearch();
         });
         
-        // Sale Mode Toggle Logic
         elements.manualModeBtn.addEventListener('click', () => {
             saleMode = 'manual';
             elements.manualModeBtn.classList.add('active');
@@ -1436,7 +1596,7 @@
             saleMode = 'quick';
             elements.quickModeBtn.classList.add('active');
             elements.manualModeBtn.classList.remove('active');
-            elements.productDetails.style.display = 'none'; // Hide details view if open
+            elements.productDetails.style.display = 'none';
             elements.barcodeInput.placeholder = "امسح المنتجات لإضافتها سريعاً...";
             showToast('تم التبديل إلى وضع البيع السريع', 'success');
         });
@@ -1507,7 +1667,7 @@
             processScanOrSearch(barcode);
         }
 
-        // 7. البحث عن المنتج في قاعدة البيانات (MODIFIED to be central processor)
+        // 7. البحث عن المنتج في قاعدة البيانات
         elements.barcodeInput.addEventListener('keypress', function(e) {
             if (e.key === 'Enter') processScanOrSearch();
         });
@@ -1529,11 +1689,9 @@
                     const productData = snapshot.val();
 
                     if (productData) {
-                        const product = { // Create a consistent product object
+                        const product = {
                             barcode: barcode,
                             name: productData.name,
-                            price: parseFloat(productData.price),
-                            cost: parseFloat(productData.cost),
                             batches: productData.batches || {},
                             image: productData.image || 'https://via.placeholder.com/150',
                             date: productData.date || new Date().toISOString().split('T')[0]
@@ -1557,100 +1715,6 @@
                 });
         }
         
-        async function handleQuickSale(product) {
-            const existingItemIndex = invoiceItems.findIndex(item => item.product.barcode === product.barcode);
-            
-            if (existingItemIndex !== -1) {
-                const item = invoiceItems[existingItemIndex];
-                const newQuantity = item.quantity + 1;
-                
-                const batchSnapshot = await database.ref(`products/${product.barcode}/batches/${item.batch.id}/quantity`).once('value');
-                const liveBatchQuantity = batchSnapshot.val();
-                
-                if (newQuantity <= liveBatchQuantity) {
-                    item.quantity = newQuantity;
-                    item.itemTotal = item.product.price * newQuantity;
-                    showToast(`+1 ${item.product.name} (الإجمالي: ${newQuantity})`, 'info');
-                } else {
-                    showToast(`لا يوجد مخزون كافٍ لـ ${item.product.name} في هذه الدفعة`, 'error');
-                }
-
-            } else {
-                const batches = product.batches;
-                if (!batches || Object.keys(batches).length === 0) {
-                    showToast(`المنتج ${product.name} ليس له دفعات متاحة`, 'error');
-                    return;
-                }
-
-                const today = new Date();
-                today.setHours(0, 0, 0, 0);
-
-                const validBatches = Object.entries(batches)
-                    .map(([id, batch]) => ({ id, ...batch }))
-                    .filter(batch => {
-                        const expiryDate = new Date(batch.expiryDate);
-                        return batch.quantity > 0 && expiryDate >= today;
-                    });
-                
-                if (validBatches.length === 0) {
-                    showToast(`لا توجد دفعات صالحة أو متاحة لـ ${product.name}`, 'error');
-                    return;
-                }
-                
-                validBatches.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
-                const bestBatch = validBatches[0];
-
-                addProductToInvoice(product, bestBatch, 1);
-            }
-            
-            displayInvoiceItems();
-            calculateAndDisplayTotals();
-            elements.barcodeInput.value = ''; 
-            elements.barcodeInput.focus();
-        }
-
-        // ... (All existing functions from displayProduct to calculateAndDisplayTotals remain here without changes)
-        function displayProduct(product) {
-            elements.productName.textContent = product.name;
-            elements.basePrice.innerHTML = `<i class="fas fa-tags"></i> ${product.price.toFixed(2)} ر.س`;
-
-            const totalQuantity = calculateTotalQuantity(product.batches);
-            const stockElement = elements.productQuantity;
-
-            if (totalQuantity <= 0) {
-                stockElement.innerHTML = '<i class="fas fa-boxes"></i> <span class="out-of-stock">انتهى المخزون</span>';
-                stockElement.className = 'product-stock out-of-stock';
-            }
-            else if (totalQuantity <= 5) {
-                stockElement.innerHTML = `<i class="fas fa-boxes"></i> <span class="low-stock stock-warning">المخزون: ${totalQuantity} قطع</span>`;
-                stockElement.className = 'product-stock low-stock';
-            }
-            else {
-                stockElement.innerHTML = `<i class="fas fa-boxes"></i> المخزون: ${totalQuantity} قطع`;
-                stockElement.className = 'product-stock';
-            }
-
-            updateProductExpiryStatus(product.batches);
-            displayBatches(product.batches);
-            elements.productImage.src = product.image;
-            elements.productDetails.style.display = 'block';
-
-            if (isUpdatingItemIndex !== null) {
-                elements.addToInvoiceBtn.style.display = 'none';
-                elements.updateInvoiceItemBtn.style.display = 'inline-flex';
-                const currentBatchId = invoiceItems[isUpdatingItemIndex].batch.id;
-                const batchToSelect = Object.values(product.batches).find(b => b.id === currentBatchId) || { id: currentBatchId, ...invoiceItems[isUpdatingItemIndex].batch };
-                if (batchToSelect) selectBatch(batchToSelect, true);
-                
-            } else {
-                elements.addToInvoiceBtn.style.display = 'inline-flex';
-                elements.updateInvoiceItemBtn.style.display = 'none';
-                elements.addToInvoiceBtn.disabled = totalQuantity <= 0;
-            }
-
-            selectedBatch = null;
-        }
-
         function updateProductExpiryStatus(batches) {
             const expiryElement = elements.productExpiry;
 
@@ -1828,21 +1892,6 @@
             elements.quantityModal.style.display = 'none';
         });
 
-        function addProductToInvoice(product, batch, quantity) {
-            const item = {
-                product: {
-                    barcode: product.barcode, name: product.name, price: product.price, cost: product.cost, image: product.image
-                },
-                batch: {
-                    id: batch.id, batchNumber: batch.batchNumber, expiryDate: batch.expiryDate,
-                },
-                quantity: quantity,
-                itemTotal: product.price * quantity
-            };
-            invoiceItems.push(item);
-            showToast(`${product.name} (${quantity} قطع) أضيف إلى الفاتورة`, 'success');
-        }
-
         function displayInvoiceItems() {
             elements.invoiceItemsList.innerHTML = '';
             const hasItems = invoiceItems.length > 0;
@@ -1922,6 +1971,10 @@
                     batchNumber: selectedBatch.batchNumber,
                     expiryDate: selectedBatch.expiryDate,
                 };
+                // Update price and cost as well
+                item.product.price = selectedBatch.price;
+                item.product.cost = selectedBatch.cost;
+
                 showToast(`تم تحديث دفعة المنتج ${item.product.name}`, 'success');
             }
             
@@ -1931,7 +1984,6 @@
             displayInvoiceItems();
             calculateAndDisplayTotals();
         });
-
 
         async function updateItemQuantity(index, newQuantity) {
             if (index < 0 || index >= invoiceItems.length) return;
@@ -2046,7 +2098,6 @@
             elements.finalInvoicePriceValue.textContent = `${currentFinalInvoicePrice.toFixed(2)} ر.س`;
         }
 
-        // 9. اختيار طريقة الدفع
         function setPaymentMethod(method) {
             paymentMethod = method;
             elements.cashPayment.classList.toggle('active', method === 'cash');
@@ -2058,7 +2109,6 @@
         elements.transferPayment.addEventListener('click', () => setPaymentMethod('transfer'));
 
 
-        // 10. Confirm Multi-Product Sale
         elements.confirmSaleBtn.addEventListener('click', processMultiProductSale);
 
         async function processMultiProductSale() {
@@ -2087,7 +2137,7 @@
                         barcode: item.product.barcode, name: item.product.name, price: item.product.price,
                         cost: item.product.cost, quantity: item.quantity, itemTotal: item.itemTotal,
                         batch: { id: item.batch.id, batchNumber: item.batch.batchNumber, expiryDate: item.batch.expiryDate },
-                        quantityReturned: 0 // Initialize returned quantity
+                        quantityReturned: 0
                     });
                 });
                 
@@ -2119,7 +2169,6 @@
             }
         });
 
-        // 11. وظيفة إنشاء الفاتورة
         function showInvoice(invoiceData) {
             const invoiceDataEncoded = encodeURIComponent(JSON.stringify(invoiceData));
             const iframe = document.createElement('iframe');
@@ -2133,135 +2182,111 @@
             iframe.src = `invoice.html?data=${invoiceDataEncoded}`;
         }
         
-        // =======================================================
-        // NEW: RETURN FUNCTIONALITY
-        // =======================================================
-        
-        // Open the Return Center modal
         elements.returnModeBtn.addEventListener('click', () => {
             elements.returnCenterModal.style.display = 'flex';
             elements.invoiceSearchInput.focus();
         });
 
-        // Close the Return Center modal
         elements.closeReturnCenterBtn.addEventListener('click', () => {
             elements.returnCenterModal.style.display = 'none';
             elements.invoiceSearchResult.innerHTML = '';
             elements.invoiceSearchInput.value = '';
         });
         
-        // Search for invoice by ID or product barcode
         elements.searchInvoiceBtn.addEventListener('click', findInvoice);
         elements.invoiceSearchInput.addEventListener('keypress', (e) => {
             if (e.key === 'Enter') findInvoice();
         });
         
-        // === MODIFIED: Improved invoice search logic ===
-// === نسخة مطورة: تبحث عن كل الفواتير المطابقة ===
-async function findInvoice() {
-    const searchTerm = elements.invoiceSearchInput.value.trim();
-    if (!searchTerm) {
-        showToast('الرجاء إدخال رقم الفاتورة أو باركود المنتج', 'warning');
-        return;
-    }
-    elements.invoiceSearchResult.innerHTML = `<p style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جار البحث...</p>`;
-
-    let foundInvoiceSnapshot = null;
-
-    // 1. البحث بالرقم التعريفي أولاً
-    const snapshotById = await database.ref('invoices/' + searchTerm).once('value');
-    if (snapshotById.exists()) {
-        foundInvoiceSnapshot = snapshotById;
-    } else {
-        const isPotentialKey = !searchTerm.startsWith('-') && searchTerm.length === 19 && /^[A-Za-z0-9_-]+$/.test(searchTerm);
-        if (isPotentialKey) {
-            const newSearchTerm = '-' + searchTerm;
-            const snapshotWithHyphen = await database.ref('invoices/' + newSearchTerm).once('value');
-            if (snapshotWithHyphen.exists()) {
-                foundInvoiceSnapshot = snapshotWithHyphen;
+        async function findInvoice() {
+            const searchTerm = elements.invoiceSearchInput.value.trim();
+            if (!searchTerm) {
+                showToast('الرجاء إدخال رقم الفاتورة أو باركود المنتج', 'warning');
+                return;
             }
-        }
-    }
+            elements.invoiceSearchResult.innerHTML = `<p style="text-align:center;"><i class="fas fa-spinner fa-spin"></i> جار البحث...</p>`;
 
-    // إذا تم العثور على فاتورة بالرقم التعريفي، اعرضها مباشرة
-    if (foundInvoiceSnapshot) {
-        displayFoundInvoice(foundInvoiceSnapshot.key, foundInvoiceSnapshot.val());
-        return;
-    }
+            let foundInvoiceSnapshot = null;
 
-    // 2. إذا لم يتم العثور عليها بالرقم التعريفي، ابحث بالباركود في كل الفواتير
-    const invoicesRef = database.ref('invoices');
-    invoicesRef.once('value').then((snapshot) => {
-        const matchingInvoices = []; // قائمة لتخزين كل الفواتير المطابقة
-
-        if (snapshot.exists()) {
-            snapshot.forEach((childSnapshot) => {
-                const invoice = childSnapshot.val();
-                const items = invoice.items || {};
-                for (const itemKey in items) {
-                    if (items[itemKey].barcode === searchTerm) {
-                        // أضف الفاتورة المطابقة إلى القائمة ولا تتوقف
-                        matchingInvoices.push({ id: childSnapshot.key, data: invoice });
-                        break; // انتقل للفاتورة التالية بعد العثور على المنتج داخلها
+            const snapshotById = await database.ref('invoices/' + searchTerm).once('value');
+            if (snapshotById.exists()) {
+                foundInvoiceSnapshot = snapshotById;
+            } else {
+                const isPotentialKey = !searchTerm.startsWith('-') && searchTerm.length === 19 && /^[A-Za-z0-9_-]+$/.test(searchTerm);
+                if (isPotentialKey) {
+                    const newSearchTerm = '-' + searchTerm;
+                    const snapshotWithHyphen = await database.ref('invoices/' + newSearchTerm).once('value');
+                    if (snapshotWithHyphen.exists()) {
+                        foundInvoiceSnapshot = snapshotWithHyphen;
                     }
                 }
+            }
+
+            if (foundInvoiceSnapshot) {
+                displayFoundInvoice(foundInvoiceSnapshot.key, foundInvoiceSnapshot.val());
+                return;
+            }
+
+            const invoicesRef = database.ref('invoices');
+            invoicesRef.once('value').then((snapshot) => {
+                const matchingInvoices = [];
+
+                if (snapshot.exists()) {
+                    snapshot.forEach((childSnapshot) => {
+                        const invoice = childSnapshot.val();
+                        const items = invoice.items || {};
+                        for (const itemKey in items) {
+                            if (items[itemKey].barcode === searchTerm) {
+                                matchingInvoices.push({ id: childSnapshot.key, data: invoice });
+                                break;
+                            }
+                        }
+                    });
+                }
+
+                if (matchingInvoices.length === 0) {
+                    elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">لم يتم العثور على فاتورة مطابقة.</p>`;
+                } else if (matchingInvoices.length === 1) {
+                    const singleInvoice = matchingInvoices[0];
+                    displayFoundInvoice(singleInvoice.id, singleInvoice.data);
+                } else {
+                    displayInvoiceList(matchingInvoices);
+                }
+
+            }).catch(err => {
+                 elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">حدث خطأ أثناء البحث.</p>`;
+                 console.error("خطأ في جلب بيانات الفواتير:", err);
             });
         }
 
-        // بعد الانتهاء من البحث، تحقق من عدد النتائج
-        if (matchingInvoices.length === 0) {
-            // لا توجد أي فاتورة مطابقة
-            elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">لم يتم العثور على فاتورة مطابقة.</p>`;
-        } else if (matchingInvoices.length === 1) {
-            // هناك فاتورة واحدة فقط، اعرضها مباشرة
-            const singleInvoice = matchingInvoices[0];
-            displayFoundInvoice(singleInvoice.id, singleInvoice.data);
-        } else {
-            // هناك عدة فواتير، اعرض قائمة للمستخدم ليختار منها
-            displayInvoiceList(matchingInvoices);
+        function displayInvoiceList(invoices) {
+            elements.invoiceSearchResult.innerHTML = `<h4 style="text-align:center; margin-bottom: 15px;">تم العثور على عدة فواتير، الرجاء اختيار الفاتورة الصحيحة:</h4>`;
+            
+            invoices.sort((a, b) => new Date(b.data.date) - new Date(a.data.date));
+
+            invoices.forEach(invoiceInfo => {
+                const invoiceCard = document.createElement('div');
+                invoiceCard.className = 'invoice-item-card';
+                invoiceCard.style.cursor = 'pointer';
+                invoiceCard.style.marginBottom = '10px';
+                
+                invoiceCard.innerHTML = `
+                    <div>
+                        <div class="invoice-item-name">رقم الفاتورة: ${invoiceInfo.id}</div>
+                        <div class="invoice-item-details">
+                            التاريخ: ${formatDate(invoiceInfo.data.date)} | الإجمالي: ${invoiceInfo.data.finalPrice.toFixed(2)} ر.س
+                        </div>
+                    </div>
+                    <i class="fas fa-chevron-left"></i>
+                `;
+                
+                invoiceCard.addEventListener('click', () => {
+                    displayFoundInvoice(invoiceInfo.id, invoiceInfo.data);
+                });
+                
+                elements.invoiceSearchResult.appendChild(invoiceCard);
+            });
         }
-
-    }).catch(err => {
-         elements.invoiceSearchResult.innerHTML = `<p style="text-align:center; color: var(--danger);">حدث خطأ أثناء البحث.</p>`;
-         console.error("خطأ في جلب بيانات الفواتير:", err);
-    });
-}
-
-
-/**
- * دالة لعرض قائمة بالفواتير ليختار المستخدم منها
- * @param {Array} invoices - قائمة الفواتير المطابقة
- */
-function displayInvoiceList(invoices) {
-    elements.invoiceSearchResult.innerHTML = `<h4 style="text-align:center; margin-bottom: 15px;">تم العثور على عدة فواتير، الرجاء اختيار الفاتورة الصحيحة:</h4>`;
-    
-    // قم بترتيب الفواتير من الأحدث إلى الأقدم
-    invoices.sort((a, b) => new Date(b.data.date) - new Date(a.data.date));
-
-    invoices.forEach(invoiceInfo => {
-        const invoiceCard = document.createElement('div');
-        invoiceCard.className = 'invoice-item-card'; // إعادة استخدام نفس التصميم
-        invoiceCard.style.cursor = 'pointer';
-        invoiceCard.style.marginBottom = '10px';
-        
-        invoiceCard.innerHTML = `
-            <div>
-                <div class="invoice-item-name">رقم الفاتورة: ${invoiceInfo.id}</div>
-                <div class="invoice-item-details">
-                    التاريخ: ${formatDate(invoiceInfo.data.date)} | الإجمالي: ${invoiceInfo.data.finalPrice.toFixed(2)} ر.س
-                </div>
-            </div>
-            <i class="fas fa-chevron-left"></i>
-        `;
-        
-        // أضف حدث النقر على البطاقة لعرض تفاصيلها
-        invoiceCard.addEventListener('click', () => {
-            displayFoundInvoice(invoiceInfo.id, invoiceInfo.data);
-        });
-        
-        elements.invoiceSearchResult.appendChild(invoiceCard);
-    });
-}
         
         function displayFoundInvoice(invoiceId, invoiceData) {
             elements.invoiceSearchResult.innerHTML = '';
@@ -2311,7 +2336,6 @@ function displayInvoiceList(invoices) {
                 elements.invoiceSearchResult.appendChild(itemCard);
             }
             
-            // Add event listeners to the new return buttons
             elements.invoiceSearchResult.querySelectorAll('.item-return-btn').forEach(btn => {
                 btn.addEventListener('click', initiateItemReturn);
             });
@@ -2326,7 +2350,7 @@ function displayInvoiceList(invoices) {
                 return;
             }
             
-            currentItemForReturn = { ...btn.dataset }; // Copy all data attributes
+            currentItemForReturn = { ...btn.dataset };
 
             elements.returnConfirmText.textContent = `إرجاع منتج: ${currentItemForReturn.itemName}`;
             elements.returnQuantityInput.value = 1;
@@ -2354,7 +2378,6 @@ function displayInvoiceList(invoices) {
             }
             
             try {
-                // 1. Add record to returns collection
                 const returnRef = database.ref('returns').push();
                 await returnRef.set({
                     invoiceId: currentItemForReturn.invoiceId,
@@ -2366,19 +2389,15 @@ function displayInvoiceList(invoices) {
                     returnDate: new Date().toISOString()
                 });
 
-                // 2. Update the returned quantity in the original invoice item
                 const itemInInvoiceRef = database.ref(`invoices/${currentItemForReturn.invoiceId}/items/${currentItemForReturn.itemKey}/quantityReturned`);
                 await itemInInvoiceRef.transaction(currentVal => (currentVal || 0) + quantityToReturn);
 
-                // 3. Increment stock in the product batch
                 const productBatchPath = `products/${currentItemForReturn.barcode}/batches/${currentItemForReturn.batchId}/quantity`;
                 await database.ref(productBatchPath).set(firebase.database.ServerValue.increment(quantityToReturn));
                 
-                // Success feedback
                 elements.returnConfirmModal.style.display = 'none';
                 showReturnSuccess(`تم إرجاع ${quantityToReturn} قطعة من ${currentItemForReturn.itemName} بنجاح.`);
                 
-                // Refresh the invoice view in the modal
                 findInvoice(); 
                 
             } catch (error) {
@@ -2402,38 +2421,31 @@ function displayInvoiceList(invoices) {
             }, 3000);
         }
 
-        // =======================================================
-        // END OF RETURN FUNCTIONALITY
-        // =======================================================
-
-
-        // 15. إعادة تعيين النظام
        function resetSystem() {
-    elements.barcodeInput.value = '';
-    elements.productDetails.style.display = 'none';
-    elements.invoiceItemsContainer.style.display = 'none'; // هذا يخفي قائمة المنتجات، وهو صحيح
-    elements.invoiceDiscountSection.style.display = 'none';
-    // elements.invoicePlaceholder.style.display = 'none'; // <-- تم تعطيل هذا السطر
+            elements.barcodeInput.value = '';
+            elements.productDetails.style.display = 'none';
+            elements.invoiceItemsContainer.style.display = 'none';
+            elements.invoiceDiscountSection.style.display = 'none';
 
-    if (elements.searchWrapper.style.display !== 'flex') {
-        toggleSearch();
-    }
+            if (elements.searchWrapper.style.display !== 'flex') {
+                toggleSearch();
+            }
 
-    resetProductSelection();
-    invoiceItems = [];
-    invoiceOverallDiscount = { type: 'none', value: 0, reason: '' };
-    currentSubTotal = 0;
-    currentFinalInvoicePrice = 0;
+            resetProductSelection();
+            invoiceItems = [];
+            invoiceOverallDiscount = { type: 'none', value: 0, reason: '' };
+            currentSubTotal = 0;
+            currentFinalInvoicePrice = 0;
 
-    displayInvoiceItems();
-    calculateAndDisplayTotals();
-    elements.invoiceDiscountPercent.value = '';
-    elements.invoiceDiscountAmount.value = '';
-    elements.invoiceReasonInput.value = '';
-    setPaymentMethod('cash');
-    
-    if(cameraActive) stopCamera();
-}
+            displayInvoiceItems();
+            calculateAndDisplayTotals();
+            elements.invoiceDiscountPercent.value = '';
+            elements.invoiceDiscountAmount.value = '';
+            elements.invoiceReasonInput.value = '';
+            setPaymentMethod('cash');
+            
+            if(cameraActive) stopCamera();
+        }
 
         function resetProductSelection() {
              currentProduct = null;
@@ -2441,7 +2453,6 @@ function displayInvoiceList(invoices) {
              isUpdatingItemIndex = null;
         }
 
-        // 16. عرض التنبيهات
         function showToast(message, type = 'info', duration = 3000) {
             const toast = elements.toast;
             toast.textContent = message;
@@ -2466,7 +2477,6 @@ function displayInvoiceList(invoices) {
             }, duration);
         }
 
-        // 17. استقبال رسالة من الفاتورة للإغلاق
         window.addEventListener('message', function(e) {
             if (e.data === 'closeInvoice') {
                 elements.invoicePlaceholder.style.display = 'none';
@@ -2474,10 +2484,8 @@ function displayInvoiceList(invoices) {
             }
         });
 
-        // 18. إيقاف الكاميرا عند مغادرة الصفحة
         window.addEventListener('beforeunload', stopCamera);
 
-        // Initial display of cart and totals on page load
         displayInvoiceItems();
         calculateAndDisplayTotals();
     </script>
