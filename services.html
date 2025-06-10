@@ -810,22 +810,10 @@
 
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script src="data/firebase-config.js"></script>
   
 <script>
-  // إعدادات Firebase الخاصة بمشروع Pharmacy System
-  const firebaseConfig = {
-    apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
-    authDomain: "pharmacy-system-9def6.firebaseapp.com",
-    projectId: "pharmacy-system-9def6",
-    storageBucket: "pharmacy-system-9def6.appspot.com",
-    messagingSenderId: "630855008414",
-    appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-    measurementId: "G-LC5NDKP6QZ"
-  };
-
-  // Initialize Firebase
-  firebase.initializeApp(firebaseConfig);
-  const database = firebase.database();
+ 
 
   // App variables
   let currentServiceKey = null;
