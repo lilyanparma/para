@@ -206,6 +206,10 @@
     .product-info .overall-status.warning {
         color: var(--warning);
     }
+    /* --- الإضافة الجديدة هنا --- */
+    .product-info .overall-status.info {
+        color: var(--primary);
+    }
 
     .info-image-container {
         display: flex;
@@ -383,13 +387,13 @@
         const totalQuantity = calculateTotalQuantity(product.batches);
         const nameMatch = searchTerm === '' || (product.name || '').toLowerCase().includes(searchTerm);
         const stockMatch = (stockStatus === '') ||
-                           (stockStatus === 'inStock' && totalQuantity > 0) ||
-                           (stockStatus === 'lowStock' && totalQuantity > 0 && totalQuantity <= 5) ||
-                           (stockStatus === 'outOfStock' && totalQuantity <= 0);
+                              (stockStatus === 'inStock' && totalQuantity > 0) ||
+                              (stockStatus === 'lowStock' && totalQuantity > 0 && totalQuantity <= 5) ||
+                              (stockStatus === 'outOfStock' && totalQuantity <= 0);
         const expiryMatch = (expiryStatus === '') ||
-                            (expiryStatus === 'valid' && !hasStatus(product, 'expired') && !hasStatus(product, 'expiringSoon')) ||
-                            (expiryStatus === 'expiringSoon' && hasStatus(product, 'expiringSoon')) ||
-                            (expiryStatus === 'expired' && hasStatus(product, 'expired'));
+                               (expiryStatus === 'valid' && !hasStatus(product, 'expired') && !hasStatus(product, 'expiringSoon')) ||
+                               (expiryStatus === 'expiringSoon' && hasStatus(product, 'expiringSoon')) ||
+                               (expiryStatus === 'expired' && hasStatus(product, 'expired'));
         return nameMatch && stockMatch && expiryMatch;
     });
     sortProducts(filtered, sortBy);
@@ -475,33 +479,37 @@
     return badgesHTML;
   }
 
-  // === دالة محدثة لإظهار كل التنبيهات العامة وتغيير الألوان حسب الطلب ===
+  // --- الدالة المحدثة بالكامل هنا ---
   function getOverallStatusText(product) {
-      let statusHTML = '';
-      const totalQuantity = calculateTotalQuantity(product.batches);
+    let statusHTML = '';
+    const totalQuantity = calculateTotalQuantity(product.batches);
 
-      // الحالة الأولى والأهم: نفد المخزون بالكامل
-      if (totalQuantity <= 0) {
-          return '<p class="overall-status danger"><i class="fas fa-times-circle"></i> نفد المخزون بالكامل</p>';
-      }
+    // الحالة الأولى والأهم: نفد المخزون بالكامل (يوقف باقي الفحوصات)
+    if (totalQuantity <= 0) {
+        return '<p class="overall-status danger"><i class="fas fa-times-circle"></i> نفد المخزون بالكامل</p>';
+    }
 
-      // الحالة الثانية: وجود دفعات منتهية الصلاحية (الأكثر خطورة بعد نفاذ المخزون)
-      if (hasStatus(product, 'expired')) {
-          statusHTML += '<p class="overall-status danger"><i class="fas fa-ban"></i> يحتوي على دفعات منتهية الصلاحية</p>';
-      }
+    // الحالة الثانية: وجود دفعات منتهية الصلاحية (الأكثر خطورة)
+    if (hasStatus(product, 'expired')) {
+        statusHTML += '<p class="overall-status danger"><i class="fas fa-ban"></i> يحتوي على دفعات منتهية الصلاحية</p>';
+    }
 
-      // الحالة الثالثة: وجود دفعات فارغة (بينما لا يزال هناك مخزون إجمالي)
-      if (hasOutOfStockBatches(product)) {
-          // تم تغيير اللون إلى أحمر (خطر) حسب الطلب
-          statusHTML += '<p class="overall-status danger"><i class="fas fa-archive"></i> يحتوي على دفعات فارغة</p>';
-      }
+    // الحالة الثالثة: وجود دفعات فارغة (بينما لا يزال هناك مخزون إجمالي)
+    if (hasOutOfStockBatches(product)) {
+        statusHTML += '<p class="overall-status danger"><i class="fas fa-archive"></i> يحتوي على دفعات فارغة</p>';
+    }
 
-      // الحالة الرابعة: وجود دفعات قريبة من الانتهاء
-      if (hasStatus(product, 'expiringSoon')) {
-          statusHTML += '<p class="overall-status warning"><i class="fas fa-exclamation-triangle"></i> يحتوي على دفعات قريبة الانتهاء</p>';
-      }
+    // الحالة الرابعة: وجود دفعات قريبة من الانتهاء
+    if (hasStatus(product, 'expiringSoon')) {
+        statusHTML += '<p class="overall-status warning"><i class="fas fa-exclamation-triangle"></i> يحتوي على دفعات قريبة الانتهاء</p>';
+    }
+    
+    // الحالة الخامسة: المخزون الإجمالي قليل
+    if (totalQuantity > 0 && totalQuantity <= 5) {
+        statusHTML += '<p class="overall-status info"><i class="fas fa-box-open"></i> المخزون الإجمالي قليل</p>';
+    }
 
-      return statusHTML;
+    return statusHTML;
   }
 
   function sortProducts(products, sortBy) {
