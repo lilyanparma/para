@@ -2,8 +2,11 @@
 // == ملف إعدادات Firebase المشترك - Pharmacy System ==
 // =================================================================
 
-// أولاً: قم بوضع معلومات مشروعك في Firebase هنا
-// الرجاء استخدام مفاتيح جديدة وآمنة من حسابك في Firebase
+// =================================================================
+// == ملف إعدادات Firebase المشترك - تم التصحيح ==
+// =================================================================
+
+// تم استخدام الإعدادات التي قدمتها وتصحيح بناء الكود
 const firebaseConfig = {
   apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
   authDomain: "pharmacy-system-9def6.firebaseapp.com",
@@ -15,11 +18,17 @@ const firebaseConfig = {
   measurementId: "G-LC5NDKP6QZ"
 };
 
-// ثانياً: تهيئة تطبيق Firebase
-firebase.initializeApp(firebaseConfig);
+// تهيئة تطبيق Firebase
+// تأكد من تحميل سكربتات Firebase في ملفات HTML قبل هذا الملف
+try {
+  firebase.initializeApp(firebaseConfig);
 
-// ثالثاً: إنشاء متغير مشترك للوصول إلى قاعدة البيانات
-// هذا المتغير (database) سيكون متاحاً في جميع الصفحات التي تستدعي هذا الملف
-const database = firebase.database();
+  // إنشاء متغير مشترك للوصول إلى قاعدة البيانات
+  const database = firebase.database();
 
-console.log("Firebase has been initialized from firebase-config.js");
+  console.log("Firebase has been initialized successfully from firebase-config.js");
+} catch (e) {
+  console.error("Error initializing Firebase:", e);
+  // يمكنك إضافة تنبيه للمستخدم هنا إذا فشلت التهيئة
+  alert("فشل الاتصال بقاعدة البيانات. الرجاء التحقق من إعدادات Firebase أو الاتصال بالإنترنت.");
+}
