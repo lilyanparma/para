@@ -14,7 +14,7 @@
     <script src="data/firebase-config.js"></script>
   
     <style>
-        /* تم استخدام نفس كود التصميم الحديث الذي أرسلته */
+        /* ====== نظام الألوان المتطور ====== */
         :root {
             --primary: #6C63FF; --primary-dark: #564FD9; --primary-light: #E0DEFF;
             --secondary: #FF6584; --success: #4CAF50; --danger: #FF5252;
@@ -31,7 +31,7 @@
         body {
             font-family: 'Tajawal', Arial, sans-serif; direction: rtl;
             background: var(--bg-color); min-height: 100vh; position: relative;
-            color: var(--dark); line-height: 1.7; overflow-x: hidden;
+            color: var(--dark); line-height: 1.7; overflow-x: hidden; padding-bottom: 80px;
         }
         .header-container {
             background: var(--glass-bg); padding: 15px 30px;
@@ -124,13 +124,7 @@
             visibility: hidden; transition: opacity 0.4s ease; backdrop-filter: blur(5px); 
         }
         .overlay.active { opacity: 1; visibility: visible; }
-        .spinner { 
-            border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; 
-            border-top: 4px solid var(--primary); width: 40px; height: 40px; 
-            animation: spin 1s linear infinite; margin: auto;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        /* ... Other styles from the new design ... */
+        /* ... باقي كود CSS ... */
     </style>
 </head>
 <body>
@@ -158,8 +152,11 @@
         <ul>
             <li><a href="index.html" class="active"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
             <li id="addUserMenuLink"><a href="add-user.html"><i class="fas fa-user-plus"></i><span>إضافة مستخدم</span></a></li>
-            <li><a href="products.html"><i class="fas fa-box-open"></i><span>إدارة المنتجات</span></a></li>
-            <li><a href="profits.html" id="profitsMenuLink"><i class="fas fa-file-invoice-dollar"></i><span>الارباح والحسابات</span></a></li>
+            <li id="productsMenuLink"><a href="products.html"><i class="fas fa-box-open"></i><span>إدارة المنتجات</span></a></li>
+            <li><a href="view-products.html"><i class="fas fa-list-ul"></i><span>عرض المنتجات</span></a></li>
+            <li><a href="sell-products.html"><i class="fas fa-cash-register"></i><span>بيع المنتجات</span></a></li>
+            <li><a href="services.html"><i class="fas fa-concierge-bell"></i><span>خدمات اضافية</span></a></li>
+            <li id="profitsMenuLink"><a href="profits.html"><i class="fas fa-file-invoice-dollar"></i><span>الارباح والحسابات</span></a></li>
             <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a></li>
         </ul>
     </nav>
@@ -168,7 +165,7 @@
     <main id="main-content">
         </main>
 
-    <footer>
+    <footer style="position: relative; margin-top: 40px; background: var(--dark); color: white; text-align: center; padding: 20px;">
         <p>جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE</p>
     </footer>
 
@@ -201,8 +198,8 @@
             document.getElementById('userName').textContent = userName;
             document.getElementById('userRole').textContent = userRole;
 
-            // Role-Based Access Control (RBAC)
-            const adminOnlyLinks = ['profitsMenuLink', 'addUserMenuLink'];
+            // Role-Based Access Control (RBAC) - التحكم في إظهار الروابط
+            const adminOnlyLinks = ['profitsMenuLink', 'addUserMenuLink', 'productsMenuLink'];
             if (userRole === 'موظف') {
                 adminOnlyLinks.forEach(id => {
                     const el = document.getElementById(id);
@@ -211,7 +208,7 @@
             }
 
             setupEventListeners();
-            // ... Call other data loading functions like generateAndRenderCharts() ...
+            // Call other data loading functions if they exist on this page
         }
 
         // ========= Event Listeners & Core UI Functions =========
@@ -233,9 +230,6 @@
                 console.error('Logout Error', error);
             });
         }
-        
-        // ... All your other chart and data functions would go here ...
-
     </script>
 </body>
 </html>
