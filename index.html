@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>PARAMEDICAL LILYAN ROSE</title>
+  <title>PARAMEDICAL LILYAN ROSE - الرئيسية</title>
   
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
@@ -12,46 +12,28 @@
   <link rel="stylesheet" href="side/main-style.css">
 
   <style>
-    /* هذا الجزء يحتوي فقط على تنسيقات خاصة بهذه الصفحة، وليس الهيدر */
-    body {
-      font-family: 'Tajawal', Arial, sans-serif;
-      background-color: #f8f9fa;
-      padding-bottom: 60px;
-    }
-    main {
-      padding: 30px;
-      max-width: 1200px;
-      margin: 0 auto;
-    }
-    main h2 {
-      text-align: center;
-      margin-bottom: 40px;
-      color: var(--primary-color, #d23369);
-      font-size: 2em;
-    }
+    /* === تم التعديل هنا: تحسين تنسيق الرسوم البيانية === */
     .chart-container {
       position: relative;
       width: 100%;
-      max-width: 650px;
+      max-width: 600px;
+      height: 350px;
       margin: 35px auto;
-      height: 380px;
       background: white;
       border-radius: 15px;
-      padding: 25px;
+      padding: 20px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.07);
     }
-    footer {
-      background: linear-gradient(to right, var(--primary-color, #d23369), var(--secondary-color, #ff66b2));
-      color: white;
-      text-align: center;
-      padding: 18px;
-      position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      z-index: 99;
-      transition: background 0.4s ease;
+    @media (max-width: 768px) {
+      .chart-container {
+        height: 300px;
+        padding: 15px;
+      }
     }
+    
+    main { padding: 30px; max-width: 1200px; margin: 0 auto; }
+    main h2 { text-align: center; margin-bottom: 40px; color: var(--primary-color, #d23369); font-size: 2em; }
+    footer { background: linear-gradient(to right, var(--primary-color, #d23369), var(--secondary-color, #ff66b2)); color: white; text-align: center; padding: 18px; position: fixed; bottom: 0; left: 0; right: 0; z-index: 99; transition: background 0.4s ease; }
   </style>
 </head>
 <body>
@@ -76,30 +58,22 @@
   <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-
   <script src="data/firebase-config.js"></script>
-
   <script src="side/main-script.js"></script>
-
   <script>
     let salesChartInstance = null;
     let doughnutChartInstance = null;
-
     document.addEventListener('DOMContentLoaded', function() {
       AOS.init({ duration: 800, once: true });
       initCharts();
     });
-
     function initCharts() {
       if (salesChartInstance) salesChartInstance.destroy();
       if (doughnutChartInstance) doughnutChartInstance.destroy();
-      
       const salesData = { labels: ['يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو'], datasets: [{ label: 'المبيعات', data: [18, 25, 12, 15, 8, 14], backgroundColor: 'rgba(155, 89, 182, 0.7)' }] };
       const doughnutData = { labels: ['منتج أ', 'منتج ب', 'منتج ج'], datasets: [{ data: [40, 35, 25], backgroundColor: ['#9b59b6', '#8e44ad', '#3498db'] }] };
-      
       const salesCtx = document.getElementById('salesChart');
       if (salesCtx) salesChartInstance = new Chart(salesCtx, { type: 'bar', data: salesData });
-
       const doughnutCtx = document.getElementById('doughnutChart');
       if(doughnutCtx) doughnutChartInstance = new Chart(doughnutCtx, { type: 'doughnut', data: doughnutData });
     }
