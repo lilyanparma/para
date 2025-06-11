@@ -5,7 +5,7 @@
 // أولاً: قم بوضع معلومات مشروعك في Firebase هنا
 // الرجاء استخدام مفاتيح جديدة وآمنة من حسابك في Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSy...ضع-مفتاحك-الجديد-هنا", // استبدل هذا بمفتاحك
+  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4"
   authDomain: "pharmacy-system-9def6.firebaseapp.com",
   databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com", //
   projectId: "pharmacy-system-9def6", //
