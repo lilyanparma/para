@@ -65,7 +65,7 @@
     .lang-btn { font-size: 14px; padding: 0 14px; width: auto; gap: 8px; font-weight: 500; }
     .lang-btn svg { width: 20px; height: 14px; }
     
-    /* === *تعديل جديد* تنسيق الهيدر في الوضع السهل === */
+    /* تنسيق الهيدر في الوضع السهل */
     body.easy-mode-active .header-top-row {
         justify-content: center;
     }
@@ -248,7 +248,7 @@
             <a href="sell-products.html" class="app-card"> <i class="fas fa-cash-register"></i> <span>نقطة البيع</span> </a>
             <a href="services.html" class="app-card"> <i class="fas fa-concierge-bell"></i> <span>الخدمات</span> </a>
             <a href="profits.html" class="app-card"> <i class="fas fa-file-invoice-dollar"></i> <span>الأرباح والتقارير</span> </a>
-            <a href="#" class="app-card" onclick="setMode('pro')"> <i class="fas fa-chart-line"></i> <span>عرض الرسوم البيانية</span> </a>
+            <a href="#" class="app-card" onclick="setMode('pro'); return false;"> <i class="fas fa-chart-line"></i> <span>الوضع الاحترافي</span> </a>
         </div>
     </div>
   </main>
@@ -298,11 +298,10 @@
         elements.proModeView.style.display = isPro ? 'block' : 'none';
         elements.easyModeView.style.display = isPro ? 'none' : 'block';
         
-        // التحكم في الهيدر حسب الوضع
         elements.body.classList.toggle('easy-mode-active', !isPro);
 
         if (!isPro && isSidebarOpen) {
-            toggleSidebar(); // أغلق القائمة الجانبية إذا كانت مفتوحة عند التبديل للوضع السهل
+            toggleSidebar();
         }
         localStorage.setItem('dashboardMode', mode);
     }
@@ -311,10 +310,6 @@
         const savedMode = localStorage.getItem('dashboardMode') || 'pro';
         setMode(savedMode);
     }
-
-    // ربط الأحداث بأزرار تبديل الوضع
-    elements.proModeBtn.addEventListener('click', () => setMode('pro'));
-    elements.easyModeBtn.addEventListener('click', () => setMode('easy'));
 
     // === دوال نظام التنبيهات (تبقى كما هي) ===
     async function fetchStockAndExpiryAlerts() { try { const snapshot = await database.ref('products').once('value'); const products = snapshot.val(); if (!products) return; const alerts = []; const today = new Date(); today.setHours(0, 0, 0, 0); for (const productId in products) { const product = products[productId]; if (!product.batches) continue; for (const batchId in product.batches) { const batch = product.batches[batchId]; const quantity = batch.quantity || 0; if (batch.expiryDate) { const expiryDate = new Date(batch.expiryDate); const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays <= 30) { alerts.push({ type: 'warning', name: product.name, message: `صلاحية الدفعة ${batch.batchNumber || ''} تنتهي خلال ${diffDays} يوم (الكمية: ${quantity})` }); } } if (quantity > 0 && quantity <= 5) { alerts.push({ type: 'danger', name: product.name, message: `كمية الدفعة ${batch.batchNumber || ''} قليلة جداً (${quantity} متبقية)` }); } } } displayAlerts(alerts); } catch (error) { console.error("Error fetching alerts:", error); } }
@@ -335,7 +330,8 @@
     });
     
     // ربط الأحداث المتبقية
-    elements.hamburger.addEventListener('click', toggleSidebar);
+    elements.proModeBtn.addEventListener('click', () => setMode('pro'));
+    elements.easyModeBtn.addEventListener('click', () => setMode('easy'));
     elements.overlay.addEventListener('click', toggleSidebar);
 
     elements.bellIcon.addEventListener('click', (event) => {
@@ -347,7 +343,6 @@
             elements.notificationsPanel.classList.remove('show');
         }
     });
-
   </script>
 </body>
 </html>
