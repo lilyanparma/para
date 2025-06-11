@@ -2,27 +2,75 @@
 <html lang="ar" dir="rtl">
 <head>
     <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>تسجيل الدخول - نظام LILYAN ROSE</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script> 
     <script src="data/firebase-config.js"></script>
+    
     <style>
-        /* يمكنك نسخ نفس تنسيقات CSS من صفحة signup.html هنا */
-        :root { --primary: #6C63FF; /* ... বাকি রং */ }
-        body { font-family: 'Tajawal', sans-serif; background: linear-gradient(135deg, #F8FAFC, #e6f0ff); display: flex; justify-content: center; align-items: center; min-height: 100vh; direction: rtl; }
-        .login-container { width: 100%; max-width: 420px; padding: 40px; background: rgba(255, 255, 255, 0.5); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); text-align: center; }
-        .logo { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #6C63FF, #FF6584); color: white; font-size: 2.5rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
-        h2 { color: #1A1A2E; margin-bottom: 10px; }
-        p { color: #718096; margin-bottom: 30px; }
+        :root {
+            --primary: #6C63FF;
+            --primary-light: #E0DEFF;
+            --dark: #1A1A2E;
+            --bg-color: linear-gradient(135deg, #F8FAFC, #e6f0ff);
+            --glass-bg: rgba(255, 255, 255, 0.5);
+            --glass-border: rgba(255, 255, 255, 0.2);
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'Tajawal', sans-serif;
+            background: var(--bg-color);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            direction: rtl;
+        }
+        .login-container {
+            width: 100%; max-width: 420px; padding: 40px;
+            background: var(--glass-bg); border-radius: 20px;
+            border: 1px solid var(--glass-border);
+            box-shadow: var(--card-shadow); backdrop-filter: blur(10px);
+            text-align: center;
+        }
+        .logo {
+            width: 80px; height: 80px; border-radius: 20px;
+            background: linear-gradient(135deg, var(--primary), #FF6584);
+            color: white; font-size: 2.5rem; display: flex;
+            align-items: center; justify-content: center;
+            margin: 0 auto 20px; box-shadow: 0 10px 20px rgba(108, 99, 255, 0.4);
+        }
+        h2 { color: var(--dark); font-size: 1.8rem; margin-bottom: 10px; }
+        p { color: var(--gray, #718096); margin-bottom: 30px; }
         .input-group { position: relative; margin-bottom: 25px; }
-        .input-field { width: 100%; padding: 15px 45px 15px 20px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; background: rgba(255, 255, 255, 0.5); font-size: 1rem; }
-        .input-icon { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); color: #718096; }
-        .login-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(135deg, #6C63FF, #564FD9); color: white; font-size: 1.1rem; font-weight: 700; cursor: pointer; }
-        #error-message { color: #FF5252; margin-top: 15px; display: none; }
-         a { color: var(--primary); text-decoration: none; font-weight: 600; }
+        .input-field {
+            width: 100%; padding: 15px 45px 15px 20px;
+            border: 1px solid var(--glass-border); border-radius: 12px;
+            background: rgba(255, 255, 255, 0.5); font-size: 1rem;
+            transition: all 0.3s;
+        }
+        .input-field:focus {
+            outline: none; border-color: var(--primary);
+            box-shadow: 0 0 0 3px var(--primary-light);
+        }
+        .input-icon { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); color: var(--gray, #718096); }
+        .login-btn {
+            width: 100%; padding: 15px; border: none; border-radius: 12px;
+            background: linear-gradient(135deg, var(--primary), #564FD9);
+            color: white; font-size: 1.1rem; font-weight: 700;
+            cursor: pointer; transition: all 0.3s;
+            box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);
+        }
+        .login-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 15px 25px rgba(108, 99, 255, 0.4);
+        }
+        #error-message { color: #FF5252; margin-top: 15px; font-weight: 600; display: none; }
     </style>
 </head>
 <body>
@@ -40,34 +88,34 @@
                 <input type="password" id="password" class="input-field" placeholder="كلمة المرور" required>
             </div>
             <button type="submit" class="login-btn">تسجيل الدخول</button>
-            <p id="error-message">البريد الإلكتروني أو كلمة المرور غير صحيحة.</p>
+            <p id="error-message"></p>
         </form>
-        <p style="margin-top: 20px;">ليس لديك حساب؟ <a href="signup.html">أنشئ حساباً جديداً</a></p>
     </div>
 
     <script>
         const auth = firebase.auth();
         const loginForm = document.getElementById('loginForm');
+        const errorMessage = document.getElementById('error-message');
 
         loginForm.addEventListener('submit', (e) => {
             e.preventDefault();
             
             const email = document.getElementById('email').value;
             const password = document.getElementById('password').value;
-            const errorMsg = document.getElementById('error-message');
+            
+            errorMessage.style.display = 'none';
 
-            errorMsg.style.display = 'none';
-
+            // Use Firebase Authentication to sign in
             auth.signInWithEmailAndPassword(email, password)
                 .then((userCredential) => {
-                    // Login successful, redirect to dashboard
+                    // Login successful, redirect to the main dashboard
                     window.location.href = 'index.html';
                 })
                 .catch((error) => {
                     // Handle login errors
-                    errorMsg.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
-                    errorMsg.style.display = 'block';
-                    console.error("Login failed:", error);
+                    errorMessage.textContent = "البريد الإلكتروني أو كلمة المرور غير صحيحة.";
+                    errorMessage.style.display = 'block';
+                    console.error("Login failed:", error.code, error.message);
                 });
         });
     </script>
