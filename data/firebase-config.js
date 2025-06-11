@@ -2,24 +2,23 @@
 // == ملف إعدادات Firebase المشترك - Pharmacy System ==
 // =================================================================
 
-// تم استخدام البيانات الصحيحة التي أرسلتها
+// أولاً: قم بوضع معلومات مشروعك في Firebase هنا
+// الرجاء استخدام مفاتيح جديدة وآمنة من حسابك في Firebase
 const firebaseConfig = {
-  apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
+  apiKey: "AIzaSy...ضع-مفتاحك-الجديد-هنا", // استبدل هذا بمفتاحك
   authDomain: "pharmacy-system-9def6.firebaseapp.com",
-  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com",
-  projectId: "pharmacy-system-9def6",
-  storageBucket: "pharmacy-system-9def6.firebasestorage.app",
-  messagingSenderId: "630855008414",
-  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f",
-  measurementId: "G-LC5NDKP6QZ"
+  databaseURL: "https://pharmacy-system-9def6-default-rtdb.firebaseio.com", //
+  projectId: "pharmacy-system-9def6", //
+  storageBucket: "pharmacy-system-9def6.appspot.com", //
+  messagingSenderId: "630855008414", //
+  appId: "1:630855008414:web:b464bcb81c8a2091d0fb8f", //
 };
 
-// تهيئة تطبيق Firebase
+// ثانياً: تهيئة تطبيق Firebase
 firebase.initializeApp(firebaseConfig);
 
-// === الحل النهائي: تعريف المتغير بشكل عام ===
-// هذا يجعل المتغير "database" متاحاً لجميع ملفات المشروع
-database = firebase.database();
-// =========================================
+// ثالثاً: إنشاء متغير مشترك للوصول إلى قاعدة البيانات
+// هذا المتغير (database) سيكون متاحاً في جميع الصفحات التي تستدعي هذا الملف
+const database = firebase.database();
 
-console.log("Firebase has been initialized correctly. Database object is now global.");
+console.log("Firebase has been initialized from firebase-config.js");
