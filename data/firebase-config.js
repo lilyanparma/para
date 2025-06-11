@@ -1,5 +1,8 @@
-// data/firebase-config.js
+// =================================================================
+// == ملف إعدادات Firebase المشترك - Pharmacy System ==
+// =================================================================
 
+// تم استخدام البيانات الصحيحة التي أرسلتها
 const firebaseConfig = {
   apiKey: "AIzaSyDRtJBPOjpfXXfsaDo98E_NTT7KWzz8gj4",
   authDomain: "pharmacy-system-9def6.firebaseapp.com",
@@ -11,10 +14,12 @@ const firebaseConfig = {
   measurementId: "G-LC5NDKP6QZ"
 };
 
+// تهيئة تطبيق Firebase
 firebase.initializeApp(firebaseConfig);
 
-// === السطر المهم الذي تم تعديله ===
+// === الحل النهائي: تعريف المتغير بشكل عام ===
+// هذا يجعل المتغير "database" متاحاً لجميع ملفات المشروع
 database = firebase.database();
-// ================================
+// =========================================
 
-console.log("Firebase has been initialized. Database object is now global.");
+console.log("Firebase has been initialized correctly. Database object is now global.");
