@@ -1322,8 +1322,6 @@
     <div id="toast" class="toast"></div>
 
     <script>
-       
-
         // 2. تهيئة النظام
         const codeReader = new ZXing.BrowserMultiFormatReader();
         let cameraActive = false;
@@ -1333,11 +1331,11 @@
         const pharmacyName = "صيدلية النخبة";
         let currentItemForReturn = null; 
 
-        // System state variables
+        // متغيرات حالة النظام
         let saleMode = 'manual'; // 'manual' or 'quick'
         let isUpdatingItemIndex = null;
 
-        // Array to hold items for the current invoice
+        // مصفوفة لتخزين المنتجات في الفاتورة الحالية
         let invoiceItems = [];
         let invoiceOverallDiscount = { type: 'none', value: 0, reason: '' };
         let currentSubTotal = 0;
@@ -1403,11 +1401,11 @@
         };
 
         // =======================================================
-        // ========== START: الكود المعدل والجديد ==========
+        // ========== START: الكود المحسّن والجديد ==========
         // =======================================================
 
         /**
-         * [جديد] دالة لحساب وعرض نطاق السعر بناءً على الدفعات
+         * [محسّن] دالة لحساب وعرض نطاق السعر بناءً على الدفعات
          * @param {object} batches - كائن يحتوي على دفعات المنتج
          * @returns {string} - نص منسق لعرض السعر
          */
@@ -1428,9 +1426,10 @@
             }
             return `من ${minPrice.toFixed(2)} إلى ${maxPrice.toFixed(2)} ر.س`;
         }
-
+        
         /**
-         * [مُعدّل] دالة عرض تفاصيل المنتج
+         * [محسّن] دالة عرض تفاصيل المنتج
+         * تعرض نطاق السعر إذا كانت الدفعات لها أسعار مختلفة
          */
         function displayProduct(product) {
             elements.productName.textContent = product.name;
@@ -1476,15 +1475,16 @@
         }
 
         /**
-         * [مُعدّل] دالة إضافة منتج إلى الفاتورة
+         * [محسّن] دالة إضافة منتج إلى الفاتورة
+         * تتأكد من استخدام سعر وتكلفة الدفعة المحددة
          */
         function addProductToInvoice(product, batch, quantity) {
             const item = {
                 product: {
                     barcode: product.barcode,
                     name: product.name,
-                    price: batch.price, // <-- الإصلاح: استخدام سعر الدفعة
-                    cost: batch.cost,   // <-- الإصلاح: استخدام تكلفة الدفعة
+                    price: batch.price, // استخدام سعر الدفعة
+                    cost: batch.cost,   // استخدام تكلفة الدفعة
                     image: product.image
                 },
                 batch: {
@@ -1493,17 +1493,16 @@
                     expiryDate: batch.expiryDate,
                 },
                 quantity: quantity,
-                itemTotal: batch.price * quantity // <-- الإصلاح: الحساب بناءً على سعر الدفعة
+                itemTotal: batch.price * quantity // الحساب بناءً على سعر الدفعة
             };
             invoiceItems.push(item);
-            showToast(`${product.name} (${quantity} قطع) أضيف إلى الفاتورة`, 'success');
         }
 
         /**
-         * [مُعدّل] دالة معالجة البيع السريع
+         * [محسّن] دالة معالجة البيع السريع
+         * توفر رسالة واضحة للمستخدم عند إضافة المنتج
          */
         async function handleQuickSale(product) {
-            // تحقق إذا كان المنتج موجوداً في الفاتورة بالفعل
             const existingItemIndex = invoiceItems.findIndex(item => item.product.barcode === product.barcode);
             
             if (existingItemIndex !== -1) {
@@ -1511,7 +1510,6 @@
                 const item = invoiceItems[existingItemIndex];
                 const newQuantity = item.quantity + 1;
                 
-                // تحقق من المخزون المتاح في نفس الدفعة
                 const batchSnapshot = await database.ref(`products/${product.barcode}/batches/${item.batch.id}/quantity`).once('value');
                 const liveBatchQuantity = batchSnapshot.val();
                 
@@ -1534,7 +1532,6 @@
                 const today = new Date();
                 today.setHours(0, 0, 0, 0);
 
-                // فلترة الدفعات الصالحة (متوفرة وغير منتهية الصلاحية)
                 const validBatches = Object.entries(batches)
                     .map(([id, batch]) => ({ id, ...batch }))
                     .filter(batch => {
@@ -1547,11 +1544,12 @@
                     return;
                 }
                 
-                // ترتيب الدفعات حسب تاريخ الصلاحية الأقرب
                 validBatches.sort((a, b) => new Date(a.expiryDate) - new Date(b.expiryDate));
                 const bestBatch = validBatches[0];
 
                 addProductToInvoice(product, bestBatch, 1);
+                // --- تحسين رسالة التأكيد هنا ---
+                showToast(`+1 ${product.name} (من دفعة ${bestBatch.batchNumber || 'الأقدم'})`, 'success');
             }
             
             displayInvoiceItems();
@@ -1561,7 +1559,7 @@
         }
 
         // =======================================================
-        // ========== END: الكود المعدل والجديد ==========
+        // ========== END: الكود المحسّن والجديد ==========
         // =======================================================
 
 
@@ -2094,15 +2092,46 @@
         elements.cardPayment.addEventListener('click', () => setPaymentMethod('card'));
         elements.transferPayment.addEventListener('click', () => setPaymentMethod('transfer'));
 
+        
+        /**
+         * [جديد] دالة للتحقق من المخزون لجميع المنتجات في الفاتورة قبل تأكيد البيع
+         */
+        async function checkInventoryBeforeSale() {
+            for (const item of invoiceItems) {
+                try {
+                    const batchRef = database.ref(`products/${item.product.barcode}/batches/${item.batch.id}/quantity`);
+                    const snapshot = await batchRef.once('value');
+                    const availableQuantity = snapshot.val();
 
-        elements.confirmSaleBtn.addEventListener('click', processMultiProductSale);
+                    if (availableQuantity === null || item.quantity > availableQuantity) {
+                        showToast(`المنتج "${item.product.name}" لم يعد متوفراً بالكمية المطلوبة (${item.quantity}). الكمية المتاحة: ${availableQuantity || 0}.`, 'error', 5000);
+                        return false; // لا يمكن إكمال البيع
+                    }
+                } catch (error) {
+                    console.error("Error checking inventory:", error);
+                    showToast(`حدث خطأ أثناء التحقق من مخزون "${item.product.name}".`, 'error');
+                    return false; // إلغاء البيع عند حدوث خطأ
+                }
+            }
+            return true; // جميع المنتجات متوفرة
+        }
 
-        async function processMultiProductSale() {
+        /**
+         * [محسّن] دالة تأكيد البيع بعد التحقق من المخزون
+         */
+        elements.confirmSaleBtn.addEventListener('click', async function() {
             if (invoiceItems.length === 0) {
                 showToast('لا توجد منتجات في الفاتورة لإتمام البيع', 'warning');
                 return;
             }
-            showToast('جارٍ معالجة الفاتورة...', 'info');
+            showToast('جارٍ التحقق من توفر المنتجات...', 'info');
+
+            const inventoryAvailable = await checkInventoryBeforeSale();
+            if (!inventoryAvailable) {
+                return; // إيقاف البيع إذا كان المخزون غير كافٍ
+            }
+
+            showToast('جارٍ معالجة الفاتورة...', 'success');
 
             try {
                 const now = new Date();
@@ -2146,7 +2175,8 @@
                 console.error('خطأ في عملية البيع:', error);
                 showToast('فشل عملية البيع: ' + error.message, 'error');
             }
-        }
+        });
+
         
         elements.cancelInvoiceBtn.addEventListener('click', function() {
             if (confirm('هل أنت متأكد من إلغاء الفاتورة الحالية؟ سيتم مسح جميع المنتجات المضافة.')) {
