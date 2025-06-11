@@ -1,0 +1,133 @@
+/* --- إعدادات الألوان المتغيرة (CSS Variables) --- */
+:root {
+  /* اللون الافتراضي (بنفسجي) */
+  --primary-color: #9b59b6;
+  --secondary-color: #8e44ad;
+  --text-on-primary: #ffffff;
+}
+
+body.theme-green {
+  --primary-color: #2ecc71;
+  --secondary-color: #27ae60;
+}
+
+body.theme-red {
+  --primary-color: #e74c3c;
+  --secondary-color: #c0392b;
+}
+
+/* --- تنسيق الهيدر --- */
+header {
+  background: linear-gradient(135deg, var(--primary-color), var(--secondary-color));
+  color: var(--text-on-primary);
+  padding: 15px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  transition: background 0.4s ease;
+}
+
+.hamburger {
+  font-size: 26px;
+  cursor: pointer;
+}
+
+.header-title-container h1 {
+  margin: 0;
+  font-size: 1.5em;
+  font-weight: 700;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+}
+
+.header-icon-btn {
+  background: none;
+  border: none;
+  color: var(--text-on-primary);
+  font-size: 1.4rem;
+  cursor: pointer;
+  position: relative;
+  padding: 5px;
+}
+
+.notification-badge {
+  position: absolute;
+  top: 0;
+  right: 0;
+  background-color: #e74c3c;
+  color: white;
+  width: 18px;
+  height: 18px;
+  border-radius: 50%;
+  font-size: 11px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid var(--primary-color);
+}
+
+/* --- تنسيق زر تغيير الألوان --- */
+.theme-switcher {
+  position: relative;
+}
+
+.theme-options {
+  display: none;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  background-color: white;
+  border-radius: 8px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.2);
+  padding: 10px;
+  margin-top: 10px;
+  z-index: 1001;
+}
+
+.theme-switcher:hover .theme-options {
+  display: flex;
+  gap: 10px;
+}
+
+.theme-dot {
+  width: 25px;
+  height: 25px;
+  border-radius: 50%;
+  cursor: pointer;
+  border: 2px solid #eee;
+  transition: transform 0.2s ease;
+}
+
+.theme-dot:hover {
+  transform: scale(1.1);
+}
+
+/* --- باقي التنسيقات للقائمة الجانبية (من ملف index.html) --- */
+.sidebar {
+  /* ... انسخ والصق كل تنسيقات السايدبار والأوفيرلاي هنا ... */
+  position: fixed; top: 0; bottom: 0; right: -280px; width: 280px;
+  background-color: white; padding: 25px; overflow-y: auto;
+  transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
+  z-index: 1000; box-shadow: -8px 0 25px rgba(0,0,0,0.1);
+}
+.sidebar.active { right: 0; }
+.close-btn { position: absolute; top: 18px; left: 18px; font-size: 30px; background: none; border: none; cursor: pointer; color: #888; transition: all 0.3s ease; }
+.close-btn:hover { color: var(--primary-color); transform: rotate(90deg); }
+.sidebar ul { list-style: none; margin-top: 50px; padding: 0;}
+.sidebar ul li { margin-bottom: 22px; }
+.sidebar ul li a { text-decoration: none; color: #555; font-size: 19px; display: flex; align-items: center; padding: 10px 18px; border-radius: 12px; transition: all 0.3s ease; font-weight: 500; }
+.sidebar ul li a i { margin-left: 12px; font-size: 20px; width: 25px; text-align: center; color: var(--primary-color); }
+.sidebar ul li a:hover { color: var(--secondary-color); background: #f8f9fa; transform: translateX(-8px); }
+.overlay { position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0,0,0,0.5); z-index: 999; opacity: 0; visibility: hidden; transition: opacity 0.4s ease, visibility 0.4s ease; backdrop-filter: blur(3px); }
+.overlay.active { opacity: 1; visibility: visible; }
+
+/* زر الترجمة - للتوافقية */
+.translate-btn { background-color: white; color: #333; border: none; border-radius: 25px; padding: 8px 14px; cursor: pointer; display: flex; align-items: center; gap: 8px; font-weight: 500;}
+.translate-btn svg { width: 20px; height: 14px; }
