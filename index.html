@@ -6,6 +6,7 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>PARAMEDICAL LILYAN ROSE</title>
+  <link rel="side/stylesheet" href="main-style.css">
   <!-- خطوط Google Fonts -->
   <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
   <!-- Font Awesome للأيقونات -->
@@ -416,33 +417,7 @@
 <body>
 
   <!-- رأس الموقع -->
-  <header>
-    <div class="hamburger" onclick="toggleSidebar()">&#9776;</div>
-    <button class="translate-btn" onclick="switchLang()">
-      <svg id="flagIcon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 60 40">
-        <rect width="60" height="40" fill="#c1272d"/>
-        <path fill="none" stroke="#006233" stroke-width="8" d="M0 20h60"/>
-        <path fill="#006233" d="M25 20a5 5 0 1 1 10 0 5 5 0 0 1-10 0z"/>
-        <path fill="#ffc400" d="M27 20a3 3 0 1 1 6 0 3 3 0 0 1-6 0z"/>
-      </svg>
-      <span id="langText">FR</span>
-    </button>
-    <h1 id="siteTitle">PARAMEDICAL LILYAN ROSE</h1>
-  </header>
-
-  <!-- القائمة الجانبية -->
-  <nav id="sidebar" class="sidebar">
-    <button class="close-btn" onclick="toggleSidebar()">×</button>
-    <ul>
-      <li><a href="index.html" data-aos="fade-left" data-aos-delay="100"><i class="fas fa-home"></i><span id="menuHome">الصفحة الرئيسية</span></a></li>
-      <li><a href="products.html" data-aos="fade-left" data-aos-delay="150"><i class="fas fa-box-open"></i><span id="menuProducts">منتجات</span></a></li>
-      <li><a href="view-products.html" data-aos="fade-left" data-aos-delay="200"><i class="fas fa-list-ul"></i><span id="menuViewProducts">عرض المنتجات</span></a></li>
-      <li><a href="sell-products.html" data-aos="fade-left" data-aos-delay="225"><i class="fas fa-cash-register"></i><span id="menuSellProducts">بيع المنتجات</span></a></li>
-      <li><a href="services.html" data-aos="fade-left" data-aos-delay="250"><i class="fas fa-concierge-bell"></i><span id="menuServices">خدمات اضافية</span></a></li>
-      <li><a href="profits.html" data-aos="fade-left" data-aos-delay="300"><i class="fas fa-chart-line"></i><span id="menuProfits">الارباح و الحسابات</span></a></li>
-    </ul>
-  </nav>
-  <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
+  <div id="side/header-placeholder"></div>
 
   <!-- المحتوى الرئيسي -->
   <main>
@@ -762,5 +737,6 @@
       });
     });
   </script>
+  <script src="side/main-script.js"></script>
 </body>
 </html>
