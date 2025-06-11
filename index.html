@@ -239,6 +239,75 @@
     }
     footer p { margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
+    /* === *قسم جديد* التجاوب مع الشاشات المختلفة === */
+    @media (max-width: 768px) {
+        body {
+            padding-bottom: 70px; /* Adjust for footer */
+        }
+        .header-title h1 {
+            font-size: 1.3em;
+        }
+        .header-btn {
+            width: 40px;
+            height: 40px;
+            font-size: 16px;
+        }
+        .lang-btn {
+            padding: 0 10px;
+        }
+        main {
+            padding: 20px;
+        }
+        main h2 {
+            font-size: 1.7em;
+        }
+        .chart-container {
+            height: 340px;
+            padding: 20px;
+        }
+        .notifications-panel {
+            width: 300px;
+        }
+    }
+
+    @media (max-width: 576px) {
+        .header-container {
+            padding: 15px;
+            border-radius: 0 0 20px 20px;
+        }
+        .header-title h1 {
+            font-size: 1.1em;
+        }
+        .header-actions {
+            gap: 10px;
+        }
+        /* Hide language text on very small screens to save space */
+        .lang-btn #langText {
+            display: none;
+        }
+        .lang-btn {
+            width: 40px; /* Make it circular like other buttons */
+        }
+        main {
+            padding: 15px;
+        }
+        main h2 {
+            font-size: 1.5em;
+            margin-bottom: 30px;
+        }
+        .chart-container {
+            height: 300px;
+            padding: 15px;
+        }
+        /* Make notification panel wider and centered on small screens */
+        .notifications-panel {
+            left: 50%;
+            transform: translateX(-50%);
+            width: 95vw;
+            max-width: 320px;
+        }
+    }
+
   </style>
 </head>
 <body>
