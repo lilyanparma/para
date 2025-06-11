@@ -9,6 +9,7 @@
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="data/firebase-config.js"></script>
   
@@ -43,7 +44,6 @@
             background: var(--bg-color);
             min-height: 100vh;
             position: relative;
-            padding-bottom: 80px;
             color: var(--dark);
             line-height: 1.7;
             overflow-x: hidden;
@@ -86,15 +86,11 @@
             background: var(--primary-light); color: var(--primary-dark);
             transform: translateY(-3px); box-shadow: 0 8px 15px rgba(108, 99, 255, 0.2);
         }
-        .lang-btn { font-size: 14px; padding: 0 15px; width: auto; gap: 8px; font-weight: 600; }
-        .lang-btn svg { width: 20px; height: 14px; }
         
         body.easy-mode-active .header-top-row { justify-content: center; }
-        body.easy-mode-active .header-title-text { display: none; } /* Hide text in easy mode */
+        body.easy-mode-active .header-title-text { display: none; }
         body.easy-mode-active #hamburger { display: none; }
-        /* Keep actions visible in easy mode */
         body.easy-mode-active .header-actions { display: flex; }
-
 
         /* ====== مفاتيح تبديل الوحدات ====== */
         .mode-switcher {
@@ -114,35 +110,6 @@
             background: linear-gradient(135deg, var(--primary), var(--secondary));
             box-shadow: 0 8px 20px rgba(108, 99, 255, 0.3); 
         }
-
-        /* ====== جرس التنبيهات ====== */
-        .notification-bell { position: relative; }
-        #notification-count { 
-            position: absolute; top: -5px; right: -5px; 
-            background: linear-gradient(135deg, var(--danger), var(--secondary));
-            color: white; width: 22px; height: 22px; border-radius: 50%; 
-            font-size: 12px; font-weight: bold; display: flex; align-items: center; 
-            justify-content: center; border: 2px solid white;
-        }
-        .notifications-panel { 
-            display: none; position: absolute; top: 65px; left: 0; 
-            width: 380px; background: var(--glass-bg); border-radius: 20px; 
-            box-shadow: var(--card-shadow); z-index: 1001; max-height: 500px; 
-            overflow-y: auto; border: 1px solid var(--glass-border);
-            backdrop-filter: blur(12px);
-        }
-        .notifications-panel.show { display: block; }
-        .notifications-header { 
-            padding: 15px 20px; font-weight: bold; border-bottom: 1px solid var(--glass-border); 
-            background: rgba(255,255,255,0.3); position: sticky; top: 0; z-index: 1;
-            font-size: 1.1rem; color: var(--dark);
-        }
-        .notification-item { 
-            padding: 15px 20px; border-bottom: 1px solid var(--glass-border); 
-            display: flex; align-items: flex-start; gap: 15px; font-size: 0.95rem; 
-        }
-        .notification-item:last-child { border-bottom: none; }
-        #no-notifications { padding: 40px 20px; text-align: center; color: var(--gray); }
 
         /* ====== القائمة الجانبية الذكية ====== */
         .sidebar { 
@@ -239,7 +206,7 @@
         .spinner { 
             border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; 
             border-top: 4px solid var(--primary); width: 40px; height: 40px; 
-            animation: spin 1s linear infinite; 
+            animation: spin 1s linear infinite; margin: auto;
         }
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
@@ -274,7 +241,7 @@
 
         footer { 
             background: var(--dark); color: var(--light); text-align: center; 
-            padding: 20px; position: absolute; bottom: 0; left: 0; right: 0; 
+            padding: 20px; position: relative; margin-top: 40px;
         }
         footer p { margin: 0; opacity: 0.8; }
     </style>
@@ -291,16 +258,12 @@
             </div>
             <div class="header-actions">
                 <div class="notification-bell">
-                    <button class="header-btn" id="bell-icon"> <i class="fas fa-bell"></i> <span id="notification-count">0</span> </button>
+                    <button class="header-btn" id="bell-icon"> <i class="fas fa-bell"></i> <span id="notification-count"></span> </button>
                     <div id="notifications-panel" class="notifications-panel">
                         <div class="notifications-header">التنبيهات</div>
                         <div id="notifications-list"> <div id="no-notifications">لا توجد تنبيهات حالياً.</div> </div>
                     </div>
                 </div>
-                <button class="header-btn lang-btn">
-                    <svg id="flagIcon" viewBox="0 0 60 40"><rect width="60" height="40" fill="#C1272D"></rect><path d="M30 10 L35 18 L43 18 L37 23 L39 31 L30 26 L21 31 L23 23 L17 18 L25 18 Z" fill="#006233"></path></svg>
-                    <span id="langText">AR</span>
-                </button>
             </div>
         </div>
     </header>
@@ -318,12 +281,13 @@
             <p id="userRole"></p>
         </div>
         <ul>
-            <li><a href="index.html" class="active"><i class="fas fa-home"></i><span id="menuHome">الرئيسية</span></a></li>
-            <li><a href="products.html"><i class="fas fa-box-open"></i><span id="menuProducts">إدارة المنتجات</span></a></li>
-            <li><a href="view-products.html"><i class="fas fa-list-ul"></i><span id="menuViewProducts">عرض المنتجات</span></a></li>
-            <li><a href="sell-products.html"><i class="fas fa-cash-register"></i><span id="menuSellProducts">بيع المنتجات</span></a></li>
-            <li><a href="services.html"><i class="fas fa-concierge-bell"></i><span id="menuServices">خدمات اضافية</span></a></li>
-            <li id="profitsMenuLink"><a href="profits.html"><i class="fas fa-file-invoice-dollar"></i><span id="menuProfits">الارباح والحسابات</span></a></li>
+            <li><a href="index.html" class="active"><i class="fas fa-home"></i><span>الرئيسية</span></a></li>
+            <li id="addUserMenuLink"><a href="add-user.html"><i class="fas fa-user-plus"></i><span>إضافة مستخدم</span></a></li>
+            <li><a href="products.html"><i class="fas fa-box-open"></i><span>إدارة المنتجات</span></a></li>
+            <li><a href="view-products.html"><i class="fas fa-list-ul"></i><span>عرض المنتجات</span></a></li>
+            <li><a href="sell-products.html"><i class="fas fa-cash-register"></i><span>بيع المنتجات</span></a></li>
+            <li><a href="services.html"><i class="fas fa-concierge-bell"></i><span>خدمات اضافية</span></a></li>
+            <li id="profitsMenuLink"><a href="profits.html"><i class="fas fa-file-invoice-dollar"></i><span>الارباح والحسابات</span></a></li>
             <li><a href="#" id="logoutBtn"><i class="fas fa-sign-out-alt"></i><span>تسجيل الخروج</span></a></li>
         </ul>
     </nav>
@@ -372,6 +336,7 @@
         <div id="easy-mode-view" style="display: none;">
              <h2 id="easyModeTitle">الوصول السريع</h2>
             <div class="app-grid">
+                <a href="add-user.html" class="app-card" id="easyModeAddUserLink"> <i class="fas fa-user-plus"></i> <span>إضافة مستخدم</span> </a>
                 <a href="products.html" class="app-card"> <i class="fas fa-box-open"></i> <span>إدارة المنتجات</span> </a>
                 <a href="view-products.html" class="app-card"> <i class="fas fa-list-ul"></i> <span>عرض المنتجات</span> </a>
                 <a href="sell-products.html" class="app-card"> <i class="fas fa-cash-register"></i> <span>نقطة البيع</span> </a>
@@ -382,7 +347,7 @@
         </div>
     </main>
 
-    <footer id="footerText">
+    <footer>
         <p>جميع الحقوق محفوظة &copy; 2025 LILYAN ROSE</p>
     </footer>
 
@@ -391,45 +356,49 @@
     <script>
         // ========= Authentication & Initialization =========
         document.addEventListener('DOMContentLoaded', function() {
-            const userRole = localStorage.getItem('userRole');
-            const userName = localStorage.getItem('userName');
-
-            if (!userRole || !userName) {
-                // If no user is logged in, redirect to login page
-                window.location.href = 'login.html';
-                return; // Stop further execution
-            }
-
-            // If logged in, initialize the page
-            initializeApp(userName, userRole);
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
+                        if (snapshot.exists()) {
+                            const userData = snapshot.val();
+                            initializeApp(user, userData.name, userData.role);
+                        } else {
+                            console.error("User data not found in Realtime Database. Logging out.");
+                            firebase.auth().signOut();
+                        }
+                    }).catch(err => {
+                        console.error("Error fetching user role:", err);
+                        firebase.auth().signOut();
+                    });
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
         });
 
-        function initializeApp(userName, userRole) {
-            // Personalize UI
+        function initializeApp(user, userName, userRole) {
             document.getElementById('userName').textContent = userName;
             document.getElementById('userRole').textContent = userRole;
 
             // Role-Based Access Control (RBAC)
             if (userRole === 'موظف') {
-                document.getElementById('profitsMenuLink').style.display = 'none';
-                document.getElementById('easyModeProfitsLink').style.display = 'none';
+                const elementsToHide = ['profitsMenuLink', 'easyModeProfitsLink', 'addUserMenuLink', 'easyModeAddUserLink'];
+                elementsToHide.forEach(id => {
+                    const el = document.getElementById(id);
+                    if (el) el.style.display = 'none';
+                });
             }
 
-            // Setup event listeners
             setupEventListeners();
-            
-            // Load dashboard data
             loadSavedMode();
             generateAndRenderKPIs();
             generateAndRenderCharts();
             fetchStockAndExpiryAlerts();
         }
 
-
         // ========= Global Variables & UI Elements =========
         let isSidebarOpen = false;
         let kpiChartInstances = {};
-
         const elements = {
             sidebar: document.getElementById('sidebar'),
             overlay: document.getElementById('overlay'),
@@ -440,7 +409,6 @@
             bellIcon: document.getElementById('bell-icon'),
             notificationsPanel: document.getElementById('notifications-panel'),
         };
-
 
         // ========= Event Listeners Setup =========
         function setupEventListeners() {
@@ -454,12 +422,11 @@
                 elements.notificationsPanel.classList.toggle('show');
             });
             document.addEventListener('click', (event) => {
-                if (!elements.bellIcon.contains(event.target) && !elements.notificationsPanel.contains(event.target)) {
+                if (elements.bellIcon && !elements.bellIcon.contains(event.target) && elements.notificationsPanel && !elements.notificationsPanel.contains(event.target)) {
                     elements.notificationsPanel.classList.remove('show');
                 }
             });
         }
-
 
         // ========= Core Functions (Sidebar, Mode, Logout) =========
         function toggleSidebar() {
@@ -484,11 +451,12 @@
         }
 
         function logout() {
-            localStorage.removeItem('userRole');
-            localStorage.removeItem('userName');
-            window.location.href = 'login.html';
+            firebase.auth().signOut().then(() => {
+                window.location.href = 'login.html';
+            }).catch((error) => {
+                console.error('Logout Error', error);
+            });
         }
-
 
         // ========= KPI Chart Functions =========
         async function generateAndRenderKPIs() {
@@ -500,8 +468,7 @@
             const invoices = invoicesSnapshot.val() || {};
             const products = productsSnapshot.val() || {};
 
-            // --- Sales Target KPI ---
-            const monthlySalesTarget = 25000; // يمكنك تغيير هذا الهدف
+            const monthlySalesTarget = 25000;
             let currentMonthSales = 0;
             Object.values(invoices).forEach(invoice => {
                 const invoiceDate = new Date(invoice.date);
@@ -512,7 +479,6 @@
             const salesTargetPercentage = Math.min(100, (currentMonthSales / monthlySalesTarget) * 100);
             renderKPIChart('salesTargetChart', salesTargetPercentage, [varToCss('--primary'), varToCss('--light-gray')]);
 
-            // --- Expired Products KPI ---
             let totalUnits = 0, expiredUnits = 0;
             const today = new Date(); today.setHours(0, 0, 0, 0);
             Object.values(products).forEach(product => {
@@ -529,7 +495,6 @@
             const expiredPercentage = totalUnits > 0 ? (expiredUnits / totalUnits) * 100 : 0;
             renderKPIChart('expiredChart', expiredPercentage, [varToCss('--danger'), varToCss('--light-gray')]);
 
-            // --- Profit Margin KPI ---
             let totalRevenue = 0, totalCost = 0;
             Object.values(invoices).forEach(invoice => {
                 const invoiceDate = new Date(invoice.date);
@@ -549,7 +514,6 @@
             container.querySelector('.spinner').style.display = 'none';
             const percentageText = container.querySelector('.kpi-percentage');
             percentageText.textContent = `${percentage.toFixed(0)}%`;
-
             if (kpiChartInstances[canvasId]) kpiChartInstances[canvasId].destroy();
             kpiChartInstances[canvasId] = new Chart(document.getElementById(canvasId).getContext('2d'), {
                 type: 'doughnut',
@@ -562,7 +526,6 @@
         }
         function varToCss(varName) { return getComputedStyle(document.documentElement).getPropertyValue(varName.trim()); }
 
-
         // ========= Main Chart Functions =========
         async function generateAndRenderCharts() { 
             try {
@@ -572,7 +535,9 @@
                 renderDoughnutChart(processProductData(invoices));
             } catch (error) {
                 console.error("Error fetching chart data:", error);
+                document.getElementById('salesChartPlaceholder').style.display='flex';
                 document.getElementById('salesChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل البيانات</p>';
+                document.getElementById('doughnutChartPlaceholder').style.display='flex';
                 document.getElementById('doughnutChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل البيانات</p>';
             }
         }
@@ -642,10 +607,57 @@
 
         // ========= Notification Functions =========
         async function fetchStockAndExpiryAlerts() {
-            // Implementation... (same as before)
+            try {
+                const snapshot = await database.ref('products').once('value');
+                const products = snapshot.val();
+                if (!products) return;
+                const alerts = [];
+                const today = new Date(); today.setHours(0, 0, 0, 0);
+                for (const productId in products) {
+                    const product = products[productId];
+                    if (!product.batches) continue;
+                    for (const batchId in product.batches) {
+                        const batch = product.batches[batchId];
+                        const quantity = batch.quantity || 0;
+                        if (batch.expiryDate) {
+                            const expiryDate = new Date(batch.expiryDate);
+                            const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
+                            if (diffDays >= 0 && diffDays <= 30) {
+                                alerts.push({ type: 'warning', name: product.name, message: `صلاحية الدفعة ${batch.batchNumber || ''} تنتهي خلال ${diffDays} يوم (الكمية: ${quantity})` });
+                            }
+                        }
+                        if (quantity > 0 && quantity <= 5) {
+                            alerts.push({ type: 'danger', name: product.name, message: `كمية الدفعة ${batch.batchNumber || ''} قليلة جداً (${quantity} متبقية)` });
+                        }
+                    }
+                }
+                displayAlerts(alerts);
+            } catch (error) {
+                console.error("Error fetching alerts:", error);
+            }
         }
+
         function displayAlerts(alerts) {
-            // Implementation... (same as before)
+            const notificationsListDiv = document.getElementById('notifications-list');
+            const noNotificationsDiv = document.getElementById('no-notifications');
+            const notificationCountBadge = document.getElementById('notification-count');
+
+            if (alerts.length > 0) {
+                noNotificationsDiv.style.display = 'none';
+                notificationsListDiv.innerHTML = '';
+                alerts.forEach(alert => {
+                    const alertDiv = document.createElement('div');
+                    alertDiv.className = 'notification-item';
+                    const iconClass = alert.type === 'warning' ? 'fa-exclamation-triangle' : 'fa-box-open';
+                    alertDiv.innerHTML = `<div class="icon ${alert.type}"><i class="fas ${iconClass}"></i></div><div class="details"><div class="product-name">${alert.name}</div><div class="message">${alert.message}</div></div>`;
+                    notificationsListDiv.appendChild(alertDiv);
+                });
+                notificationCountBadge.textContent = alerts.length;
+                notificationCountBadge.style.display = 'flex';
+            } else {
+                noNotificationsDiv.style.display = 'block';
+                notificationCountBadge.style.display = 'none';
+            }
         }
     </script>
 </body>
