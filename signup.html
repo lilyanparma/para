@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <title>إنشاء حساب جديد</title>
+    <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-auth.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="data/firebase-config.js"></script>
+    <style>
+        /* يمكنك نسخ نفس تنسيقات CSS من صفحة login.html هنا */
+        :root { --primary: #6C63FF; /* ... باقي الألوان */ }
+        body { font-family: 'Tajawal', sans-serif; background: linear-gradient(135deg, #F8FAFC, #e6f0ff); display: flex; justify-content: center; align-items: center; min-height: 100vh; direction: rtl; }
+        .login-container { width: 100%; max-width: 450px; padding: 40px; background: rgba(255, 255, 255, 0.5); border-radius: 20px; border: 1px solid rgba(255, 255, 255, 0.2); box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1); backdrop-filter: blur(10px); text-align: center; }
+        .logo { width: 80px; height: 80px; border-radius: 20px; background: linear-gradient(135deg, #6C63FF, #FF6584); color: white; font-size: 2.5rem; display: flex; align-items: center; justify-content: center; margin: 0 auto 20px; }
+        h2 { color: #1A1A2E; margin-bottom: 20px; }
+        .input-group { position: relative; margin-bottom: 20px; }
+        .input-field { width: 100%; padding: 15px 45px 15px 20px; border: 1px solid rgba(255, 255, 255, 0.2); border-radius: 12px; background: rgba(255, 255, 255, 0.5); font-size: 1rem; }
+        .input-icon { position: absolute; top: 50%; right: 15px; transform: translateY(-50%); color: #718096; }
+        .login-btn { width: 100%; padding: 15px; border: none; border-radius: 12px; background: linear-gradient(135deg, #6C63FF, #564FD9); color: white; font-size: 1.1rem; cursor: pointer; }
+        #error-message, #success-message { margin-top: 15px; display: none; font-weight: 600; }
+        #error-message { color: #FF5252; }
+        #success-message { color: #4CAF50; }
+        a { color: var(--primary); text-decoration: none; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo"><i class="fas fa-user-plus"></i></div>
+        <h2>إنشاء حساب جديد</h2>
+        <form id="signupForm">
+            <div class="input-group"><i class="fas fa-user input-icon"></i><input type="text" id="name" class="input-field" placeholder="الاسم الكامل" required></div>
+            <div class="input-group"><i class="fas fa-envelope input-icon"></i><input type="email" id="email" class="input-field" placeholder="البريد الإلكتروني" required></div>
+            <div class="input-group"><i class="fas fa-lock input-icon"></i><input type="password" id="password" class="input-field" placeholder="كلمة المرور" required></div>
+            <div class="input-group">
+                <i class="fas fa-user-shield input-icon"></i>
+                <select id="role" class="input-field" required>
+                    <option value="موظف">موظف</option>
+                    <option value="مدير النظام">مدير النظام</option>
+                </select>
+            </div>
+            <button type="submit" class="login-btn">إنشاء الحساب</button>
+            <p id="error-message"></p>
+            <p id="success-message"></p>
+        </form>
+        <p style="margin-top: 20px;">لديك حساب بالفعل؟ <a href="login.html">سجل الدخول</a></p>
+    </div>
+
+    <script>
+        const auth = firebase.auth();
+        const database = firebase.database();
+        const signupForm = document.getElementById('signupForm');
+
+        signupForm.addEventListener('submit', (e) => {
+            e.preventDefault();
+            
+            const name = document.getElementById('name').value;
+            const email = document.getElementById('email').value;
+            const password = document.getElementById('password').value;
+            const role = document.getElementById('role').value;
+            const errorMsg = document.getElementById('error-message');
+            const successMsg = document.getElementById('success-message');
+
+            errorMsg.style.display = 'none';
+            successMsg.style.display = 'none';
+
+            // Step 1: Create user in Firebase Authentication
+            auth.createUserWithEmailAndPassword(email, password)
+                .then((userCredential) => {
+                    // Step 2: User created successfully, get the UID
+                    const user = userCredential.user;
+                    
+                    // Step 3: Save user role and name in Realtime Database under their UID
+                    database.ref('user_roles/' + user.uid).set({
+                        name: name,
+                        role: role
+                    }).then(() => {
+                        successMsg.textContent = 'تم إنشاء الحساب بنجاح! يمكنك الآن تسجيل الدخول.';
+                        successMsg.style.display = 'block';
+                        signupForm.reset();
+                    }).catch(dbError => {
+                        errorMsg.textContent = 'حدث خطأ أثناء حفظ بيانات المستخدم: ' + dbError.message;
+                        errorMsg.style.display = 'block';
+                    });
+                })
+                .catch((authError) => {
+                    // Handle Authentication errors
+                    errorMsg.textContent = 'فشل إنشاء الحساب: ' + authError.message;
+                    errorMsg.style.display = 'block';
+                });
+        });
+    </script>
+</body>
+</html>
