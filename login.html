@@ -6,6 +6,11 @@
     <title>تسجيل الدخول - نظام LILYAN ROSE</title>
     <link href="https://fonts.googleapis.com/css2?family=Tajawal:wght@400;500;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
+    <script src="data/firebase-config.js"></script>
+
     <style>
         :root {
             --primary: #6C63FF;
@@ -96,14 +101,29 @@
             cursor: pointer;
             transition: all 0.3s;
             box-shadow: 0 10px 20px rgba(108, 99, 255, 0.3);
+            position: relative;
+            overflow: hidden;
         }
         .login-btn:hover {
             transform: translateY(-3px);
             box-shadow: 0 15px 25px rgba(108, 99, 255, 0.4);
         }
+        .login-btn .spinner {
+            display: none;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 50%;
+            border-top-color: #fff;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        @keyframes spin { to { transform: rotate(360deg); } }
+
         #error-message {
             color: #FF5252;
             margin-top: 15px;
+            font-weight: 600;
             display: none;
         }
     </style>
@@ -122,7 +142,10 @@
                 <i class="fas fa-lock input-icon"></i>
                 <input type="password" id="password" class="input-field" placeholder="كلمة المرور" required>
             </div>
-            <button type="submit" class="login-btn">تسجيل الدخول</button>
+            <button type="submit" class="login-btn">
+                <span class="btn-text">تسجيل الدخول</span>
+                <div class="spinner"></div>
+            </button>
             <p id="error-message">اسم المستخدم أو كلمة المرور غير صحيحة.</p>
         </form>
     </div>
@@ -131,29 +154,51 @@
         document.getElementById('loginForm').addEventListener('submit', function(event) {
             event.preventDefault();
 
-            const username = document.getElementById('username').value;
+            const username = document.getElementById('username').value.trim();
             const password = document.getElementById('password').value;
             const errorMessage = document.getElementById('error-message');
+            const loginBtn = document.querySelector('.login-btn');
+            const btnText = loginBtn.querySelector('.btn-text');
+            const spinner = loginBtn.querySelector('.spinner');
 
-            // بيانات الدخول (يمكن لاحقاً جلبها من قاعدة البيانات)
-            const users = {
-                "admin": { pass: "admin", role: "مدير النظام", name: "المدير العام" },
-                "employee": { pass: "12345", role: "موظف", name: "أحمد" }
-            };
+            // إظهار مؤشر التحميل
+            btnText.style.display = 'none';
+            spinner.style.display = 'block';
+            loginBtn.disabled = true;
+            errorMessage.style.display = 'none';
 
-            if (users[username] && users[username].pass === password) {
-                // تسجيل الدخول ناجح
-                const user = users[username];
-                localStorage.setItem('userRole', user.role);
-                localStorage.setItem('userName', user.name);
-                
-                // الانتقال إلى الصفحة الرئيسية
-                window.location.href = 'index.html';
+            // --- START: Firebase Authentication Logic ---
 
-            } else {
-                // تسجيل الدخول فاشل
-                errorMessage.style.display = 'block';
-            }
+            database.ref('users/'' + username).once('value')
+                .then(snapshot => {
+                    if (snapshot.exists()) {
+                        const userData = snapshot.val();
+                        // التحقق من كلمة المرور
+                        if (userData.password === password) {
+                            // تسجيل الدخول ناجح
+                            localStorage.setItem('userRole', userData.role);
+                            localStorage.setItem('userName', userData.name);
+                            window.location.href = 'index.html';
+                        } else {
+                            // كلمة المرور خاطئة
+                            throw new Error('Incorrect password');
+                        }
+                    } else {
+                        // اسم المستخدم غير موجود
+                        throw new Error('User not found');
+                    }
+                })
+                .catch(error => {
+                    // معالجة أي خطأ (سواء في كلمة المرور أو الاتصال)
+                    console.error("Login failed:", error.message);
+                    errorMessage.style.display = 'block';
+                    // إخفاء مؤشر التحميل وإعادة الزر لحالته الطبيعية
+                    btnText.style.display = 'inline';
+                    spinner.style.display = 'none';
+                    loginBtn.disabled = false;
+                });
+
+            // --- END: Firebase Authentication Logic ---
         });
     </script>
 </body>
