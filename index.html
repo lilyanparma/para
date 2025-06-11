@@ -13,7 +13,7 @@
   <script src="data/firebase-config.js"></script>
   
   <style>
-    /* === الإعدادات العامة والتنسيقات الجديدة === */
+    /* === الإعدادات العامة والتنسيقات === */
     :root {
         --primary: #4361ee;
         --primary-dark: #3a56d4;
@@ -24,181 +24,94 @@
         --light: #f8f9fa;
         --dark: #212529;
         --gray: #6c757d;
+        --bg-color: #f0f2f5;
     }
     
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
     
     body {
       font-family: 'Tajawal', Arial, sans-serif;
       direction: rtl;
       overflow-x: hidden;
-      background-color: #f0f2f5; /* تم تغيير لون الخلفية */
+      background-color: var(--bg-color);
       min-height: 100vh;
       position: relative;
-      padding-bottom: 80px; /* زيادة المساحة للتذييل */
+      padding-bottom: 80px;
       color: var(--dark);
       line-height: 1.6;
     }
 
-    /* === الهيدر الجديد === */
+    /* === الهيدر === */
     .header-container {
       background: linear-gradient(145deg, var(--primary), var(--secondary));
       padding: 20px;
       border-radius: 0 0 25px 25px;
       box-shadow: 0 10px 25px rgba(67, 97, 238, 0.25);
-      margin-bottom: 30px;
       position: relative;
       z-index: 100;
       color: white;
     }
-
-    .header-top-row {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .header-title h1 {
-      margin: 0;
-      font-size: 1.6em;
-      font-weight: 700;
-      text-shadow: 0 2px 4px rgba(0,0,0,0.1);
-    }
-    
-    /* === أزرار الهيدر شبه ثلاثية الأبعاد === */
-    .header-actions {
-        display: flex;
-        align-items: center;
-        gap: 15px;
-    }
-
+    .header-top-row { display: flex; justify-content: space-between; align-items: center; position: relative; }
+    .header-title { text-align: right; }
+    .header-title h1 { margin: 0; font-size: 1.6em; font-weight: 700; text-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .header-actions { display: flex; align-items: center; gap: 15px; }
     .header-btn {
-        background: rgba(255,255,255,0.1);
-        border: 1px solid rgba(255,255,255,0.2);
-        color: white;
-        width: 45px;
-        height: 45px;
-        border-radius: 50%;
-        font-size: 18px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.3s ease;
-        position: relative;
+        background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2);
+        color: white; width: 45px; height: 45px; border-radius: 50%;
+        font-size: 18px; cursor: pointer; display: flex; align-items: center;
+        justify-content: center; transition: all 0.3s ease; position: relative;
     }
+    .header-btn:hover { background: rgba(255,255,255,0.2); transform: translateY(-2px); }
+    .lang-btn { font-size: 14px; padding: 0 14px; width: auto; gap: 8px; font-weight: 500; }
+    .lang-btn svg { width: 20px; height: 14px; }
     
-    .header-btn:hover {
-        background: rgba(255,255,255,0.2);
-        transform: translateY(-2px);
-    }
-
-    .lang-btn {
-        font-size: 14px;
-        padding: 0 14px;
-        width: auto;
-        gap: 8px;
-        font-weight: 500;
-    }
-    .lang-btn svg {
-        width: 20px;
-        height: 14px;
-    }
-
-    /* === جرس التنبيهات === */
-    .notification-bell {
-        position: relative;
-    }
-
-    #notification-count {
-        position: absolute;
-        top: -5px;
-        right: -5px;
-        background-color: var(--danger);
-        color: white;
-        width: 22px;
-        height: 22px;
-        border-radius: 50%;
-        font-size: 12px;
-        font-weight: bold;
-        display: flex;
-        align-items: center;
+    /* === *تعديل جديد* تنسيق الهيدر في الوضع السهل === */
+    body.easy-mode-active .header-top-row {
         justify-content: center;
-        border: 2px solid var(--primary);
-        display: none; /* يظهر عند وجود تنبيهات */
     }
-
-    .notifications-panel {
+    body.easy-mode-active .header-title {
+        text-align: center;
+    }
+    body.easy-mode-active #hamburger,
+    body.easy-mode-active .header-actions {
         display: none;
-        position: absolute;
-        top: 60px;
-        left: 0;
-        width: 320px;
-        background: white;
-        border-radius: 12px;
-        box-shadow: 0 8px 30px rgba(0,0,0,0.15);
-        z-index: 1001;
-        max-height: 400px;
-        overflow-y: auto;
-        border: 1px solid #eee;
     }
 
-    .notifications-panel.show {
-        display: block;
+    /* === مفاتيح تبديل الوضع === */
+    .mode-switcher {
+        display: flex; justify-content: center; padding: 8px;
+        margin: 25px auto; max-width: 400px; background: #e0e5ec;
+        border-radius: 50px; box-shadow: inset 5px 5px 10px #a3b1c6, inset -5px -5px 10px #ffffff;
+    }
+    .mode-btn {
+        flex: 1; padding: 10px 20px; border: none; border-radius: 50px;
+        cursor: pointer; font-weight: 700; font-size: 1rem; color: var(--gray);
+        background: transparent; transition: all 0.4s cubic-bezier(0.25, 0.8, 0.25, 1);
+        display: flex; align-items: center; justify-content: center; gap: 8px;
+    }
+    .mode-btn.active {
+        background: linear-gradient(145deg, var(--primary), var(--primary-dark));
+        color: white; box-shadow: 0 4px 15px rgba(67, 97, 238, 0.4); transform: translateY(-2px);
     }
     
-    .notifications-header {
-        padding: 15px;
-        font-weight: bold;
-        border-bottom: 1px solid #eee;
-        background: #f8f9fa;
-        position: sticky;
-        top: 0;
-    }
-
-    .notification-item {
-        padding: 15px;
-        border-bottom: 1px solid #f0f0f0;
-        display: flex;
-        align-items: center;
-        gap: 12px;
-        font-size: 0.95rem;
-    }
-    .notification-item:last-child {
-        border-bottom: none;
-    }
-    .notification-item .icon {
-        font-size: 18px;
-    }
+    /* جرس التنبيهات */
+    .notification-bell { position: relative; }
+    #notification-count { position: absolute; top: -5px; right: -5px; background-color: var(--danger); color: white; width: 22px; height: 22px; border-radius: 50%; font-size: 12px; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 2px solid var(--primary); display: none; }
+    .notifications-panel { display: none; position: absolute; top: 60px; left: 0; width: 320px; background: white; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.15); z-index: 1001; max-height: 400px; overflow-y: auto; border: 1px solid #eee; }
+    .notifications-panel.show { display: block; }
+    .notifications-header { padding: 15px; font-weight: bold; border-bottom: 1px solid #eee; background: #f8f9fa; position: sticky; top: 0; }
+    .notification-item { padding: 15px; border-bottom: 1px solid #f0f0f0; display: flex; align-items: center; gap: 12px; font-size: 0.95rem; }
+    .notification-item:last-child { border-bottom: none; }
+    .notification-item .icon { font-size: 18px; }
     .notification-item .icon.warning { color: var(--warning); }
     .notification-item .icon.danger { color: var(--danger); }
-    .notification-item .details {
-        flex: 1;
-    }
-    .notification-item .product-name {
-        font-weight: bold;
-        color: var(--dark);
-    }
-    .notification-item .message {
-        color: var(--gray);
-    }
-    #no-notifications {
-        padding: 20px;
-        text-align: center;
-        color: var(--gray);
-    }
+    .notification-item .details { flex: 1; }
+    .notification-item .product-name { font-weight: bold; color: var(--dark); }
+    .notification-item .message { color: var(--gray); }
+    #no-notifications { padding: 20px; text-align: center; color: var(--gray); }
 
     /* القائمة الجانبية */
-    .sidebar {
-      position: fixed; top: 0; bottom: 0; right: -280px; width: 280px;
-      background-color: white; padding: 25px; overflow-y: auto;
-      transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1);
-      z-index: 1000; box-shadow: -8px 0 25px rgba(0,0,0, 0.1);
-    }
+    .sidebar { position: fixed; top: 0; bottom: 0; right: -280px; width: 280px; background-color: white; padding: 25px; overflow-y: auto; transition: right 0.4s cubic-bezier(0.22, 0.61, 0.36, 1); z-index: 1000; box-shadow: -8px 0 25px rgba(0,0,0, 0.1); }
     .sidebar.active { right: 0; }
     .close-btn { position: absolute; top: 18px; left: 18px; font-size: 30px; background: none; border: none; cursor: pointer; color: #888; transition: all 0.3s ease; }
     .close-btn:hover { color: var(--primary); transform: rotate(90deg); }
@@ -213,101 +126,55 @@
     .overlay.active { opacity: 1; visibility: visible; }
 
     /* المحتوى الرئيسي */
-    main { padding: 30px; max-width: 1200px; margin: 0 auto; }
+    main { padding: 0 30px 30px; max-width: 1200px; margin: 0 auto; }
     main h2 { text-align: center; margin-bottom: 40px; color: var(--primary); font-size: 2em; font-weight: 700; position: relative; padding-bottom: 15px; }
     main h2::after { content: ""; position: absolute; bottom: 0; right: 50%; transform: translateX(50%); width: 80px; height: 3px; background: linear-gradient(to right, var(--primary), var(--success)); border-radius: 3px; }
 
     /* الرسوم البيانية */
-    .chart-container {
-      position: relative; width: 100%; max-width: 650px;
-      margin: 35px auto; height: 380px; background: white;
-      border-radius: 15px; padding: 25px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.07);
-      border: 1px solid #e9ecef;
-      transition: transform 0.3s ease, box-shadow 0.3s ease;
-    }
+    .chart-container { position: relative; width: 100%; max-width: 650px; margin: 35px auto; height: 380px; background: white; border-radius: 15px; padding: 25px; box-shadow: 0 8px 25px rgba(0,0,0,0.07); border: 1px solid #e9ecef; transition: transform 0.3s ease, box-shadow 0.3s ease; }
     .chart-container:hover { transform: translateY(-5px); box-shadow: 0 12px 30px rgba(67, 97, 238, 0.1); }
     .chart-placeholder { display: flex; justify-content: center; align-items: center; height: 100%; color: var(--gray); flex-direction: column; gap: 15px; }
     .spinner { border: 4px solid rgba(0, 0, 0, 0.1); border-radius: 50%; border-top: 4px solid var(--primary); width: 40px; height: 40px; animation: spin 1s linear infinite; }
     @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
 
-    /* === التذييل الجديد === */
-    footer {
-      background: linear-gradient(145deg, var(--primary), var(--secondary));
-      color: white; text-align: center; padding: 20px;
-      position: absolute; bottom: 0; left: 0; right: 0;
-    }
+    /* شبكة التطبيقات للوضع السهل */
+    .app-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 20px; padding-top: 20px; }
+    .app-card { background: white; border-radius: 15px; padding: 20px; text-align: center; text-decoration: none; color: var(--dark); box-shadow: 0 5px 15px rgba(0,0,0,0.05); border: 1px solid #e9ecef; transition: all 0.3s ease; }
+    .app-card:hover { transform: translateY(-8px) scale(1.03); box-shadow: 0 12px 25px rgba(67, 97, 238, 0.12); color: var(--primary); }
+    .app-card i { font-size: 2.5rem; margin-bottom: 15px; display: block; color: var(--primary); transition: color 0.3s ease; }
+    .app-card:hover i { color: var(--primary-dark); }
+    .app-card span { font-weight: 600; font-size: 1rem; }
+
+    /* التذييل */
+    footer { background: linear-gradient(145deg, var(--primary), var(--secondary)); color: white; text-align: center; padding: 20px; position: absolute; bottom: 0; left: 0; right: 0; }
     footer p { margin: 0; text-shadow: 0 1px 2px rgba(0,0,0,0.1); }
 
-    /* === *قسم جديد* التجاوب مع الشاشات المختلفة === */
+    /* التجاوب مع الشاشات المختلفة */
     @media (max-width: 768px) {
-        body {
-            padding-bottom: 70px; /* Adjust for footer */
-        }
-        .header-title h1 {
-            font-size: 1.3em;
-        }
-        .header-btn {
-            width: 40px;
-            height: 40px;
-            font-size: 16px;
-        }
-        .lang-btn {
-            padding: 0 10px;
-        }
-        main {
-            padding: 20px;
-        }
-        main h2 {
-            font-size: 1.7em;
-        }
-        .chart-container {
-            height: 340px;
-            padding: 20px;
-        }
-        .notifications-panel {
-            width: 300px;
-        }
+        body { padding-bottom: 70px; }
+        .header-title h1 { font-size: 1.3em; }
+        .header-btn { width: 40px; height: 40px; font-size: 16px; }
+        .lang-btn { padding: 0 10px; }
+        main { padding: 0 20px 20px; }
+        main h2 { font-size: 1.7em; }
+        .chart-container { height: 340px; padding: 20px; }
+        .notifications-panel { width: 300px; }
+        .app-grid { grid-template-columns: repeat(auto-fill, minmax(120px, 1fr)); gap: 15px; }
+        .app-card i { font-size: 2rem; }
+        .app-card span { font-size: 0.9rem; }
     }
-
     @media (max-width: 576px) {
-        .header-container {
-            padding: 15px;
-            border-radius: 0 0 20px 20px;
-        }
-        .header-title h1 {
-            font-size: 1.1em;
-        }
-        .header-actions {
-            gap: 10px;
-        }
-        /* Hide language text on very small screens to save space */
-        .lang-btn #langText {
-            display: none;
-        }
-        .lang-btn {
-            width: 40px; /* Make it circular like other buttons */
-        }
-        main {
-            padding: 15px;
-        }
-        main h2 {
-            font-size: 1.5em;
-            margin-bottom: 30px;
-        }
-        .chart-container {
-            height: 300px;
-            padding: 15px;
-        }
-        /* Make notification panel wider and centered on small screens */
-        .notifications-panel {
-            left: 50%;
-            transform: translateX(-50%);
-            width: 95vw;
-            max-width: 320px;
-        }
+        .header-container { padding: 15px; border-radius: 0 0 20px 20px; }
+        .header-title h1 { font-size: 1.1em; }
+        .header-actions { gap: 10px; }
+        .lang-btn #langText { display: none; }
+        .lang-btn { width: 40px; }
+        main { padding: 0 15px 15px; }
+        main h2 { font-size: 1.5em; margin-bottom: 30px; }
+        .chart-container { height: 300px; padding: 15px; }
+        .notifications-panel { left: 50%; transform: translateX(-50%); width: 95vw; max-width: 320px; }
+        .app-grid { grid-template-columns: repeat(2, 1fr); }
     }
-
   </style>
 </head>
 <body>
@@ -322,30 +189,33 @@
       </div>
       <div class="header-actions">
         <div class="notification-bell">
-            <button class="header-btn" id="bell-icon">
-                <i class="fas fa-bell"></i>
-                <span id="notification-count">0</span>
-            </button>
+            <button class="header-btn" id="bell-icon"> <i class="fas fa-bell"></i> <span id="notification-count">0</span> </button>
             <div id="notifications-panel" class="notifications-panel">
                 <div class="notifications-header">التنبيهات</div>
-                <div id="notifications-list">
-                    <div id="no-notifications">لا توجد تنبيهات حالياً.</div>
-                </div>
+                <div id="notifications-list"> <div id="no-notifications">لا توجد تنبيهات حالياً.</div> </div>
             </div>
         </div>
-        <button class="header-btn lang-btn" onclick="switchLang()">
-          <svg id="flagIcon" viewBox="0 0 60 40"></svg>
-          <span id="langText">FR</span>
+        <button class="header-btn lang-btn">
+          <svg id="flagIcon" viewBox="0 0 60 40">
+             <rect width="60" height="40" fill="#C1272D"></rect>
+             <path d="M30 10 L35 18 L43 18 L37 23 L39 31 L30 26 L21 31 L23 23 L17 18 L25 18 Z" fill="#006233"></path>
+          </svg>
+          <span id="langText">AR</span>
         </button>
       </div>
     </div>
   </header>
+  
+  <div class="mode-switcher">
+    <button id="proModeBtn" class="mode-btn active"> <i class="fas fa-chart-line"></i> الوضع الاحترافي </button>
+    <button id="easyModeBtn" class="mode-btn"> <i class="fas fa-th-large"></i> الوضع السهل </button>
+  </div>
 
   <nav id="sidebar" class="sidebar">
     <button class="close-btn" onclick="toggleSidebar()">×</button>
     <ul>
       <li><a href="index.html"><i class="fas fa-home"></i><span id="menuHome">الصفحة الرئيسية</span></a></li>
-      <li><a href="products.html"><i class="fas fa-box-open"></i><span id="menuProducts">منتجات</span></a></li>
+      <li><a href="products.html"><i class="fas fa-box-open"></i><span id="menuProducts">إدارة المنتجات</span></a></li>
       <li><a href="view-products.html"><i class="fas fa-list-ul"></i><span id="menuViewProducts">عرض المنتجات</span></a></li>
       <li><a href="sell-products.html"><i class="fas fa-cash-register"></i><span id="menuSellProducts">بيع المنتجات</span></a></li>
       <li><a href="services.html"><i class="fas fa-concierge-bell"></i><span id="menuServices">خدمات اضافية</span></a></li>
@@ -354,23 +224,32 @@
   </nav>
   <div id="overlay" class="overlay" onclick="toggleSidebar()"></div>
 
-  <main>
-    <h2 id="mainTitle">الرئيسية - رسوم بيانية للمبيعات والأرباح</h2>
-
-    <div class="chart-container">
-      <div id="salesChartPlaceholder" class="chart-placeholder">
-        <div class="spinner"></div>
-        <p>جاري تحميل بيانات المبيعات...</p>
-      </div>
-      <canvas id="salesChart" style="display: none;"></canvas>
+  <main id="main-content">
+    <div id="pro-mode-view">
+        <h2 id="mainTitle">الرئيسية - رسوم بيانية للمبيعات والأرباح</h2>
+        <div class="chart-container">
+            <div id="salesChartPlaceholder" class="chart-placeholder">
+                <div class="spinner"></div> <p>جاري تحميل بيانات المبيعات...</p>
+            </div>
+            <canvas id="salesChart" style="display: none;"></canvas>
+        </div>
+        <div class="chart-container">
+            <div id="doughnutChartPlaceholder" class="chart-placeholder">
+                <div class="spinner"></div> <p>جاري تحميل بيانات المنتجات الأكثر مبيعاً...</p>
+            </div>
+            <canvas id="doughnutChart" style="display: none;"></canvas>
+        </div>
     </div>
 
-    <div class="chart-container">
-      <div id="doughnutChartPlaceholder" class="chart-placeholder">
-        <div class="spinner"></div>
-        <p>جاري تحميل بيانات المنتجات الأكثر مبيعاً...</p>
-      </div>
-      <canvas id="doughnutChart" style="display: none;"></canvas>
+    <div id="easy-mode-view" style="display: none;">
+        <div class="app-grid">
+            <a href="products.html" class="app-card"> <i class="fas fa-box-open"></i> <span>إدارة المنتجات</span> </a>
+            <a href="view-products.html" class="app-card"> <i class="fas fa-list-ul"></i> <span>عرض المنتجات</span> </a>
+            <a href="sell-products.html" class="app-card"> <i class="fas fa-cash-register"></i> <span>نقطة البيع</span> </a>
+            <a href="services.html" class="app-card"> <i class="fas fa-concierge-bell"></i> <span>الخدمات</span> </a>
+            <a href="profits.html" class="app-card"> <i class="fas fa-file-invoice-dollar"></i> <span>الأرباح والتقارير</span> </a>
+            <a href="#" class="app-card" onclick="setMode('pro')"> <i class="fas fa-chart-line"></i> <span>عرض الرسوم البيانية</span> </a>
+        </div>
     </div>
   </main>
 
@@ -386,341 +265,89 @@
     let salesChartInstance = null;
     let doughnutChartInstance = null;
 
+    // === عناصر الواجهة ===
+    const elements = {
+        body: document.body,
+        sidebar: document.getElementById('sidebar'),
+        overlay: document.getElementById('overlay'),
+        hamburger: document.getElementById('hamburger'),
+        proModeBtn: document.getElementById('proModeBtn'),
+        easyModeBtn: document.getElementById('easyModeBtn'),
+        proModeView: document.getElementById('pro-mode-view'),
+        easyModeView: document.getElementById('easy-mode-view'),
+        bellIcon: document.getElementById('bell-icon'),
+        notificationsPanel: document.getElementById('notifications-panel'),
+        notificationCountBadge: document.getElementById('notification-count'),
+        notificationsListDiv: document.getElementById('notifications-list'),
+        noNotificationsDiv: document.getElementById('no-notifications'),
+    };
+
     // === دوال الواجهة الرئيسية والتفاعلات ===
     function toggleSidebar() {
-      const sidebar = document.getElementById('sidebar');
-      const overlay = document.getElementById('overlay');
       isSidebarOpen = !isSidebarOpen;
-      sidebar.classList.toggle('active', isSidebarOpen);
-      overlay.classList.toggle('active', isSidebarOpen);
-      document.body.style.overflow = isSidebarOpen ? 'hidden' : '';
+      elements.sidebar.classList.toggle('active', isSidebarOpen);
+      elements.overlay.classList.toggle('active', isSidebarOpen);
+      elements.body.style.overflow = isSidebarOpen ? 'hidden' : '';
     }
 
-    document.addEventListener('click', function(event) {
-      if (isSidebarOpen && !document.getElementById('sidebar').contains(event.target) && !document.getElementById('hamburger').contains(event.target)) {
-        toggleSidebar();
-      }
-    });
-
-    // === دوال الترجمة (تبقى كما هي) ===
-    async function switchLang() { /* ... الكود الحالي للترجمة ... */ }
-    function loadSavedLanguage() {
-      const savedLang = localStorage.getItem('selectedLanguage');
-      if (savedLang === 'fr') switchToFrench(); else setMoroccoFlag();
-    }
-    async function switchToFrench() {
-      try {
-        const response = await fetch('lang/fr.json');
-        const texts = await response.json();
-        document.getElementById('siteTitle').textContent = texts.site_title;
-        document.getElementById('menuHome').textContent = texts.menu_home;
-        document.getElementById('menuProducts').textContent = texts.menu_products;
-        document.getElementById('menuViewProducts').textContent = texts.menu_view_products;
-        document.getElementById('menuSellProducts').textContent = texts.menu_sell_products;
-        document.getElementById('menuServices').textContent = texts.menu_services;
-        document.getElementById('menuProfits').textContent = texts.menu_profits;
-        document.getElementById('mainTitle').textContent = texts.main_title;
-        document.getElementById('footerText').innerHTML = `<p>${texts.footer_text}</p>`;
-        document.getElementById('langText').textContent = 'FR';
-        setFranceFlag();
-        localStorage.setItem('selectedLanguage', 'fr');
-      } catch (error) { console.error("Error loading translation:", error); }
-    }
-    function switchToArabic() { localStorage.setItem('selectedLanguage', 'ar'); location.reload(); }
-    function setMoroccoFlag() {
-      document.getElementById('flagIcon').innerHTML = `<rect width="60" height="40" fill="#C1272D"/><path d="M30 10 L35 18 L43 18 L37 23 L39 31 L30 26 L21 31 L23 23 L17 18 L25 18 Z" fill="#006233"/>`;
-      document.getElementById('langText').textContent = 'AR';
-    }
-    function setFranceFlag() {
-      document.getElementById('flagIcon').innerHTML = `<rect width="20" height="40" fill="#0055A4"/><rect x="20" width="20" height="40" fill="white"/><rect x="40" width="20" height="40" fill="#EF4135"/>`;
-    }
-
-    // === دوال نظام التنبيهات الجديد ===
-    const bellIcon = document.getElementById('bell-icon');
-    const notificationsPanel = document.getElementById('notifications-panel');
-    const notificationCountBadge = document.getElementById('notification-count');
-    const notificationsListDiv = document.getElementById('notifications-list');
-    const noNotificationsDiv = document.getElementById('no-notifications');
-
-    bellIcon.addEventListener('click', (event) => {
-        event.stopPropagation();
-        notificationsPanel.classList.toggle('show');
-    });
-
-    document.addEventListener('click', (event) => {
-        if (!bellIcon.contains(event.target) && !notificationsPanel.contains(event.target)) {
-            notificationsPanel.classList.remove('show');
-        }
-    });
-
-    async function fetchStockAndExpiryAlerts() {
-        const productsRef = database.ref('products');
-        try {
-            const snapshot = await productsRef.once('value');
-            const products = snapshot.val();
-            if (!products) return;
-
-            const alerts = [];
-            const today = new Date();
-            today.setHours(0, 0, 0, 0);
-
-            for (const productId in products) {
-                const product = products[productId];
-                if (!product.batches) continue;
-
-                for (const batchId in product.batches) {
-                    const batch = product.batches[batchId];
-                    const quantity = batch.quantity || 0;
-
-                    // تنبيه قرب انتهاء الصلاحية
-                    if (batch.expiryDate) {
-                        const expiryDate = new Date(batch.expiryDate);
-                        const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24));
-                        if (diffDays >= 0 && diffDays <= 30) {
-                            alerts.push({
-                                type: 'warning',
-                                name: product.name,
-                                message: `صلاحية الدفعة ${batch.batchNumber || ''} تنتهي خلال ${diffDays} يوم (الكمية: ${quantity})`
-                            });
-                        }
-                    }
-                    
-                    // تنبيه نفاذ الكمية
-                    if (quantity > 0 && quantity <= 5) {
-                         alerts.push({
-                            type: 'danger',
-                            name: product.name,
-                            message: `كمية الدفعة ${batch.batchNumber || ''} قليلة جداً (${quantity} متبقية)`
-                        });
-                    }
-                }
-            }
-            displayAlerts(alerts);
-
-        } catch (error) {
-            console.error("Error fetching alerts:", error);
-        }
-    }
-
-    function displayAlerts(alerts) {
-        if (alerts.length > 0) {
-            noNotificationsDiv.style.display = 'none';
-            notificationsListDiv.innerHTML = '';
-            alerts.forEach(alert => {
-                const alertDiv = document.createElement('div');
-                alertDiv.className = 'notification-item';
-                const iconClass = alert.type === 'warning' ? 'fa-exclamation-triangle' : 'fa-box-open';
-                alertDiv.innerHTML = `
-                    <div class="icon ${alert.type}"><i class="fas ${iconClass}"></i></div>
-                    <div class="details">
-                        <div class="product-name">${alert.name}</div>
-                        <div class="message">${alert.message}</div>
-                    </div>
-                `;
-                notificationsListDiv.appendChild(alertDiv);
-            });
-            notificationCountBadge.textContent = alerts.length;
-            notificationCountBadge.style.display = 'flex';
-            // فتح الجرس تلقائياً عند تحميل الصفحة لأول مرة إذا كانت هناك تنبيهات
-            if (!sessionStorage.getItem('alerts_shown')) {
-                notificationsPanel.classList.add('show');
-                sessionStorage.setItem('alerts_shown', 'true');
-            }
-
-        } else {
-            noNotificationsDiv.style.display = 'block';
-            notificationCountBadge.style.display = 'none';
-        }
-    }
-
-    // === دوال الرسوم البيانية الديناميكية ===
-    async function generateAndRenderCharts() {
-        const invoicesRef = database.ref('invoices');
-        try {
-            const snapshot = await invoicesRef.once('value');
-            const invoices = snapshot.val();
-            
-            // Render Sales Chart
-            const salesData = processSalesData(invoices);
-            renderSalesChart(salesData);
-
-            // Render Doughnut Chart
-            const productData = processProductData(invoices);
-            renderDoughnutChart(productData);
-
-        } catch (error) {
-            console.error("Error fetching invoice data:", error);
-            document.getElementById('salesChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل بيانات المبيعات</p>';
-            document.getElementById('doughnutChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل بيانات المنتجات</p>';
-        }
-    }
-
-    function processSalesData(invoices) {
-        const salesByMonth = {};
-        const profitsByMonth = {};
-        const monthLabels = [];
+    // === نظام تبديل الأوضاع الجديد ===
+    function setMode(mode) {
+        const isPro = mode === 'pro';
+        elements.proModeBtn.classList.toggle('active', isPro);
+        elements.easyModeBtn.classList.toggle('active', !isPro);
+        elements.proModeView.style.display = isPro ? 'block' : 'none';
+        elements.easyModeView.style.display = isPro ? 'none' : 'block';
         
-        const now = new Date();
-        for (let i = 5; i >= 0; i--) {
-            const d = new Date(now.getFullYear(), now.getMonth() - i, 1);
-            const year = d.getFullYear();
-            const month = (d.getMonth() + 1).toString().padStart(2, '0');
-            const label = d.toLocaleString('ar', { month: 'long' });
-            
-            const key = `${year}-${month}`;
-            salesByMonth[key] = 0;
-            profitsByMonth[key] = 0;
-            monthLabels.push(label);
-        }
+        // التحكم في الهيدر حسب الوضع
+        elements.body.classList.toggle('easy-mode-active', !isPro);
 
-        if (invoices) {
-            for (const invoiceId in invoices) {
-                const invoice = invoices[invoiceId];
-                const invoiceDate = new Date(invoice.date);
-                const year = invoiceDate.getFullYear();
-                const month = (invoiceDate.getMonth() + 1).toString().padStart(2, '0');
-                const key = `${year}-${month}`;
-
-                if (salesByMonth.hasOwnProperty(key)) {
-                    salesByMonth[key] += invoice.finalPrice || 0;
-                    
-                    // Calculate profit for this invoice
-                    let invoiceCost = 0;
-                    if (invoice.items) {
-                      Object.values(invoice.items).forEach(item => {
-                         invoiceCost += (item.cost || 0) * (item.quantity || 0);
-                      });
-                    }
-                    profitsByMonth[key] += (invoice.finalPrice || 0) - invoiceCost;
-                }
-            }
+        if (!isPro && isSidebarOpen) {
+            toggleSidebar(); // أغلق القائمة الجانبية إذا كانت مفتوحة عند التبديل للوضع السهل
         }
-        
-        return {
-            labels: monthLabels,
-            sales: Object.values(salesByMonth),
-            profits: Object.values(profitsByMonth)
-        };
+        localStorage.setItem('dashboardMode', mode);
     }
     
-    function processProductData(invoices) {
-        const productsRevenue = {};
-        if (invoices) {
-            for (const invoiceId in invoices) {
-                const invoice = invoices[invoiceId];
-                if (!invoice.items) continue;
-                for (const itemId in invoice.items) {
-                    const item = invoice.items[itemId];
-                    productsRevenue[item.name] = (productsRevenue[item.name] || 0) + item.itemTotal;
-                }
-            }
-        }
-        
-        const sortedProducts = Object.entries(productsRevenue)
-            .sort(([, a], [, b]) => b - a);
-
-        const topProducts = sortedProducts.slice(0, 5);
-        const otherRevenue = sortedProducts.slice(5).reduce((sum, [, revenue]) => sum + revenue, 0);
-
-        const labels = topProducts.map(p => p[0]);
-        const data = topProducts.map(p => p[1]);
-
-        if (otherRevenue > 0) {
-            labels.push('منتجات أخرى');
-            data.push(otherRevenue);
-        }
-        
-        return { labels, data };
+    function loadSavedMode() {
+        const savedMode = localStorage.getItem('dashboardMode') || 'pro';
+        setMode(savedMode);
     }
 
-    function renderSalesChart({ labels, sales, profits }) {
-      document.getElementById('salesChartPlaceholder').style.display = 'none';
-      document.getElementById('salesChart').style.display = 'block';
-      
-      if (salesChartInstance) salesChartInstance.destroy();
+    // ربط الأحداث بأزرار تبديل الوضع
+    elements.proModeBtn.addEventListener('click', () => setMode('pro'));
+    elements.easyModeBtn.addEventListener('click', () => setMode('easy'));
 
-      salesChartInstance = new Chart(document.getElementById('salesChart').getContext('2d'), {
-        type: 'bar',
-        data: {
-          labels: labels,
-          datasets: [
-            {
-              label: 'إجمالي المبيعات (ر.س)',
-              data: sales,
-              backgroundColor: 'rgba(67, 97, 238, 0.7)',
-              borderColor: 'rgba(67, 97, 238, 1)',
-              borderWidth: 1,
-              borderRadius: 5,
-            },
-            {
-              label: 'صافي الأرباح (ر.س)',
-              data: profits,
-              backgroundColor: 'rgba(76, 201, 240, 0.7)',
-              borderColor: 'rgba(76, 201, 240, 1)',
-              borderWidth: 1,
-              borderRadius: 5,
-            }
-          ]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          scales: { y: { beginAtZero: true, ticks: {font: { family: 'Tajawal' }} } },
-          plugins: { legend: { labels: { font: { family: 'Tajawal' }}}}
-        }
-      });
-    }
-
-    function renderDoughnutChart({ labels, data }) {
-      document.getElementById('doughnutChartPlaceholder').style.display = 'none';
-      document.getElementById('doughnutChart').style.display = 'block';
-      
-      if (doughnutChartInstance) doughnutChartInstance.destroy();
-      
-      if (labels.length === 0) {
-           document.getElementById('doughnutChartPlaceholder').style.display = 'flex';
-           document.getElementById('doughnutChartPlaceholder').innerHTML = '<p>لا توجد بيانات مبيعات لعرضها.</p>';
-           document.getElementById('doughnutChart').style.display = 'none';
-           return;
-      }
-
-      doughnutChartInstance = new Chart(document.getElementById('doughnutChart').getContext('2d'), {
-        type: 'doughnut',
-        data: {
-          labels: labels,
-          datasets: [{
-            label: 'الإيرادات حسب المنتج',
-            data: data,
-            backgroundColor: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#7209b7', '#6c757d'],
-            borderWidth: 1
-          }]
-        },
-        options: {
-          responsive: true, maintainAspectRatio: false,
-          plugins: {
-              legend: { position: 'top', labels: { font: { family: 'Tajawal' } } },
-              tooltip: {
-                callbacks: {
-                    label: function(context) {
-                        let label = context.label || '';
-                        if (label) { label += ': '; }
-                        if (context.parsed !== null) {
-                            label += new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(context.parsed);
-                        }
-                        return label;
-                    }
-                }
-              }
-          }
-        }
-      });
-    }
+    // === دوال نظام التنبيهات (تبقى كما هي) ===
+    async function fetchStockAndExpiryAlerts() { try { const snapshot = await database.ref('products').once('value'); const products = snapshot.val(); if (!products) return; const alerts = []; const today = new Date(); today.setHours(0, 0, 0, 0); for (const productId in products) { const product = products[productId]; if (!product.batches) continue; for (const batchId in product.batches) { const batch = product.batches[batchId]; const quantity = batch.quantity || 0; if (batch.expiryDate) { const expiryDate = new Date(batch.expiryDate); const diffDays = Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)); if (diffDays >= 0 && diffDays <= 30) { alerts.push({ type: 'warning', name: product.name, message: `صلاحية الدفعة ${batch.batchNumber || ''} تنتهي خلال ${diffDays} يوم (الكمية: ${quantity})` }); } } if (quantity > 0 && quantity <= 5) { alerts.push({ type: 'danger', name: product.name, message: `كمية الدفعة ${batch.batchNumber || ''} قليلة جداً (${quantity} متبقية)` }); } } } displayAlerts(alerts); } catch (error) { console.error("Error fetching alerts:", error); } }
+    function displayAlerts(alerts) { if (alerts.length > 0) { elements.noNotificationsDiv.style.display = 'none'; elements.notificationsListDiv.innerHTML = ''; alerts.forEach(alert => { const alertDiv = document.createElement('div'); alertDiv.className = 'notification-item'; const iconClass = alert.type === 'warning' ? 'fa-exclamation-triangle' : 'fa-box-open'; alertDiv.innerHTML = `<div class="icon ${alert.type}"><i class="fas ${iconClass}"></i></div><div class="details"><div class="product-name">${alert.name}</div><div class="message">${alert.message}</div></div>`; elements.notificationsListDiv.appendChild(alertDiv); }); elements.notificationCountBadge.textContent = alerts.length; elements.notificationCountBadge.style.display = 'flex'; if (!sessionStorage.getItem('alerts_shown')) { elements.notificationsPanel.classList.add('show'); sessionStorage.setItem('alerts_shown', 'true'); } } else { elements.noNotificationsDiv.style.display = 'block'; elements.notificationCountBadge.style.display = 'none'; } }
+    
+    // دوال الرسوم البيانية الديناميكية (تبقى كما هي)
+    async function generateAndRenderCharts() { try { const snapshot = await database.ref('invoices').once('value'); const invoices = snapshot.val(); const salesData = processSalesData(invoices); renderSalesChart(salesData); const productData = processProductData(invoices); renderDoughnutChart(productData); } catch (error) { console.error("Error fetching invoice data:", error); document.getElementById('salesChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل بيانات المبيعات</p>'; document.getElementById('doughnutChartPlaceholder').innerHTML = '<p style="color:red;">فشل تحميل بيانات المنتجات</p>'; } }
+    function processSalesData(invoices) { const salesByMonth = {}; const profitsByMonth = {}; const monthLabels = []; const now = new Date(); for (let i = 5; i >= 0; i--) { const d = new Date(now.getFullYear(), now.getMonth() - i, 1); const year = d.getFullYear(); const month = (d.getMonth() + 1).toString().padStart(2, '0'); const label = d.toLocaleString('ar', { month: 'long' }); const key = `${year}-${month}`; salesByMonth[key] = 0; profitsByMonth[key] = 0; monthLabels.push(label); } if (invoices) { for (const invoiceId in invoices) { const invoice = invoices[invoiceId]; const invoiceDate = new Date(invoice.date); const year = invoiceDate.getFullYear(); const month = (invoiceDate.getMonth() + 1).toString().padStart(2, '0'); const key = `${year}-${month}`; if (salesByMonth.hasOwnProperty(key)) { salesByMonth[key] += invoice.finalPrice || 0; let invoiceCost = 0; if (invoice.items) { Object.values(invoice.items).forEach(item => { invoiceCost += (item.cost || 0) * (item.quantity || 0); }); } profitsByMonth[key] += (invoice.finalPrice || 0) - invoiceCost; } } } return { labels: monthLabels, sales: Object.values(salesByMonth), profits: Object.values(profitsByMonth) }; }
+    function processProductData(invoices) { const productsRevenue = {}; if (invoices) { for (const invoiceId in invoices) { const invoice = invoices[invoiceId]; if (!invoice.items) continue; for (const itemId in invoice.items) { const item = invoice.items[itemId]; productsRevenue[item.name] = (productsRevenue[item.name] || 0) + item.itemTotal; } } } const sortedProducts = Object.entries(productsRevenue).sort(([, a], [, b]) => b - a); const topProducts = sortedProducts.slice(0, 5); const otherRevenue = sortedProducts.slice(5).reduce((sum, [, revenue]) => sum + revenue, 0); const labels = topProducts.map(p => p[0]); const data = topProducts.map(p => p[1]); if (otherRevenue > 0) { labels.push('منتجات أخرى'); data.push(otherRevenue); } return { labels, data }; }
+    function renderSalesChart({ labels, sales, profits }) { document.getElementById('salesChartPlaceholder').style.display = 'none'; document.getElementById('salesChart').style.display = 'block'; if (salesChartInstance) salesChartInstance.destroy(); salesChartInstance = new Chart(document.getElementById('salesChart').getContext('2d'), { type: 'bar', data: { labels: labels, datasets: [ { label: 'إجمالي المبيعات (ر.س)', data: sales, backgroundColor: 'rgba(67, 97, 238, 0.7)', borderColor: 'rgba(67, 97, 238, 1)', borderWidth: 1, borderRadius: 5, }, { label: 'صافي الأرباح (ر.س)', data: profits, backgroundColor: 'rgba(76, 201, 240, 0.7)', borderColor: 'rgba(76, 201, 240, 1)', borderWidth: 1, borderRadius: 5, } ] }, options: { responsive: true, maintainAspectRatio: false, scales: { y: { beginAtZero: true, ticks: {font: { family: 'Tajawal' }} } }, plugins: { legend: { labels: { font: { family: 'Tajawal' }}}} } }); }
+    function renderDoughnutChart({ labels, data }) { document.getElementById('doughnutChartPlaceholder').style.display = 'none'; document.getElementById('doughnutChart').style.display = 'block'; if (doughnutChartInstance) doughnutChartInstance.destroy(); if (labels.length === 0) { document.getElementById('doughnutChartPlaceholder').style.display = 'flex'; document.getElementById('doughnutChartPlaceholder').innerHTML = '<p>لا توجد بيانات مبيعات لعرضها.</p>'; document.getElementById('doughnutChart').style.display = 'none'; return; } doughnutChartInstance = new Chart(document.getElementById('doughnutChart').getContext('2d'), { type: 'doughnut', data: { labels: labels, datasets: [{ label: 'الإيرادات حسب المنتج', data: data, backgroundColor: ['#4361ee', '#4cc9f0', '#f72585', '#f8961e', '#7209b7', '#6c757d'], borderWidth: 1 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'top', labels: { font: { family: 'Tajawal' } } }, tooltip: { callbacks: { label: function(context) { let label = context.label || ''; if (label) { label += ': '; } if (context.parsed !== null) { label += new Intl.NumberFormat('ar-SA', { style: 'currency', currency: 'SAR' }).format(context.parsed); } return label; } } } } } }); }
 
     // === تشغيل عند تحميل الصفحة ===
     document.addEventListener('DOMContentLoaded', function() {
-      loadSavedLanguage();
+      loadSavedMode();
       generateAndRenderCharts();
       fetchStockAndExpiryAlerts();
     });
+    
+    // ربط الأحداث المتبقية
+    elements.hamburger.addEventListener('click', toggleSidebar);
+    elements.overlay.addEventListener('click', toggleSidebar);
+
+    elements.bellIcon.addEventListener('click', (event) => {
+        event.stopPropagation();
+        elements.notificationsPanel.classList.toggle('show');
+    });
+    document.addEventListener('click', (event) => {
+        if (!elements.bellIcon.contains(event.target) && !elements.notificationsPanel.contains(event.target)) {
+            elements.notificationsPanel.classList.remove('show');
+        }
+    });
+
   </script>
 </body>
 </html>
