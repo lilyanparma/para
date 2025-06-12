@@ -178,10 +178,11 @@
             height: 14px; 
         }
         
-        body.easy-mode-active .header-top-row { justify-content: center; }
-        body.easy-mode-active .header-title { text-align: center; }
-        body.easy-mode-active #hamburger,
-        body.easy-mode-active .header-actions { display: none; }
+        /* === تعديل الوضع السهل === */
+        body.easy-mode-active .header-top-row { justify-content: space-between; }
+        body.easy-mode-active .header-title { text-align: right; }
+        body.easy-mode-active #hamburger { display: none; }
+        /* body.easy-mode-active .header-actions { display: none; } <-- تم حذف هذا السطر للسماح بظهور الأزرار */
 
         /* ====== مفاتيح تبديل الوحدات ====== */
         .mode-switcher {
@@ -710,11 +711,19 @@
         }
 
         /* ====== الرسوم البيانية ====== */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 25px;
+            align-items: flex-start;
+            margin-bottom: 40px;
+        }
+
         .chart-container { 
             position: relative; 
             width: 100%; 
-            margin: 40px auto; 
-            height: 450px; 
+            margin: 0; 
+            height: 420px; /* <-- تم تقليل الارتفاع */
             background: var(--glass-bg); 
             border-radius: 20px; 
             padding: 25px; 
@@ -926,6 +935,10 @@
             .app-grid {
                 grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
             }
+
+            .charts-grid {
+                grid-template-columns: 1fr; /* المخططات تحت بعضها على الشاشات المتوسطة */
+            }
         }
         
         @media (max-width: 992px) {
@@ -1089,7 +1102,7 @@
                     <h3><i class="fas fa-bullseye"></i> هدف المبيعات الشهري</h3>
                     <div class="kpi-content">
                         <div class="kpi-details">
-                            <div id="salesTargetValue" class="kpi-value"></div>
+                            <div id="salesTargetValue" class="kpi-value">جاري الحساب...</div>
                             <div id="salesTargetDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1102,7 +1115,7 @@
                     <h3><i class="fas fa-calendar-times"></i> المخزون منتهي الصلاحية</h3>
                     <div class="kpi-content">
                          <div class="kpi-details">
-                            <div id="expiredValue" class="kpi-value"></div>
+                            <div id="expiredValue" class="kpi-value">جاري الحساب...</div>
                             <div id="expiredDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1115,7 +1128,7 @@
                     <h3><i class="fas fa-hand-holding-usd"></i> هامش الربح (الشهر الحالي)</h3>
                      <div class="kpi-content">
                         <div class="kpi-details">
-                            <div id="profitMarginValue" class="kpi-value"></div>
+                            <div id="profitMarginValue" class="kpi-value">جاري الحساب...</div>
                             <div id="profitMarginDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1127,16 +1140,20 @@
             </div>
 
             <h2 data-lang-key="main_title">تحليل الأداء</h2>
-            <div class="chart-container">
-                <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
-                <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                <canvas id="salesChart" style="display: none;"></canvas>
+            
+            <div class="charts-grid">
+                <div class="chart-container">
+                    <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
+                    <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                    <canvas id="salesChart" style="display: none;"></canvas>
+                </div>
+                <div class="chart-container">
+                     <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
+                    <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                    <canvas id="doughnutChart" style="display: none;"></canvas>
+                </div>
             </div>
-            <div class="chart-container">
-                 <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
-                <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                <canvas id="doughnutChart" style="display: none;"></canvas>
-            </div>
+
         </div>
 
         <div id="easy-mode-view" style="display: none;">
@@ -1215,18 +1232,22 @@
         }
 
         // ========= Authentication & Initialization =========
-        document.addEventListener('DOMContentLoaded', async function() {
-            await fetchTranslations();
-            setLanguage(currentLang);
-
+        document.addEventListener('DOMContentLoaded', function() {
             firebase.auth().onAuthStateChanged(function(user) {
                 if (user) {
                     firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
-                        if (snapshot.exists()) {
-                            initializeApp(user, snapshot.val().name, snapshot.val().role);
-                        } else { firebase.auth().signOut(); }
-                    }).catch(err => { console.error(err); firebase.auth().signOut(); });
-                } else { window.location.href = 'login.html'; }
+                        if (snapshot.exists() && snapshot.val().role) {
+                             initializeApp(user, snapshot.val().name, snapshot.val().role);
+                        } else {
+                             document.body.innerHTML = `<div style="text-align: center; padding: 50px; font-family: 'Tajawal', sans-serif;"><h1>خطأ في التحقق</h1><p>لم نتمكن من العثور على صلاحيات المستخدم. الرجاء التواصل مع مدير النظام.</p><button onclick="firebase.auth().signOut()">تسجيل الخروج</button></div>`;
+                        }
+                    }).catch(err => {
+                        console.error("Database read error:", err);
+                        document.body.innerHTML = `<div style="text-align: center; padding: 50px;"><h1>خطأ في الاتصال بقاعدة البيانات</h1></div>`;
+                    });
+                } else {
+                    window.location.href = 'login.html';
+                }
             });
         });
 
@@ -1244,7 +1265,6 @@
             setupEventListeners();
             loadSavedMode();
             
-            // --- تم التفعيل ---
             generateAndRenderKPIs();
             generateAndRenderCharts();
             fetchStockAndExpiryAlerts();
@@ -1253,6 +1273,7 @@
         // ========= Global UI Elements & State =========
         let isSidebarOpen = false;
         let kpiChartInstances = {};
+        let mainChartInstances = {};
 
         // ========= Event Listeners Setup =========
         function setupEventListeners() {
@@ -1305,12 +1326,10 @@
             });
         }
         
-        // ========= Chart & Data Functions (START OF IMPLEMENTATION) =========
+        // ========= Chart & Data Functions (Full Implementation) =========
         
-        // Helper to format currency
         const formatCurrency = (value) => `${(value || 0).toFixed(2)} ر.س`;
 
-        // Helper to create small KPI doughnut charts
         function createKpiDoughnut(canvasId, percentage) {
             if (kpiChartInstances[canvasId]) {
                 kpiChartInstances[canvasId].destroy();
@@ -1322,7 +1341,7 @@
                     datasets: [{
                         data: [percentage, 100 - percentage],
                         backgroundColor: [
-                            percentage > 80 ? 'var(--success)' : percentage > 50 ? 'var(--warning)' : 'var(--danger)',
+                            percentage >= 80 ? 'var(--success)' : percentage >= 40 ? 'var(--warning)' : 'var(--danger)',
                             '#e9ecef'
                         ],
                         borderWidth: 0,
@@ -1338,22 +1357,26 @@
                 }
             });
         }
-
+        
         async function generateAndRenderKPIs() {
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
             
-            // --- 1. Sales Target KPI ---
-            const monthlySalesTarget = 150000; // يمكن تغيير هذا الرقم حسب الحاجة
             const invoicesSnap = await database.ref('invoices').once('value');
             const invoices = invoicesSnap.val() || {};
-            let currentMonthSales = 0;
+            const productsSnap = await database.ref('products').once('value');
+            const products = productsSnap.val() || {};
+            const servicesSnap = await database.ref('services').once('value');
+            const services = servicesSnap.val() || {};
             
+            // --- 1. Sales Target KPI ---
+            const monthlySalesTarget = 150000; 
+            let currentMonthSales = 0;
             Object.values(invoices).forEach(inv => {
                 const invDate = new Date(inv.date);
                 if (invDate.getFullYear() === currentYear && invDate.getMonth() === currentMonth) {
-                    currentMonthSales += inv.finalPrice;
+                    currentMonthSales += (inv.finalPrice || 0);
                 }
             });
             const salesPercentage = Math.min((currentMonthSales / monthlySalesTarget) * 100, 100);
@@ -1364,10 +1387,7 @@
             createKpiDoughnut('salesTargetChart', salesPercentage);
 
             // --- 2. Expired Stock KPI ---
-            const productsSnap = await database.ref('products').once('value');
-            const products = productsSnap.val() || {};
             let totalItems = 0, expiredItems = 0;
-            
             Object.values(products).forEach(prod => {
                 if(prod.batches) {
                     Object.values(prod.batches).forEach(batch => {
@@ -1383,17 +1403,14 @@
             document.getElementById('expiredValue').textContent = `${expiredItems} قطعة`;
             document.getElementById('expiredDesc').textContent = `من إجمالي ${totalItems} قطعة`;
             document.getElementById('expiredPercentage').textContent = `${Math.round(expiredPercentage)}%`;
-            createKpiDoughnut('expiredChart', 100 - expiredPercentage); // Reverse for "good" items
+            createKpiDoughnut('expiredChart', 100 - expiredPercentage); 
 
             // --- 3. Profit Margin KPI ---
-            const servicesSnap = await database.ref('services').once('value');
-            const services = servicesSnap.val() || {};
             let totalProfit = 0, totalRevenue = 0;
-
             Object.values(invoices).forEach(inv => {
                 const invDate = new Date(inv.date);
                 if (invDate.getFullYear() === currentYear && invDate.getMonth() === currentMonth) {
-                    totalRevenue += inv.finalPrice;
+                    totalRevenue += (inv.finalPrice || 0);
                     if(inv.items) {
                         Object.values(inv.items).forEach(item => {
                             const profit = (item.price - (item.cost || 0)) * item.quantity;
@@ -1405,8 +1422,8 @@
             Object.values(services).forEach(srv => {
                  const srvDate = new Date(srv.date);
                 if (srvDate.getFullYear() === currentYear && srvDate.getMonth() === currentMonth) {
-                    totalRevenue += srv.price;
-                    totalProfit += (srv.price - (srv.cost || 0));
+                    totalRevenue += (srv.price || 0);
+                    totalProfit += ((srv.price || 0) - (srv.cost || 0));
                 }
             });
 
@@ -1418,33 +1435,33 @@
         }
 
         async function generateAndRenderCharts() {
-            // --- 1. Main Sales Chart (Line Chart) ---
             const invoicesSnap = await database.ref('invoices').once('value');
             const invoices = invoicesSnap.val() || {};
+
+            // --- 1. Main Sales Chart (Line Chart) ---
             const monthlySales = {};
             const monthLabels = [];
-
             for (let i = 5; i >= 0; i--) {
                 const d = new Date();
                 d.setMonth(d.getMonth() - i);
                 const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
-                monthLabels.push(d.toLocaleDateString('ar', { month: 'short' }));
+                monthLabels.push(d.toLocaleDateString('ar', { month: 'short', year: 'numeric' }));
                 monthlySales[monthKey] = 0;
             }
-
             Object.values(invoices).forEach(inv => {
                 const d = new Date(inv.date);
                 const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
                 if (monthlySales[monthKey] !== undefined) {
-                    monthlySales[monthKey] += inv.finalPrice;
+                    monthlySales[monthKey] += (inv.finalPrice || 0);
                 }
             });
             
             const salesChartCtx = document.getElementById('salesChart').getContext('2d');
+            if (mainChartInstances.sales) mainChartInstances.sales.destroy();
             document.getElementById('salesChartPlaceholder').style.display = 'none';
             document.getElementById('salesChart').style.display = 'block';
 
-            new Chart(salesChartCtx, {
+            mainChartInstances.sales = new Chart(salesChartCtx, {
                 type: 'line',
                 data: {
                     labels: monthLabels,
@@ -1465,20 +1482,20 @@
             Object.values(invoices).forEach(inv => {
                 if (inv.items) {
                     Object.values(inv.items).forEach(item => {
-                        productSales[item.name] = (productSales[item.name] || 0) + item.itemTotal;
+                        productSales[item.name] = (productSales[item.name] || 0) + (item.itemTotal || 0);
                     });
                 }
             });
-
             const topProducts = Object.entries(productSales)
                 .sort(([,a],[,b]) => b - a)
                 .slice(0, 5);
 
             const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
+            if (mainChartInstances.doughnut) mainChartInstances.doughnut.destroy();
             document.getElementById('doughnutChartPlaceholder').style.display = 'none';
             document.getElementById('doughnutChart').style.display = 'block';
 
-            new Chart(doughnutCtx, {
+            mainChartInstances.doughnut = new Chart(doughnutCtx, {
                 type: 'doughnut',
                 data: {
                     labels: topProducts.map(p => p[0]),
@@ -1511,7 +1528,7 @@
                     
                     Object.values(prod.batches).forEach(batch => {
                         const expiryDate = new Date(batch.expiryDate);
-                        if (expiryDate < expiryLimitDate && expiryDate > now) {
+                        if (expiryDate > now && expiryDate <= expiryLimitDate) {
                              alertCount++;
                              const item = `<div class="notification-item">
                                 <div class="icon warning"><i class="fas fa-exclamation-triangle"></i></div>
