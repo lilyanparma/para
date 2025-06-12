@@ -1,4 +1,3 @@
-
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -181,8 +180,8 @@
         
         body.easy-mode-active .header-top-row { justify-content: center; }
         body.easy-mode-active .header-title { text-align: center; }
-        body.easy-mode-active #hamburger,
-        body.easy-mode-active .header-actions { display: none; }
+        /* --- التحسين: إخفاء زر الهمبرغر فقط في الوضع السهل --- */
+        body.easy-mode-active #hamburger { display: none; }
 
         /* ====== مفاتيح تبديل الوحدات ====== */
         .mode-switcher {
@@ -711,10 +710,22 @@
         }
 
         /* ====== الرسوم البيانية ====== */
+        /* --- التحسين: حاوية شبكية للرسوم البيانية --- */
+        .charts-grid-container {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+        @media (min-width: 1200px) {
+            .charts-grid-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+        
         .chart-container { 
             position: relative; 
             width: 100%; 
-            margin: 40px auto; 
             height: 450px; 
             background: var(--glass-bg); 
             border-radius: 20px; 
@@ -776,7 +787,7 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: 100%; 
+            height: calc(100% - 60px); 
             color: var(--gray); 
             flex-direction: column; 
             gap: 20px; 
@@ -1128,15 +1139,17 @@
             </div>
 
             <h2 data-lang-key="main_title">تحليل الأداء</h2>
-            <div class="chart-container">
-                <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
-                <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                <canvas id="salesChart" style="display: none;"></canvas>
-            </div>
-            <div class="chart-container">
-                 <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
-                <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                <canvas id="doughnutChart" style="display: none;"></canvas>
+            <div class="charts-grid-container">
+                <div class="chart-container">
+                    <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
+                    <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                    <canvas id="salesChart" style="display: none;"></canvas>
+                </div>
+                <div class="chart-container">
+                     <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
+                    <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                    <canvas id="doughnutChart" style="display: none;"></canvas>
+                </div>
             </div>
         </div>
 
