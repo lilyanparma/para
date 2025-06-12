@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -13,8 +14,8 @@
     <script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
     <script src="data/firebase-config.js"></script>
   
-   <style>
-  /* ====== نظام الألوان المتطور ====== */
+    <style>
+       /* ====== نظام الألوان المتطور ====== */
         :root {
             --primary: #6C63FF;
             --primary-dark: #564FD9;
@@ -34,7 +35,7 @@
             --gray: #718096;
             --light-gray: #EDF2F7;
             --bg-color: linear-gradient(135deg, #F8FAFC, #e6f0ff);
-            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.2);
+            --card-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
             --card-hover-shadow: 0 20px 50px rgba(108, 99, 255, 0.4);
             --transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
             --glass-bg: rgba(255, 255, 255, 0.85);
@@ -255,7 +256,7 @@
             border-radius: 50%; 
             font-size: 12px; 
             font-weight: bold; 
-            display: flex; 
+            display: none; /* Hidden by default */
             align-items: center; 
             justify-content: center; 
             border: 2px solid white; 
@@ -656,40 +657,29 @@
         .kpi-card h3 {
             font-size: 1.1rem;
             color: var(--gray);
-            margin-bottom: 20px;
+            margin-bottom: 15px;
             font-weight: 600;
             display: flex;
             align-items: center;
             gap: 12px;
         }
-        
-        .kpi-card h3 i {
-            font-size: 1.3rem;
-            color: var(--primary);
-        }
-        
+                
         .kpi-content {
             display: flex;
             align-items: center;
-            gap: 25px;
+            justify-content: space-between;
         }
         
         .kpi-chart-container {
             position: relative;
-            height: 120px;
-            width: 120px;
+            height: 100px;
+            width: 100px;
             flex-shrink: 0;
         }
         
         .kpi-chart {
             width: 100%;
             height: 100%;
-            border-radius: 50%;
-            background: conic-gradient(var(--primary) 75%, var(--light-gray) 0);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            box-shadow: 0 8px 20px rgba(108, 99, 255, 0.2);
         }
         
         .kpi-percentage {
@@ -697,58 +687,27 @@
             top: 50%;
             left: 50%;
             transform: translate(-50%, -50%);
-            font-size: 1.8rem;
+            font-size: 1.5rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--primary), var(--secondary));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--primary);
         }
         
         .kpi-details {
-            flex: 1;
+            text-align: left;
         }
         
         .kpi-value {
-            font-size: 2.2rem;
+            font-size: 1.8rem;
             font-weight: 800;
-            background: linear-gradient(135deg, var(--primary-dark), var(--dark));
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+            color: var(--dark);
             margin-bottom: 8px;
-            line-height: 1.1;
+            line-height: 1.2;
         }
         
         .kpi-description {
-            font-size: 0.95rem;
-            color: var(--gray);
-            line-height: 1.6;
-        }
-        
-        .kpi-trend {
-            display: inline-flex;
-            align-items: center;
-            gap: 5px;
             font-size: 0.9rem;
-            padding: 6px 15px;
-            border-radius: 20px;
-            margin-top: 12px;
-            font-weight: 600;
-            background: rgba(76, 175, 80, 0.15);
-        }
-        
-        .trend-up {
-            background: rgba(76, 175, 80, 0.15);
-            color: var(--success);
-        }
-        
-        .trend-down {
-            background: rgba(255, 82, 82, 0.15);
-            color: var(--danger);
-        }
-        
-        .trend-neutral {
-            background: rgba(255, 171, 0, 0.15);
-            color: var(--warning);
+            color: var(--gray);
+            line-height: 1.5;
         }
 
         /* ====== الرسوم البيانية ====== */
@@ -1060,63 +1019,6 @@
             
             .sidebar { width: 280px; padding: 20px; }
         }
-        
-        /* ====== تأثيرات إضافية ====== */
-        .pulse {
-            animation: pulse 3s infinite;
-        }
-        
-        @keyframes pulse {
-            0% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0.5); }
-            70% { box-shadow: 0 0 0 20px rgba(108, 99, 255, 0); }
-            100% { box-shadow: 0 0 0 0 rgba(108, 99, 255, 0); }
-        }
-        
-        .float {
-            animation: float 6s ease-in-out infinite;
-        }
-        
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-15px); }
-            100% { transform: translateY(0px); }
-        }
-        
-        .rotate {
-            animation: rotate 15s linear infinite;
-        }
-        
-        @keyframes rotate {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        
-        /* تأثيرات دخول العناصر */
-        [data-aos] {
-            opacity: 0;
-            transition: opacity 0.6s, transform 0.6s;
-        }
-        
-        [data-aos].aos-animate {
-            opacity: 1;
-            transform: none;
-        }
-        
-        .fade-up {
-            transform: translateY(30px);
-        }
-        
-        .fade-left {
-            transform: translateX(30px);
-        }
-        
-        .fade-right {
-            transform: translateX(-30px);
-        }
-        
-        .zoom-in {
-            transform: scale(0.9);
-        }
     </style>
 </head>
 <body>
@@ -1188,7 +1090,7 @@
                     <h3><i class="fas fa-bullseye"></i> هدف المبيعات الشهري</h3>
                     <div class="kpi-content">
                         <div class="kpi-details">
-                            <div id="salesTargetValue" class="kpi-value">جاري الحساب...</div>
+                            <div id="salesTargetValue" class="kpi-value"></div>
                             <div id="salesTargetDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1201,7 +1103,7 @@
                     <h3><i class="fas fa-calendar-times"></i> المخزون منتهي الصلاحية</h3>
                     <div class="kpi-content">
                          <div class="kpi-details">
-                            <div id="expiredValue" class="kpi-value">جاري الحساب...</div>
+                            <div id="expiredValue" class="kpi-value"></div>
                             <div id="expiredDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1214,7 +1116,7 @@
                     <h3><i class="fas fa-hand-holding-usd"></i> هامش الربح (الشهر الحالي)</h3>
                      <div class="kpi-content">
                         <div class="kpi-details">
-                            <div id="profitMarginValue" class="kpi-value">جاري الحساب...</div>
+                            <div id="profitMarginValue" class="kpi-value"></div>
                             <div id="profitMarginDesc" class="kpi-description"></div>
                         </div>
                         <div class="kpi-chart-container">
@@ -1226,20 +1128,16 @@
             </div>
 
             <h2 data-lang-key="main_title">تحليل الأداء</h2>
-            
-            <div class="charts-grid">
-                <div class="chart-container">
-                    <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
-                    <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                    <canvas id="salesChart" style="display: none;"></canvas>
-                </div>
-                <div class="chart-container">
-                     <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
-                    <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                    <canvas id="doughnutChart" style="display: none;"></canvas>
-                </div>
+            <div class="chart-container">
+                <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
+                <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                <canvas id="salesChart" style="display: none;"></canvas>
             </div>
-
+            <div class="chart-container">
+                 <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
+                <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
+                <canvas id="doughnutChart" style="display: none;"></canvas>
+            </div>
         </div>
 
         <div id="easy-mode-view" style="display: none;">
@@ -1318,22 +1216,18 @@
         }
 
         // ========= Authentication & Initialization =========
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
+            await fetchTranslations();
+            setLanguage(currentLang);
+
             firebase.auth().onAuthStateChanged(function(user) {
                 if (user) {
                     firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
-                        if (snapshot.exists() && snapshot.val().role) {
-                             initializeApp(user, snapshot.val().name, snapshot.val().role);
-                        } else {
-                             document.body.innerHTML = `<div style="text-align: center; padding: 50px; font-family: 'Tajawal', sans-serif;"><h1>خطأ في التحقق</h1><p>لم نتمكن من العثور على صلاحيات المستخدم. الرجاء التواصل مع مدير النظام.</p><button onclick="firebase.auth().signOut()">تسجيل الخروج</button></div>`;
-                        }
-                    }).catch(err => {
-                        console.error("Database read error:", err);
-                        document.body.innerHTML = `<div style="text-align: center; padding: 50px;"><h1>خطأ في الاتصال بقاعدة البيانات</h1></div>`;
-                    });
-                } else {
-                    window.location.href = 'login.html';
-                }
+                        if (snapshot.exists()) {
+                            initializeApp(user, snapshot.val().name, snapshot.val().role);
+                        } else { firebase.auth().signOut(); }
+                    }).catch(err => { console.error(err); firebase.auth().signOut(); });
+                } else { window.location.href = 'login.html'; }
             });
         });
 
@@ -1351,6 +1245,7 @@
             setupEventListeners();
             loadSavedMode();
             
+            // --- تم التفعيل ---
             generateAndRenderKPIs();
             generateAndRenderCharts();
             fetchStockAndExpiryAlerts();
@@ -1359,7 +1254,6 @@
         // ========= Global UI Elements & State =========
         let isSidebarOpen = false;
         let kpiChartInstances = {};
-        let mainChartInstances = {};
 
         // ========= Event Listeners Setup =========
         function setupEventListeners() {
@@ -1412,10 +1306,12 @@
             });
         }
         
-        // ========= Chart & Data Functions (Full Implementation) =========
+        // ========= Chart & Data Functions (START OF IMPLEMENTATION) =========
         
+        // Helper to format currency
         const formatCurrency = (value) => `${(value || 0).toFixed(2)} ر.س`;
 
+        // Helper to create small KPI doughnut charts
         function createKpiDoughnut(canvasId, percentage) {
             if (kpiChartInstances[canvasId]) {
                 kpiChartInstances[canvasId].destroy();
@@ -1427,7 +1323,7 @@
                     datasets: [{
                         data: [percentage, 100 - percentage],
                         backgroundColor: [
-                            percentage >= 80 ? 'var(--success)' : percentage >= 40 ? 'var(--warning)' : 'var(--danger)',
+                            percentage > 80 ? 'var(--success)' : percentage > 50 ? 'var(--warning)' : 'var(--danger)',
                             '#e9ecef'
                         ],
                         borderWidth: 0,
@@ -1443,26 +1339,22 @@
                 }
             });
         }
-        
+
         async function generateAndRenderKPIs() {
             const now = new Date();
             const currentMonth = now.getMonth();
             const currentYear = now.getFullYear();
             
+            // --- 1. Sales Target KPI ---
+            const monthlySalesTarget = 150000; // يمكن تغيير هذا الرقم حسب الحاجة
             const invoicesSnap = await database.ref('invoices').once('value');
             const invoices = invoicesSnap.val() || {};
-            const productsSnap = await database.ref('products').once('value');
-            const products = productsSnap.val() || {};
-            const servicesSnap = await database.ref('services').once('value');
-            const services = servicesSnap.val() || {};
-            
-            // --- 1. Sales Target KPI ---
-            const monthlySalesTarget = 150000; 
             let currentMonthSales = 0;
+            
             Object.values(invoices).forEach(inv => {
                 const invDate = new Date(inv.date);
                 if (invDate.getFullYear() === currentYear && invDate.getMonth() === currentMonth) {
-                    currentMonthSales += (inv.finalPrice || 0);
+                    currentMonthSales += inv.finalPrice;
                 }
             });
             const salesPercentage = Math.min((currentMonthSales / monthlySalesTarget) * 100, 100);
@@ -1473,7 +1365,10 @@
             createKpiDoughnut('salesTargetChart', salesPercentage);
 
             // --- 2. Expired Stock KPI ---
+            const productsSnap = await database.ref('products').once('value');
+            const products = productsSnap.val() || {};
             let totalItems = 0, expiredItems = 0;
+            
             Object.values(products).forEach(prod => {
                 if(prod.batches) {
                     Object.values(prod.batches).forEach(batch => {
@@ -1489,14 +1384,17 @@
             document.getElementById('expiredValue').textContent = `${expiredItems} قطعة`;
             document.getElementById('expiredDesc').textContent = `من إجمالي ${totalItems} قطعة`;
             document.getElementById('expiredPercentage').textContent = `${Math.round(expiredPercentage)}%`;
-            createKpiDoughnut('expiredChart', 100 - expiredPercentage); 
+            createKpiDoughnut('expiredChart', 100 - expiredPercentage); // Reverse for "good" items
 
             // --- 3. Profit Margin KPI ---
+            const servicesSnap = await database.ref('services').once('value');
+            const services = servicesSnap.val() || {};
             let totalProfit = 0, totalRevenue = 0;
+
             Object.values(invoices).forEach(inv => {
                 const invDate = new Date(inv.date);
                 if (invDate.getFullYear() === currentYear && invDate.getMonth() === currentMonth) {
-                    totalRevenue += (inv.finalPrice || 0);
+                    totalRevenue += inv.finalPrice;
                     if(inv.items) {
                         Object.values(inv.items).forEach(item => {
                             const profit = (item.price - (item.cost || 0)) * item.quantity;
@@ -1508,8 +1406,8 @@
             Object.values(services).forEach(srv => {
                  const srvDate = new Date(srv.date);
                 if (srvDate.getFullYear() === currentYear && srvDate.getMonth() === currentMonth) {
-                    totalRevenue += (srv.price || 0);
-                    totalProfit += ((srv.price || 0) - (srv.cost || 0));
+                    totalRevenue += srv.price;
+                    totalProfit += (srv.price - (srv.cost || 0));
                 }
             });
 
@@ -1521,33 +1419,33 @@
         }
 
         async function generateAndRenderCharts() {
+            // --- 1. Main Sales Chart (Line Chart) ---
             const invoicesSnap = await database.ref('invoices').once('value');
             const invoices = invoicesSnap.val() || {};
-
-            // --- 1. Main Sales Chart (Line Chart) ---
             const monthlySales = {};
             const monthLabels = [];
+
             for (let i = 5; i >= 0; i--) {
                 const d = new Date();
                 d.setMonth(d.getMonth() - i);
                 const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
-                monthLabels.push(d.toLocaleDateString('ar', { month: 'short', year: 'numeric' }));
+                monthLabels.push(d.toLocaleDateString('ar', { month: 'short' }));
                 monthlySales[monthKey] = 0;
             }
+
             Object.values(invoices).forEach(inv => {
                 const d = new Date(inv.date);
                 const monthKey = `${d.getFullYear()}-${d.getMonth() + 1}`;
                 if (monthlySales[monthKey] !== undefined) {
-                    monthlySales[monthKey] += (inv.finalPrice || 0);
+                    monthlySales[monthKey] += inv.finalPrice;
                 }
             });
             
             const salesChartCtx = document.getElementById('salesChart').getContext('2d');
-            if (mainChartInstances.sales) mainChartInstances.sales.destroy();
             document.getElementById('salesChartPlaceholder').style.display = 'none';
             document.getElementById('salesChart').style.display = 'block';
 
-            mainChartInstances.sales = new Chart(salesChartCtx, {
+            new Chart(salesChartCtx, {
                 type: 'line',
                 data: {
                     labels: monthLabels,
@@ -1568,20 +1466,20 @@
             Object.values(invoices).forEach(inv => {
                 if (inv.items) {
                     Object.values(inv.items).forEach(item => {
-                        productSales[item.name] = (productSales[item.name] || 0) + (item.itemTotal || 0);
+                        productSales[item.name] = (productSales[item.name] || 0) + item.itemTotal;
                     });
                 }
             });
+
             const topProducts = Object.entries(productSales)
                 .sort(([,a],[,b]) => b - a)
                 .slice(0, 5);
 
             const doughnutCtx = document.getElementById('doughnutChart').getContext('2d');
-            if (mainChartInstances.doughnut) mainChartInstances.doughnut.destroy();
             document.getElementById('doughnutChartPlaceholder').style.display = 'none';
             document.getElementById('doughnutChart').style.display = 'block';
 
-            mainChartInstances.doughnut = new Chart(doughnutCtx, {
+            new Chart(doughnutCtx, {
                 type: 'doughnut',
                 data: {
                     labels: topProducts.map(p => p[0]),
@@ -1614,7 +1512,7 @@
                     
                     Object.values(prod.batches).forEach(batch => {
                         const expiryDate = new Date(batch.expiryDate);
-                        if (expiryDate > now && expiryDate <= expiryLimitDate) {
+                        if (expiryDate < expiryLimitDate && expiryDate > now) {
                              alertCount++;
                              const item = `<div class="notification-item">
                                 <div class="icon warning"><i class="fas fa-exclamation-triangle"></i></div>
