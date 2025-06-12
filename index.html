@@ -178,10 +178,10 @@
             height: 14px; 
         }
         
-        body.easy-mode-active .header-top-row { justify-content: center; }
-        body.easy-mode-active .header-title { text-align: center; }
-        /* --- التحسين: إخفاء زر الهمبرغر فقط في الوضع السهل --- */
-        body.easy-mode-active #hamburger { display: none; }
+        /* --- التحسين: تعديل تخطيط الوضع السهل --- */
+        body.easy-mode-active #hamburger { 
+            visibility: hidden; /* إخفاء الزر مع الحفاظ على مساحته لتحقيق التوازن */
+        }
 
         /* ====== مفاتيح تبديل الوحدات ====== */
         .mode-switcher {
@@ -671,8 +671,9 @@
         
         .kpi-chart-container {
             position: relative;
-            height: 100px;
-            width: 100px;
+            /* --- التحسين: تصغير حجم الرسم البياني --- */
+            height: 90px;
+            width: 90px;
             flex-shrink: 0;
         }
         
@@ -710,7 +711,6 @@
         }
 
         /* ====== الرسوم البيانية ====== */
-        /* --- التحسين: حاوية شبكية للرسوم البيانية --- */
         .charts-grid-container {
             display: grid;
             grid-template-columns: 1fr;
@@ -726,7 +726,8 @@
         .chart-container { 
             position: relative; 
             width: 100%; 
-            height: 450px; 
+            /* --- التحسين: زيادة ارتفاع الحاوية --- */
+            height: 480px; 
             background: var(--glass-bg); 
             border-radius: 20px; 
             padding: 25px; 
