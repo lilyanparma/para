@@ -14,7 +14,7 @@
     <script src="data/firebase-config.js"></script>
   
     <style>
-       /* ====== نظام الألوان المتطور ====== */
+        /* ====== نظام الألوان المتطور ====== */
         :root {
             --primary: #6C63FF;
             --primary-dark: #564FD9;
@@ -636,6 +636,8 @@
             position: relative;
             overflow: hidden;
             backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
         }
         
         .kpi-card:hover {
@@ -667,11 +669,11 @@
             display: flex;
             align-items: center;
             justify-content: space-between;
+            flex-grow: 1;
         }
         
         .kpi-chart-container {
             position: relative;
-            /* --- التحسين: تصغير حجم الرسم البياني --- */
             height: 90px;
             width: 90px;
             flex-shrink: 0;
@@ -694,6 +696,7 @@
         
         .kpi-details {
             text-align: left;
+            flex-grow: 1;
         }
         
         .kpi-value {
@@ -726,7 +729,6 @@
         .chart-container { 
             position: relative; 
             width: 100%; 
-            /* --- التحسين: زيادة ارتفاع الحاوية --- */
             height: 480px; 
             background: var(--glass-bg); 
             border-radius: 20px; 
@@ -735,6 +737,8 @@
             border: 1px solid var(--glass-border); 
             transition: var(--transition); 
             backdrop-filter: blur(5px);
+            display: flex;
+            flex-direction: column;
         }
         
         .chart-container:hover { 
@@ -747,6 +751,7 @@
             justify-content: space-between;
             align-items: center;
             margin-bottom: 20px;
+            flex-shrink: 0;
         }
         
         .chart-title {
@@ -788,10 +793,29 @@
             display: flex; 
             justify-content: center; 
             align-items: center; 
-            height: calc(100% - 60px); 
+            height: 100%; 
             color: var(--gray); 
             flex-direction: column; 
             gap: 20px; 
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--glass-bg);
+            z-index: 5;
+        }
+        
+        .chart-canvas-container {
+            position: relative;
+            width: 100%;
+            height: calc(100% - 60px);
+            flex-grow: 1;
+        }
+        
+        .chart-canvas-container canvas {
+            width: 100% !important;
+            height: 100% !important;
         }
         
         .spinner { 
@@ -1144,12 +1168,16 @@
                 <div class="chart-container">
                     <div class="chart-header"><h3 class="chart-title">المبيعات الشهرية (آخر 6 أشهر)</h3></div>
                     <div id="salesChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                    <canvas id="salesChart" style="display: none;"></canvas>
+                    <div class="chart-canvas-container">
+                        <canvas id="salesChart" style="display: none;"></canvas>
+                    </div>
                 </div>
                 <div class="chart-container">
                      <div class="chart-header"><h3 class="chart-title">المنتجات الأكثر مبيعاً (حسب الإيراد)</h3></div>
                     <div id="doughnutChartPlaceholder" class="chart-placeholder"><div class="spinner"></div></div>
-                    <canvas id="doughnutChart" style="display: none;"></canvas>
+                    <div class="chart-canvas-container">
+                        <canvas id="doughnutChart" style="display: none;"></canvas>
+                    </div>
                 </div>
             </div>
         </div>
@@ -1472,7 +1500,15 @@
                         tension: 0.4
                     }]
                 },
-                options: { responsive: true, maintainAspectRatio: false }
+                options: { 
+                    responsive: true, 
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    }
+                }
             });
 
             // --- 2. Doughnut Chart (Top Selling Products) ---
@@ -1504,7 +1540,22 @@
                         hoverOffset: 4
                     }]
                 },
-                 options: { responsive: true, maintainAspectRatio: false }
+                 options: { 
+                     responsive: true, 
+                     maintainAspectRatio: false,
+                     plugins: {
+                         legend: {
+                             position: 'bottom',
+                             labels: {
+                                 padding: 15,
+                                 font: {
+                                     family: 'Tajawal',
+                                     size: 12
+                                 }
+                             }
+                         }
+                     }
+                 }
             });
         }
         
