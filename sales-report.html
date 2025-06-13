@@ -241,15 +241,15 @@
         <div class="report-summary">
             <div class="summary-card">
                 <div class="summary-title">إجمالي المبيعات</div>
-                <div class="summary-value" id="totalSales">0.00 ر.س</div>
+                <div class="summary-value" id="totalSales">0.00 د.م</div>
             </div>
             <div class="summary-card">
                 <div class="summary-title">إجمالي التكاليف</div>
-                <div class="summary-value cost" id="totalCosts">0.00 ر.س</div>
+                <div class="summary-value cost" id="totalCosts">0.00 د.م</div>
             </div>
             <div class="summary-card">
                 <div class="summary-title">صافي الأرباح</div>
-                <div class="summary-value profit" id="netProfit">0.00 ر.س</div>
+                <div class="summary-value profit" id="netProfit">0.00 د.م</div>
             </div>
         </div>
         <div class="table-wrapper">
@@ -345,9 +345,9 @@
                           <td>${invoice.id.substring(0, 8)}...</td>
                           <td>${item.name || 'غير معروف'}</td>
                           <td>${itemQuantity}</td>
-                          <td>${itemPrice.toFixed(2)} ر.س</td>
-                          <td class="transaction-cost">${itemCost.toFixed(2)} ر.س</td>
-                          <td class="transaction-profit">${itemProfit.toFixed(2)} ر.س</td>
+                          <td>${itemPrice.toFixed(2)} د.م</td>
+                          <td class="transaction-cost">${itemCost.toFixed(2)} د.م</td>
+                          <td class="transaction-profit">${itemProfit.toFixed(2)} د.م</td>
                       </tr>
                   `;
               });
@@ -361,9 +361,9 @@
       // 5. دالة تحديث ملخص الأرباح
       function updateSummary(sales, costs) {
           const profit = sales - costs;
-          document.getElementById('totalSales').textContent = sales.toFixed(2) + ' ر.س';
-          document.getElementById('totalCosts').textContent = costs.toFixed(2) + ' ر.س';
-          document.getElementById('netProfit').textContent = profit.toFixed(2) + ' ر.س';
+          document.getElementById('totalSales').textContent = sales.toFixed(2) + ' د.م';
+          document.getElementById('totalCosts').textContent = costs.toFixed(2) + ' د.م';
+          document.getElementById('netProfit').textContent = profit.toFixed(2) + ' د.م';
       }
 
       // 6. تشغيل عند تحميل الصفحة
