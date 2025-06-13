@@ -135,33 +135,55 @@
         box-shadow: 0 15px 35px rgba(0,0,0,0.1);
     }
 
-    #cameraScanner video {
-        width: 100%;
-        height: auto;
-        display: block;
-    }
+   
+        #cameraScanner {
+            width: 100%;
+            max-height: 450px;
+            margin: 25px 0;
+            border-radius: 20px;
+            overflow: hidden;
+            display: none;
+            position: relative;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.1);
+            border: 1px solid rgba(0,0,0,0.05);
+        }
 
-    .scanner-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        width: 100%;
-        height: 100%;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        pointer-events: none;
-        background: rgba(0,0,0,0.3);
-    }
+        #cameraScanner video {
+            width: 100%;
+            height: auto;
+            display: block;
+        }
 
-    .scanner-frame {
-        width: 80%;
-        height: 200px;
-        border: 4px solid rgba(255,255,255,0.7);
-        border-radius: 15px;
-        box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.5);
-    }
+        .scanner-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            pointer-events: none;
+            background: rgba(0,0,0,0.3);
+        }
+
+        .scanner-frame {
+            width: 80%;
+            height: 200px;
+            border: 4px solid rgba(255,255,255,0.7);
+            border-radius: 15px;
+            box-shadow: 0 0 0 10000px rgba(0, 0, 0, 0.5);
+            margin-bottom: 20px;
+        }
+
+        .scanner-instruction {
+            color: white;
+            text-align: center;
+            font-size: 1.2rem;
+            text-shadow: 0 1px 3px rgba(0,0,0,0.5);
+            margin-top: 10px;
+        }
     
     .modal {
         display: none;
@@ -350,19 +372,20 @@
       <button class="btn btn-success" onclick="searchProduct()"><i class="fas fa-search"></i> بحث</button>
     </div>
     
-    <div id="cameraScanner"><video id="scannerVideo" muted playsinline></video><div class="scanner-overlay"><div class="scanner-frame"></div></div></div>
-  </div> 
-  <div id="cameraScanner">
-            <video muted playsinline></video>
-            <div class="scanner-overlay">
-                <div class="scanner-frame"></div>
-                <div class="scanner-instruction">
-                    <i class="fas fa-barcode fa-3x"></i>
-                    <p>وجه الكاميرا نحو الباركود</p>
-                </div>
-            </div>
+
+<div id="cameraScanner">
+    <video id="scannerVideo" muted playsinline></video>
+    <div class="scanner-overlay">
+        <div class="scanner-frame"></div>
+        <div class="scanner-instruction">
+            <i class="fas fa-barcode fa-3x"></i>
+            <p>وجه الكاميرا نحو الباركود</p>
         </div>
-  
+        </div>
+</div>
+
+
+       
   <div class="modal" id="productModal">
     <div class="modal-content">
       <span class="close-btn" onclick="closeModal('productModal')">&times;</span>
