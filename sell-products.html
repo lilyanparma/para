@@ -1161,7 +1161,7 @@
                         <i class="fas fa-tag"></i> اسم المنتج
                     </h2>
                     <div id="basePrice" class="product-price">
-                        <i class="fas fa-tags"></i> 0.00 ر.س
+                        <i class="fas fa-tags"></i> 0.00 د.م
                     </div>
                     <div id="productQuantity" class="product-stock">
                         <i class="fas fa-boxes"></i> المخزون: 0 قطع
@@ -1193,7 +1193,7 @@
             <ul id="invoiceItemsList" class="invoice-items-list">
                 </ul>
             <div class="invoice-total-display">
-                الإجمالي الفرعي: <span id="subTotalValue">0.00 ر.س</span>
+                الإجمالي الفرعي: <span id="subTotalValue">0.00 د.م</span>
             </div>
 
             <button id="applyInvoiceDiscount" class="btn btn-outline" style="margin-top: 20px;">
@@ -1219,7 +1219,7 @@
 
                 <div id="invoiceFixedDiscountGroup" class="form-group" style="display: none;">
                     <label for="invoiceDiscountAmount" class="form-label">
-                        <i class="fas fa-money-bill-wave"></i> مبلغ الخصم (ر.س)
+                        <i class="fas fa-money-bill-wave"></i> مبلغ الخصم (د.م)
                     </label>
                     <input type="number" id="invoiceDiscountAmount" class="form-control" min="0" placeholder="5.00">
                 </div>
@@ -1254,7 +1254,7 @@
                 <div class="final-price-label">
                     <i class="fas fa-receipt"></i> السعر النهائي للفاتورة
                 </div>
-                <div id="finalInvoicePriceValue" class="final-price-value">0.00 ر.س</div>
+                <div id="finalInvoicePriceValue" class="final-price-value">0.00 د.م</div>
             </div>
 
             <div class="action-buttons">
@@ -1423,9 +1423,9 @@
             const maxPrice = Math.max(...prices);
             
             if (minPrice === maxPrice) {
-                return `${minPrice.toFixed(2)} ر.س`;
+                return `${minPrice.toFixed(2)} د.م`;
             }
-            return `من ${minPrice.toFixed(2)} إلى ${maxPrice.toFixed(2)} ر.س`;
+            return `من ${minPrice.toFixed(2)} إلى ${maxPrice.toFixed(2)} د.م`;
         }
         
         /**
@@ -1897,7 +1897,7 @@
                     <div class="invoice-item-info">
                         <div class="invoice-item-name">${item.product.name}</div>
                         <div class="invoice-item-details">
-                            ${item.quantity} x ${item.product.price.toFixed(2)} ر.س
+                            ${item.quantity} x ${item.product.price.toFixed(2)} د.م
                             <div class="invoice-item-batch-info">
                                 <span>الدفعة: ${item.batch.batchNumber || item.batch.id} (${formatDate(item.batch.expiryDate)})</span>
                                 <button class="change-batch-btn" data-index="${index}"><i class="fas fa-sync-alt"></i> تغيير الدفعة</button>
@@ -2067,7 +2067,7 @@
         
         function calculateAndDisplayTotals() {
             currentSubTotal = invoiceItems.reduce((total, item) => total + item.itemTotal, 0);
-            elements.subTotalValue.textContent = `${currentSubTotal.toFixed(2)} ر.س`;
+            elements.subTotalValue.textContent = `${currentSubTotal.toFixed(2)} د.م`;
 
             let finalPrice = currentSubTotal;
 
@@ -2080,7 +2080,7 @@
             if (finalPrice < 0) finalPrice = 0;
 
             currentFinalInvoicePrice = finalPrice;
-            elements.finalInvoicePriceValue.textContent = `${currentFinalInvoicePrice.toFixed(2)} ر.س`;
+            elements.finalInvoicePriceValue.textContent = `${currentFinalInvoicePrice.toFixed(2)} د.م`;
         }
 
         function setPaymentMethod(method) {
@@ -2291,7 +2291,7 @@
                     <div>
                         <div class="invoice-item-name">رقم الفاتورة: ${invoiceInfo.id}</div>
                         <div class="invoice-item-details">
-                            التاريخ: ${formatDate(invoiceInfo.data.date)} | الإجمالي: ${invoiceInfo.data.finalPrice.toFixed(2)} ر.س
+                            التاريخ: ${formatDate(invoiceInfo.data.date)} | الإجمالي: ${invoiceInfo.data.finalPrice.toFixed(2)} د.م
                         </div>
                     </div>
                     <i class="fas fa-chevron-left"></i>
@@ -2313,7 +2313,7 @@
             headerDiv.innerHTML = `
                 <div style="font-weight: bold; color: var(--primary);">رقم الفاتورة: ${invoiceId}</div>
                 <div>التاريخ: ${formatDate(invoiceData.date)}</div>
-                <div>الإجمالي النهائي: ${invoiceData.finalPrice.toFixed(2)} ر.س</div>
+                <div>الإجمالي النهائي: ${invoiceData.finalPrice.toFixed(2)} د.م</div>
             `;
             elements.invoiceSearchResult.appendChild(headerDiv);
 
