@@ -444,7 +444,7 @@
               <div class="batch-item-details">
                   <span><strong>الرقم:</strong> ${batch.batchNumber || '-'}</span>
                   <span><strong>الكمية:</strong> ${batch.quantity}</span>
-                  <span><strong>السعر:</strong> ${(batch.price || 0).toFixed(2)} ر.س</span>
+                  <span><strong>السعر:</strong> ${(batch.price || 0).toFixed(2)} د.م</span>
                   <span><strong>الصلاحية:</strong> ${batch.expiryDate}</span>
               </div>
               <div class="batch-status-badges">${batchBadges}</div>
@@ -527,7 +527,7 @@
       if (prices.length === 0) return 'غير محدد';
       const minPrice = Math.min(...prices);
       const maxPrice = Math.max(...prices);
-      return minPrice === maxPrice ? `${minPrice.toFixed(2)} ر.س` : `${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)} ر.س`;
+      return minPrice === maxPrice ? `${minPrice.toFixed(2)} د.م` : `${minPrice.toFixed(2)} - ${maxPrice.toFixed(2)} د.م`;
   }
 
   function getMinPrice(product) {
