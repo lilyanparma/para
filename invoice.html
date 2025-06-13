@@ -287,7 +287,7 @@
         </div>
 <div class="invoice-body">
     <div class="invoice-logo-container">
-        <img src="https://i.imgur.com/YOUR_IMAGE_URL.png" alt="شعار Lilyan Rose" class="invoice-logo">
+        <img src="https://i.imgur.com/uVdHuI1.jpeg" alt="شعار Lilyan Rose" class="invoice-logo">
     </div>
     <div id="invoicePharmacy" class="invoice-pharmacy">صيدلية النخبة</div>
             
@@ -312,11 +312,11 @@
             <div class="invoice-summary">
                 <div class="summary-row">
                     <span>الإجمالي الفرعي:</span>
-                    <span id="subTotal">0.00 ر.س</span>
+                    <span id="subTotal">0.00 د.م</span>
                 </div>
                 <div id="invoiceDiscountRow" class="summary-row discount" style="display: none;">
                     <span>الخصم:</span>
-                    <span id="invoiceDiscount">0.00 ر.س</span>
+                    <span id="invoiceDiscount">0.00 د.م</span>
                 </div>
                 <div id="invoiceReasonRow" class="summary-row" style="display: none; font-size: 0.9rem;">
                      <span>سبب الخصم:</span>
@@ -324,7 +324,7 @@
                 </div>
                 <div class="summary-row total">
                     <span>الإجمالي النهائي:</span>
-                    <span id="finalTotal">0.00 ر.س</span>
+                    <span id="finalTotal">0.00 د.م</span>
                 </div>
             </div>
 
@@ -389,15 +389,15 @@
                 row.innerHTML = `
                     <td>${item.product.name}</td>
                     <td>${item.quantity}</td>
-                    <td>${item.product.price.toFixed(2)} ر.س</td>
-                    <td>${item.itemTotal.toFixed(2)} ر.س</td>
+                    <td>${item.product.price.toFixed(2)} د.م</td>
+                    <td>${item.itemTotal.toFixed(2)} د.م</td>
                 `;
             });
         }
 
         // 3. تعبئة ملخص الحسابات
-        document.getElementById('subTotal').textContent = invoice.subTotal.toFixed(2) + ' ر.س';
-        document.getElementById('finalTotal').textContent = invoice.finalPrice.toFixed(2) + ' ر.س';
+        document.getElementById('subTotal').textContent = invoice.subTotal.toFixed(2) + ' د.م';
+        document.getElementById('finalTotal').textContent = invoice.finalPrice.toFixed(2) + ' د.م';
         
         // 4. عرض الخصم إن وجد
         const discountRow = document.getElementById('invoiceDiscountRow');
@@ -408,9 +408,9 @@
             
             const discountValueSpan = document.getElementById('invoiceDiscount');
             if (invoice.overallDiscount.type === 'percent') {
-                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} ر.س (${invoice.overallDiscount.value}%)`;
+                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} د.م (${invoice.overallDiscount.value}%)`;
             } else { // fixed
-                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} ر.س`;
+                discountValueSpan.textContent = `-${discountAmount.toFixed(2)} د.م`;
             }
 
             if(invoice.overallDiscount.reason && invoice.overallDiscount.reason !== 'لا يوجد سبب مذكور') {
