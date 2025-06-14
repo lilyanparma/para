@@ -2505,6 +2505,20 @@
 
         displayInvoiceItems();
         calculateAndDisplayTotals();
+
+
+document.addEventListener('DOMContentLoaded', function() {
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            // المستخدم قام بتسجيل الدخول، اسمح له بالبقاء في الصفحة
+            console.log("User is logged in.");
+        } else {
+            // المستخدم لم يسجل دخوله، قم بإعادة توجيهه إلى صفحة الدخول
+            window.location.href = 'login.html';
+        }
+    });
+});
+        
     </script>
 </body>
 </html>
