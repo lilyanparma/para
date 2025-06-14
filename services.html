@@ -856,11 +856,20 @@
   };
 
   // Initialize the app
-  document.addEventListener('DOMContentLoaded', function() {
-    showLoading(true);
-    loadServices();
-    setupEventListeners();
+ // --- الكود الصحيح والمعدّل لصفحة services.html ---
+document.addEventListener('DOMContentLoaded', function() {
+  firebase.auth().onAuthStateChanged(function(user) {
+    if (user) {
+      // المستخدم مسجل دخوله، اسمح بتشغيل كود الصفحة الأصلي
+      showLoading(true);
+      loadServices();
+      setupEventListeners();
+    } else {
+      // المستخدم غير مسجل، حوله فوراً لصفحة الدخول
+      window.location.href = 'login.html';
+    }
   });
+});
 
   // Event Listeners
   function setupEventListeners() {
