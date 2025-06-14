@@ -1,3 +1,4 @@
+
 <!DOCTYPE html>
 <html lang="ar" dir="rtl">
 <head>
@@ -856,25 +857,11 @@
   };
 
   // Initialize the app
- // --- الكود الصحيح والمعدّل لصفحة services.html ---
-document.addEventListener('DOMContentLoaded', function() {
-      firebase.auth().onAuthStateChanged(function(user) {
-          if (user) {
-              // المستخدم مسجل، الآن نتأكد من دوره
-              firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
-                  if (snapshot.exists() && snapshot.val().role === 'مدير النظام') {
-                      // كل شيء تمام، المستخدم هو المدير
-                  } else {
-                      // المستخدم ليس مديرًا، أعده للصفحة الرئيسية
-                      alert("ليس لديك صلاحية الوصول لهذه الصفحة.");
-                      window.location.href = 'index.html';
-                  }
-              });
-          } else {
-              // المستخدم غير مسجل أصلاً، أعده لصفحة الدخول
-              window.location.href = 'login.html';
-          }
-      });
+  document.addEventListener('DOMContentLoaded', function() {
+    showLoading(true);
+    loadServices();
+    setupEventListeners();
+  });
 
   // Event Listeners
   function setupEventListeners() {
