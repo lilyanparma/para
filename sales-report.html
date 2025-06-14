@@ -368,7 +368,22 @@
       }
 
       // 6. تشغيل عند تحميل الصفحة
-      document.addEventListener('DOMContentLoaded', fetchAndRenderReport);
+      document.addEventListener('DOMContentLoaded', function() {
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
+                        if (snapshot.exists() && snapshot.val().role === 'مدير النظام') {
+                            console.log("Admin access granted to report page.");
+                        } else {
+                            alert("ليس لديك صلاحية الوصول لهذه الصفحة.");
+                            window.location.href = 'index.html';
+                        }
+                    });
+                } else {
+                    window.location.href = 'login.html';
+                }
+            });
+        });
   </script>
 </body>
 </html>
