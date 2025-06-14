@@ -1209,6 +1209,13 @@
     
     return date.toLocaleDateString('ar-EG', options);
   }
+
+ firebase.auth().onAuthStateChanged(function(user) {
+        if (!user) {
+            window.location.href = 'login.html';
+        }
+    });
+  
 </script>
 </body>
 </html>
