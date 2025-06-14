@@ -327,11 +327,26 @@
     </div>
 </div>
 
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-app.js"></script>
-<script src="https://www.gstatic.com/firebasejs/8.10.0/firebase-database.js"></script>
-<script src="data/firebase-config.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-database-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.6.0/firebase-auth-compat.js"></script>
+  <script src="data/firebase-config.js"></script>
 
 <script>
+
+  document.addEventListener('DOMContentLoaded', function() {
+    firebase.auth().onAuthStateChanged(function(user) {
+        if (user) {
+            // المستخدم مسجل دخوله، اسمح له بالبقاء في الصفحة
+            console.log("Access granted for logged-in user.");
+            // يمكنك هنا إضافة أي كود آخر يعتمد على بيانات المستخدم إذا أردت
+            
+        } else {
+            // المستخدم غير مسجل دخوله، أعد توجيهه فوراً لصفحة الدخول
+            window.location.href = 'login.html';
+        }
+    });
+});
  
 
   let allProducts = [];
