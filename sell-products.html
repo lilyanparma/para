@@ -2507,17 +2507,21 @@
         calculateAndDisplayTotals();
 
 
-document.addEventListener('DOMContentLoaded', function() {
-    firebase.auth().onAuthStateChanged(function(user) {
-        if (user) {
-            // المستخدم قام بتسجيل الدخول، اسمح له بالبقاء في الصفحة
-            console.log("User is logged in.");
-        } else {
-            // المستخدم لم يسجل دخوله، قم بإعادة توجيهه إلى صفحة الدخول
-            window.location.href = 'login.html';
-        }
-    });
-});
+  // ========= Authentication & Initialization =========
+        document.addEventListener('DOMContentLoaded', async function() {
+            await fetchTranslations();
+            setLanguage(currentLang);
+
+            firebase.auth().onAuthStateChanged(function(user) {
+                if (user) {
+                    firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
+                        if (snapshot.exists()) {
+                            initializeApp(user, snapshot.val().name, snapshot.val().role);
+                        } else { firebase.auth().signOut(); }
+                    }).catch(err => { console.error(err); firebase.auth().signOut(); });
+                } else { window.location.href = 'login.html'; }
+            });
+        });
         
     </script>
 </body>
