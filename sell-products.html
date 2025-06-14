@@ -1806,7 +1806,7 @@
 
         function formatDate(dateString) {
             if (!dateString) return 'غير محدد';
-            return new Date(dateString).toLocaleDateString('ar-SA', { year: 'numeric', month: 'short', day: 'numeric' });
+            return new Date(dateString).toLocaleDateString('en-GB', { year: 'numeric', month: 'short', day: 'numeric' });
         }
         
         elements.addToInvoiceBtn.addEventListener('click', function() {
