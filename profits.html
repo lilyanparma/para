@@ -464,15 +464,19 @@
     let filteredInvoices = [];
     
     // تحميل البيانات عند فتح الصفحة
+    // تحميل البيانات عند فتح الصفحة
     document.addEventListener('DOMContentLoaded', function() {
         // التحقق من صلاحيات المستخدم أولاً
         firebase.auth().onAuthStateChanged(function(user) {
             if (user) {
                 database.ref('user_roles/' + user.uid).once('value').then(snapshot => {
                     if (snapshot.exists() && snapshot.val().role === 'مدير النظام') {
-                        // إذا كان المستخدم مدير، قم بتحميل البيانات
+                        
+                        // ✅ هذا هو الجزء الصحيح الذي يحل المشكلة
+                        // بعد التأكد من أن المستخدم مدير، نبدأ بتهيئة الصفحة وجلب البيانات
                         initDates();
-                        loadInitialData();
+                        loadInitialData(); 
+
                     } else {
                         alert("ليس لديك صلاحية الوصول لهذه الصفحة.");
                         window.location.href = 'index.html';
