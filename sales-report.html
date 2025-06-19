@@ -13,7 +13,6 @@
   <script src="data/firebase-config.js"></script>
 
   <style>
-    /* === (نفس التنسيقات السابقة بدون تغيير) === */
     :root {
         --primary: #4361ee;
         --secondary: #3a0ca3;
@@ -46,6 +45,11 @@
     .transactions-table tbody tr:hover { background-color: #f8f9fa; }
     .transaction-profit { color: var(--profit-color); font-weight: bold; }
     .transaction-cost { color: var(--cost-color); }
+    /* ==== بداية التنسيقات الجديدة ==== */
+    .returned-item { background-color: #fff5f5; color: #e53e3e; text-decoration: line-through; opacity: 0.8; }
+    .returned-item .transaction-profit, .returned-item .transaction-cost { text-decoration: line-through; }
+    .returned-info { display: block; font-size: 0.8rem; color: #718096; text-decoration: none; margin-top: 4px; }
+    /* ==== نهاية التنسيقات الجديدة ==== */
     .footer { text-align: center; padding: 25px; font-size: 0.9rem; color: #6c757d; background: #f1f2f6; }
     .print-btn { border: none; padding: 12px 25px; border-radius: 50px; font-size: 1rem; font-weight: 600; cursor: pointer; transition: var(--transition); box-shadow: 0 4px 15px rgba(0,0,0,0.2); background: linear-gradient(135deg, var(--primary), var(--secondary)); color: white; margin-top: 15px; }
     .print-btn:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.2); }
@@ -54,13 +58,12 @@
         body { padding: 0; background: white; font-size: 10pt; }
         .report-container, .summary-card { box-shadow: none; border: 1px solid #eee; }
         .print-btn, .footer { display: none; }
-        .report-header { padding: 15px; }
-        .report-title { font-size: 1.5rem; }
+        .report-header { padding: 15px; } .report-title { font-size: 1.5rem; }
         .table-wrapper { overflow: visible; }
         .transactions-table { min-width: 0 !important; width: 100%; font-size: 9pt; }
         .transactions-table th, .transactions-table td { padding: 6px 4px; word-wrap: break-word; }
-        .summary-card { padding: 10px; }
-        .summary-value { font-size: 1.2rem; }
+        .summary-card { padding: 10px; } .summary-value { font-size: 1.2rem; }
+        .returned-item { background-color: #eee !important; color: #333 !important; } /* تنسيق طباعة مبسط */
     }
   </style>
 </head>
@@ -70,7 +73,6 @@
           <h1 class="report-title"><i class="fas fa-cash-register"></i> كشف أرباح المبيعات</h1>
           <p class="report-period" id="reportPeriod"></p>
       </div>
-      
       <div id="reportBody">
         <div class="report-summary">
             <div class="summary-card">
@@ -105,7 +107,6 @@
             </table>
         </div>
       </div>
-      
       <div class="footer">
           <p>تم إنشاء الكشف بتاريخ <span id="creationDate"></span></p>
           <button onclick="window.print()" class="print-btn">
@@ -120,7 +121,6 @@
             if (user) {
                 firebase.database().ref('user_roles/' + user.uid).once('value').then(snapshot => {
                     if (snapshot.exists() && snapshot.val().role === 'مدير النظام') {
-                        console.log("Admin access granted to report page.");
                         fetchAndRenderReport(); 
                     } else {
                         alert("ليس لديك صلاحية الوصول لهذه الصفحة.");
@@ -143,29 +143,23 @@
               document.getElementById('reportBody').innerHTML = '<div class="loading-overlay">خطأ: لم يتم تحديد السنة والشهر.</div>';
               return;
           }
-
           document.getElementById('reportPeriod').textContent = `شهر ${arabicMonths[month - 1]} ${year}`;
           document.getElementById('creationDate').textContent = new Date().toLocaleDateString('ar-EG', { year: 'numeric', month: 'long', day: 'numeric' });
-
           try {
               const snapshot = await database.ref('invoices').once('value');
               const allInvoices = snapshot.val() ? Object.values(snapshot.val()) : [];
-
               const filteredInvoices = allInvoices.filter(invoice => {
                   if (!invoice.date) return false;
                   const itemDate = new Date(invoice.date);
                   return itemDate.getFullYear() == year && (itemDate.getMonth() + 1) == month;
               });
-
               renderReport(filteredInvoices);
-
           } catch (error) {
               console.error("Error fetching data:", error);
               document.getElementById('reportBody').innerHTML = '<div class="loading-overlay">فشل تحميل البيانات من قاعدة البيانات.</div>';
           }
       }
 
-      // ==== بداية الكود المعدل ====
       function renderReport(invoices) {
           let totalSales = 0, totalCosts = 0, transactionsBody = '';
 
@@ -177,7 +171,6 @@
 
           invoices.forEach(invoice => {
               const items = invoice.items ? Object.values(invoice.items) : [];
-              
               const subTotal = invoice.subTotal || 0;
               const finalPrice = invoice.finalPrice || 0;
               const discountRatio = (subTotal > 0) ? (finalPrice / subTotal) : 1;
@@ -185,43 +178,51 @@
               items.forEach(item => {
                   const itemOriginalPrice = item.price || 0;
                   const itemCost = item.cost || 0;
-                  
-                  // --- تعديل: حساب الكمية الصافية ---
                   const originalQuantity = item.quantity || 0;
                   const returnedQuantity = item.quantityReturned || 0;
                   const netQuantity = originalQuantity - returnedQuantity;
 
-                  // إذا كانت الكمية الصافية صفر أو أقل، لا نعرضها في التقرير
-                  if (netQuantity <= 0) return;
-
                   const itemEffectivePrice = itemOriginalPrice * discountRatio;
                   
-                  // --- تعديل: استخدام الكمية الصافية للحسابات ---
+                  let rowClass = '';
+                  let quantityText = netQuantity;
+
+                  // --- تعديل: منطق العرض للمنتجات المرتجعة ---
+                  if (netQuantity <= 0 && originalQuantity > 0) {
+                      rowClass = 'class="returned-item"';
+                      quantityText = `0 <span class="returned-info">(بيع ${originalQuantity}، إرجاع ${returnedQuantity})</span>`;
+                  } else if (returnedQuantity > 0) {
+                      quantityText = `${netQuantity} <span class="returned-info">(بيع ${originalQuantity}، إرجاع ${returnedQuantity})</span>`;
+                  }
+                  
+                  // يتم استخدام الكمية الصافية في الحسابات
                   const itemNetTotalEffectivePrice = itemEffectivePrice * netQuantity;
                   const itemNetTotalCost = itemCost * netQuantity;
                   const itemProfit = itemNetTotalEffectivePrice - itemNetTotalCost;
 
-                  totalSales += itemNetTotalEffectivePrice; // تحديث إجمالي المبيعات
-                  totalCosts += itemNetTotalCost;       // تحديث إجمالي التكاليف
+                  totalSales += itemNetTotalEffectivePrice;
+                  totalCosts += itemNetTotalCost;
 
-                  transactionsBody += `
-                      <tr>
-                          <td>${new Date(invoice.date).toLocaleDateString('en-GB')}</td>
-                          <td>${invoice.id ? invoice.id.substring(0, 8) : 'N/A'}...</td>
-                          <td>${item.name || 'غير معروف'}</td>
-                          <td>${netQuantity} (تم بيع ${originalQuantity} وإرجاع ${returnedQuantity})</td>
-                          <td>${itemEffectivePrice.toFixed(2)} د.م</td> 
-                          <td class="transaction-cost">${itemCost.toFixed(2)} د.م</td>
-                          <td class="transaction-profit">${itemProfit.toFixed(2)} د.م</td>
-                      </tr>
-                  `;
+                  // لا نعرض الصف إذا لم تكن هناك كمية مباعة أصلاً
+                  if (originalQuantity > 0) {
+                    transactionsBody += `
+                        <tr ${rowClass}>
+                            <td>${new Date(invoice.date).toLocaleDateString('en-GB')}</td>
+                            <td>${invoice.id ? invoice.id.substring(0, 8) : 'N/A'}...</td>
+                            <td>${item.name || 'غير معروف'}</td>
+                            <td>${quantityText}</td>
+                            <td>${itemEffectivePrice.toFixed(2)} د.م</td> 
+                            <td class="transaction-cost">${itemCost.toFixed(2)} د.م</td>
+                            <td class="transaction-profit">${itemProfit.toFixed(2)} د.م</td>
+                        </tr>
+                    `;
+                  }
               });
           });
 
           document.getElementById('transactionsBody').innerHTML = transactionsBody;
           updateSummary(totalSales, totalCosts);
       }
-      // ==== نهاية الكود المعدل ====
       
       function updateSummary(sales, costs) {
           const profit = sales - costs;
